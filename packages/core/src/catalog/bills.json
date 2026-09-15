@@ -1,0 +1,7 @@
+[
+  { "vendor": "Acme Hosting", "amount": 4200.0, "due": "2026-09-18", "memo": "September hosting" },
+  { "vendor": "Figma", "amount": 720.0, "due": "2026-09-20", "memo": "Design seats, Sept" },
+  { "vendor": "Deel", "amount": 18500.0, "due": "2026-09-30", "memo": "Contractor payroll, Sept" },
+  { "vendor": "Northstar Legal", "amount": 3150.0, "due": "2026-09-12", "memo": "Invoice 2211 — trademark filing" },
+  { "vendor": "Vercel", "amount": 640.0, "due": "2026-10-01", "memo": "Pro plan, Oct" }
+]

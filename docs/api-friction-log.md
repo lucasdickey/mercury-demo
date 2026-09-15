@@ -162,3 +162,39 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
     only** — an elicitation makes the call time out. Together with Claude.ai
     and ChatGPT, none of the three consumer chat surfaces can render an
     approval today.
+
+## Found while building (2026-09-15)
+
+33. 🟡 `[api]` `[docs]` **Resource paths are inconsistent.** Receivables live at
+    `/ar/invoices` and `/ar/customers`; everything else is top-level
+    (`/recipients`, `/treasury`). The approval-queue transfer is
+    `POST /request-transfer`, but its docs title is "Request to transfer money"
+    and its payment sibling is `/account/{id}/request-send-money` — one is
+    account-scoped, one isn't. An agent reading titles guesses wrong. **Ship:**
+    a path table in Getting Started; consider aliases.
+34. 🟠 `[api]` **No typed client and no spec to generate one from.** We
+    hand-typed ~15 objects from per-page OpenAPI fragments. A published
+    `openapi.json` would have made this `openapi-typescript` in one command.
+    (Restates item 2 from the builder's seat.)
+35. 🟡 `[api]` **`Account.kind` is a free-form string.** The enum that clearly
+    exists server-side (checking/savings/treasury/credit…) isn't in the spec,
+    so filtering "operating accounts" means string-matching. **Ship:** enum it.
+36. 🟡 `[mcp]` `[ecosystem]` **MCP 2026-07-28 capability detection is
+    per-request.** `_meta["io.modelcontextprotocol/clientCapabilities"]` must be
+    read on every call to decide whether elicitation is renderable; the SDK
+    backfills `getClientCapabilities()` from it. Any bank-grade MCP server that
+    wants to gate on this needs the same branch we wrote — worth a paragraph in
+    Mercury's "Build your own client" guide when they add writes.
+37. 🔴 `[mcp]` `[ecosystem]` **Stateless servers can't see 2025-era clients'
+    capabilities.** Verified with the official TypeScript client SDK v2: by
+    default it speaks 2025-11-25 — capabilities are declared once in
+    `initialize` and never again. A stateless Streamable HTTP server (Vercel,
+    one fresh server per request) has forgotten them by `tools/call`, so
+    `getClientCapabilities()` is `undefined` and there is no `_meta` envelope.
+    Only 2026-07-28 clients (per-request envelope) can be capability-gated.
+    Our server treats "unknown" as "can't render" and returns the approve URL,
+    which is the safe default — but it means **every 2025-era client gets the
+    URL path even if it could have shown a form.** Any bank that ships a
+    hosted, stateless, write-capable MCP will hit this. **Ship (Mercury MCP
+    docs):** state the protocol version the server speaks and that
+    2025-era clients are served statelessly; recommend clients upgrade.

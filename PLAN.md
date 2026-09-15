@@ -21,6 +21,15 @@ Hand-off document for whichever model/agents execute the build. Read
 | Presentation | `docs/index.html` memo + `docs/explainer.html` walkthrough. Remotion render = stretch. |
 | Standing task | **Keep cataloging.** Every paper cut goes in `docs/api-friction-log.md` under the right layer (API · MCP · CLI · docs · sandbox · ecosystem) with severity and a proposed fix. This is a deliverable, not a side effect. |
 
+## Status (2026-09-15, end of day)
+
+Built and green without a sandbox token:
+- `packages/core`: sandbox-only Mercury client (refuses production, redacts account/routing numbers, follows cursors), analyzers (cash floor, overdue AR, bills-due AP with recipient matching, treasury sweep), zod proposal schema, `closeMonth()` / `queueProposal()`. **11/11 tests.**
+- `apps/web`: MCP route with real MRTR elicitation + HMAC `requestState` + approve-URL fallback; chat UI on AI SDK 7; `/approve/[token]`; `/docs` served statically. **`next build` passes.**
+- `npm run smoke` — offline end-to-end with a mock Mercury and the real MCP client SDK: `tools/list`, `close_month`, approve-URL fallback for clients without elicitation, and the full MRTR round trip (form → accept → signed re-entry → `POST /request-transfer` with the proposal id as idempotencyKey → `pendingApproval`; decline → nothing queued). 7/7 checks.
+
+Blocked on the sandbox token: PLAN §2 recon, live `close_month`, live `request-*` calls, Claude Code end-to-end.
+
 ## 1. Preconditions (human)
 
 - [ ] Sandbox account at https://sandbox.mercury.com/signup → sandbox API token (read-write, no allowlist needed? **verify** — if the sandbox modal also demands an IP allowlist for read-write, log it and use a Custom token with `RequestSendMoney` + reads).

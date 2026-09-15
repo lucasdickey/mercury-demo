@@ -1,0 +1,21 @@
+{
+  "name": "mercury-demo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -ws --if-present",
+    "test": "npm run test -w packages/core",
+    "dev": "npm run dev -w apps/web",
+    "typecheck": "npm run typecheck -ws --if-present",
+    "smoke": "scripts/smoke/run.sh"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.0.0"
+  }
+}
