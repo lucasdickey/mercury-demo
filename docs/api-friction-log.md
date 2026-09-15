@@ -113,3 +113,21 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
 
 24. 🟠 No webhooks in sandbox (documented). Unknown: cards, agent cards, vault,
     events, MCC coverage on seeded data. Will log as we hit them.
+
+## Ecosystem (not Mercury's fault, but shapes what Mercury should build)
+
+25. 🔴 **Consumer chat clients can't render an approval.** MCP elicitation (form
+    mode) works in Claude Code, Cursor, VS Code, and the Vercel AI SDK client;
+    **Claude.ai** has an open request (anthropics/claude-ai-mcp#153, Apr 2026)
+    and turns a state-only `InputRequiredResult` into "Error occurred during
+    tool execution" (#1027, Sep 2026); ChatGPT shows no evidence of support.
+    So "propose, approve in chat" is a developer-client story today.
+    **Ship (Mercury):** a hosted approval page reachable by URL — the
+    approval-queue endpoints already exist; a `/approve/{requestId}` deep link
+    into the dashboard, returned by the API, would let any client complete the
+    loop. (`dashboardLink` already exists on accounts and transactions; add it
+    to `SendMoneyApprovalRequestResponse`.)
+26. 🟠 **Spec churn.** MCP 2026-07-28 made elicitation stateless (MRTR) and
+    deprecated sampling/roots. Mercury's MCP docs don't state which protocol
+    version the server speaks or which client features it uses. Add a
+    "protocol version + capabilities" line to *Connecting Mercury MCP*.
