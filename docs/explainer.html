@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Steward Walkthrough</title>
+<meta name="description" content="Step through one conversation: a chat client calls the Steward MCP server, which reads Mercury, proposes a transfer, asks for approval in the chat, and queues it in Mercury's dashboard.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Single-theme by choice: this is a console. Every color is painted explicitly. */
+  :root {
+    --ground: #0B0F14;
+    --panel: #121820;
+    --panel-2: #0E141B;
+    --ink: #E8ECF1;
+    --muted: #8D98A6;
+    --rule: #263140;
+    --client: #6FA8FF;   /* chat client */
+    --ours: #E8ECF1;     /* steward */
+    --mercury: #B39CFF;  /* mercury api */
+    --gate: #3FBF8F;     /* approvals */
+    --money: #E0A04A;    /* money movement */
+    --display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  a { color: var(--ink); text-decoration-color: var(--rule); text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--money); outline-offset: 2px; }
+
+  .app { display: grid; grid-template-columns: minmax(0, 1fr) 420px; grid-template-rows: auto minmax(0, 1fr); height: 100%; }
+  header { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 18px; padding: 14px 20px; border-bottom: 1px solid var(--rule); }
+  header h1 { font-family: var(--display); font-weight: 700; font-size: 18px; margin: 0; letter-spacing: -.01em; }
+  header .sub { color: var(--muted); font-size: 14px; }
+  header .back { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  .stage { position: relative; min-width: 0; min-height: 360px; }
+  canvas { display: block; width: 100%; height: 100%; }
+  .labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .lbl { position: absolute; transform: translate(-50%, 0); white-space: nowrap; font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: center; line-height: 1.3; }
+  .lbl b { display: block; font-family: var(--display); font-weight: 700; font-size: 14px; color: var(--ink); letter-spacing: -.01em; }
+  .lbl.client b { color: var(--client); }
+  .lbl.mercury b { color: var(--mercury); }
+  .lbl.gate b { color: var(--gate); }
+  .lbl.dim { opacity: .35; }
+  .stage.flat { background: var(--panel-2); }
+  .lbl.flat { pointer-events: auto; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 4px; background: var(--panel); transform: translate(-50%, -50%); }
+  .legend { position: absolute; left: 16px; bottom: 14px; display: flex; gap: 14px; font-family: var(--mono); font-size: 11px; color: var(--muted); pointer-events: none; }
+  .legend span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .legend .r::before { background: var(--client); }
+  .legend .m::before { background: var(--money); }
+  .legend .g::before { background: var(--gate); }
+
+  aside { border-left: 1px solid var(--rule); background: var(--panel); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; }
+  .step-head { padding: 18px 20px 12px; border-bottom: 1px solid var(--rule); }
+  .step-k { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .step-t { font-family: var(--display); font-weight: 700; font-size: 20px; line-height: 1.2; margin: 4px 0 0; letter-spacing: -.01em; text-wrap: balance; }
+  .step-body { padding: 14px 20px; overflow: auto; min-height: 0; }
+  .step-body p { margin: 0 0 12px; color: var(--ink); }
+  .step-body p.note { color: var(--muted); font-size: 14px; }
+  .gatebadge { display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--gate); border: 1px solid color-mix(in srgb, var(--gate) 45%, transparent); background: color-mix(in srgb, var(--gate) 14%, transparent); padding: 2px 7px; border-radius: 3px; margin-bottom: 10px; }
+  .wire { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; }
+  pre { margin: 0 0 10px; background: var(--panel-2); border: 1px solid var(--rule); border-radius: 4px; padding: 12px 14px; font-family: var(--mono); font-size: 12.5px; line-height: 1.5; overflow-x: auto; color: var(--ink); }
+  pre .c { color: var(--muted); }
+  pre .k { color: var(--client); }
+  pre .s { color: var(--money); }
+  pre .g { color: var(--gate); }
+  pre .p { color: var(--mercury); }
+
+  .controls { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 12px 20px 16px; border-top: 1px solid var(--rule); }
+  button { font-family: var(--body); font-size: 14px; font-weight: 600; color: var(--ink); background: transparent; border: 1px solid var(--rule); border-radius: 4px; padding: 8px 14px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button:disabled { opacity: .35; cursor: default; }
+  .dots { display: flex; justify-content: center; gap: 6px; }
+  .dots button { width: 22px; height: 6px; padding: 0; border: 0; border-radius: 3px; background: var(--rule); }
+  .dots button[aria-current="step"] { background: var(--ink); }
+  .dots button.gate[aria-current="step"] { background: var(--gate); }
+
+  @media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: auto minmax(300px, 46vh) minmax(0, 1fr); }
+    aside { border-left: 0; border-top: 1px solid var(--rule); }
+    .legend { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Steward walkthrough</h1>
+    <span class="sub">One conversation, both approval gates, every call on the wire</span>
+    <a class="back" href="index.html">← decision memo</a>
+  </header>
+
+  <div class="stage" id="stage">
+    <canvas id="c" aria-label="3D diagram of the chat client, Steward server, Mercury API, and the two approval gates"></canvas>
+    <div class="labels" id="labels"></div>
+    <div class="legend"><span class="r">read</span><span class="m">money movement</span><span class="g">approval gate</span></div>
+  </div>
+
+  <aside>
+    <div class="step-head">
+      <div class="step-k" id="stepK">Step 1 of 8</div>
+      <h2 class="step-t" id="stepT"></h2>
+    </div>
+    <div class="step-body" id="stepBody"></div>
+    <div class="controls">
+      <button id="prev" type="button">← Back</button>
+      <div class="dots" id="dots" role="tablist" aria-label="Steps"></div>
+      <button id="next" type="button">Next →</button>
+    </div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.158.0/three.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- content ----------
+  // Node ids: client, steward, mercury, dashboard, you
+  var STEPS = [
+    {
+      t: 'The cast',
+      dots: 'n',
+      body: '<p>Four things talk to each other. A <strong>chat client</strong> you don’t control (ChatGPT, Claude, Grok — or our own web UI). <strong>Steward</strong>, our MCP server on Vercel. <strong>Mercury’s API</strong>. And the <strong>Mercury dashboard</strong>, where a human approves money movement.</p><p class="note">Nothing on this diagram can move money except the dashboard. That’s the whole design.</p>',
+      focus: ['client', 'steward', 'mercury', 'dashboard', 'you'], packets: []
+    },
+    {
+      t: 'You ask a question in a surface we don’t own',
+      dots: 'n',
+      body: '<p>You type into ChatGPT: <em>“Where am I wasting money?”</em> The client already connected to Steward over MCP and fetched its tool list, so the model knows what it can ask for.</p><div class="wire">on the wire · tools/list (abridged)</div><pre>{ <span class="k">"tools"</span>: [\n  { <span class="k">"name"</span>: <span class="s">"audit_spend"</span>,\n    <span class="c">"description": "Recurring charges, fee leakage, idle cash. Read-only."</span> },\n  { <span class="k">"name"</span>: <span class="s">"propose_sweep"</span>,\n    <span class="c">"description": "Queue a checking→savings transfer for approval. Never executes."</span> },\n  { <span class="k">"name"</span>: <span class="s">"propose_payment"</span>,\n    <span class="c">"description": "Queue a payment to a saved recipient for approval."</span> }\n] }</pre>',
+      focus: ['you', 'client', 'steward'], packets: [['you', 'client', 'read'], ['client', 'steward', 'read']]
+    },
+    {
+      t: 'Steward reads Mercury with a read-only token',
+      dots: 'n',
+      body: '<p>The model calls <code>audit_spend</code>. Steward pages transactions from Mercury. Each row carries a merchant category code, Mercury’s own category, the counterparty, and any FX fee — the raw material for finding streams.</p><div class="wire">on the wire · REST</div><pre><span class="k">GET</span> /api/v1/transactions?start=2026-03-15&amp;limit=1000\n<span class="c">Authorization: Bearer secret-token:mercury_production_…  (read-only)</span>\n\n<span class="c">→ 200</span> { <span class="k">"transactions"</span>: [\n  { <span class="k">"counterpartyName"</span>: <span class="s">"Netflix"</span>, <span class="k">"amount"</span>: -22.99,\n    <span class="k">"mercuryCategory"</span>: <span class="p">"Entertainment"</span>, <span class="k">"merchant"</span>: { <span class="k">"categoryCode"</span>: <span class="s">"4899"</span> } },\n  <span class="c">… 412 more</span> ] }</pre><p class="note">The token cannot write. Even a compromised Steward could only read.</p>',
+      focus: ['steward', 'mercury'], packets: [['steward', 'mercury', 'read'], ['mercury', 'steward', 'read']]
+    },
+    {
+      t: 'Findings come back as typed proposals',
+      dots: 'n',
+      body: '<p>Steward groups charges into streams (same merchant, steady cadence), checks them against a small plan catalog, and measures cash sitting above a floor. It returns <em>proposals</em>, each with evidence and a flag saying whether it needs approval.</p><div class="wire">on the wire · tool result</div><pre>{ <span class="k">"proposals"</span>: [\n  { <span class="k">"kind"</span>: <span class="s">"downgrade"</span>, <span class="k">"merchant"</span>: <span class="s">"Netflix"</span>,\n    <span class="k">"from"</span>: <span class="s">"Premium $22.99"</span>, <span class="k">"to"</span>: <span class="s">"Standard $15.49"</span>,\n    <span class="k">"saves_per_year"</span>: 90.00, <span class="k">"requires_approval"</span>: <span class="g">false</span>,\n    <span class="k">"evidence"</span>: [<span class="s">"txn_8f1…"</span>, <span class="s">"txn_a02…"</span>, <span class="s">"txn_c77…"</span>] },\n  { <span class="k">"kind"</span>: <span class="s">"sweep"</span>, <span class="k">"amount"</span>: 3000.00,\n    <span class="k">"from"</span>: <span class="s">"Checking"</span>, <span class="k">"to"</span>: <span class="s">"Savings"</span>,\n    <span class="k">"why"</span>: <span class="s">"$3,000 above your 60-day floor; savings pays 4.0% APY"</span>,\n    <span class="k">"requires_approval"</span>: <span class="g">true</span> } ] }</pre>',
+      focus: ['steward', 'client'], packets: [['steward', 'client', 'read']]
+    },
+    {
+      t: 'Gate 1 — Steward asks you, in the chat',
+      dots: 'g',
+      body: '<div class="gatebadge">approval gate 1 · elicitation</div><p>You say “do the sweep.” The model calls <code>propose_sweep</code>. Instead of acting, Steward sends an <strong>elicitation request</strong>: the MCP client renders Approve / Decline in its own UI. The model cannot answer on your behalf — only you can click.</p><div class="wire">on the wire · elicitation/create</div><pre>{ <span class="k">"message"</span>: <span class="s">"Queue a $3,000 transfer Checking → Savings for approval in Mercury?"</span>,\n  <span class="k">"requestedSchema"</span>: { <span class="k">"properties"</span>: {\n    <span class="k">"approve"</span>: { <span class="k">"type"</span>: <span class="s">"boolean"</span> } } } }\n\n<span class="c">← you click Approve</span>\n{ <span class="k">"action"</span>: <span class="g">"accept"</span>, <span class="k">"content"</span>: { <span class="k">"approve"</span>: <span class="g">true</span> } }</pre><p class="note">This is the thing a plain API script can’t express: a pause, rendered by a client we didn’t build.</p>',
+      focus: ['client', 'steward', 'you'], packets: [['steward', 'client', 'gate'], ['client', 'you', 'gate'], ['you', 'client', 'gate'], ['client', 'steward', 'gate']]
+    },
+    {
+      t: 'Steward queues it — it does not send it',
+      dots: 'n',
+      body: '<p>With your approval, Steward calls Mercury’s <strong>request-transfer-money</strong> endpoint. This endpoint exists specifically to hand an action to a human in the dashboard, and because approval is the control, it needs <strong>no IP allowlist</strong> — the only write path that works from a serverless host.</p><div class="wire">on the wire · REST (sandbox in the demo; identical in production)</div><pre><span class="k">POST</span> /api/v1/account/{checkingId}/request-transfer-money\n<span class="c">Authorization: Bearer secret-token:mercury_sandbox_…</span>\n{ <span class="k">"destinationAccountId"</span>: <span class="s">"acct_savings…"</span>, <span class="k">"amount"</span>: 3000.00,\n  <span class="k">"idempotencyKey"</span>: <span class="s">"steward-sweep-2026-09-15-01"</span>,\n  <span class="k">"note"</span>: <span class="s">"Steward: idle cash above 60-day floor"</span> }\n\n<span class="c">→ 200</span> { <span class="k">"id"</span>: <span class="s">"smr_…"</span>, <span class="k">"status"</span>: <span class="p">"pendingApproval"</span> }</pre>',
+      focus: ['steward', 'mercury'], packets: [['steward', 'mercury', 'money'], ['mercury', 'steward', 'money']]
+    },
+    {
+      t: 'Gate 2 — a human approves in Mercury',
+      dots: 'g',
+      body: '<div class="gatebadge">approval gate 2 · mercury dashboard</div><p>The transfer appears in Mercury’s approval queue with Steward’s note attached. You (or a second admin, if your rules say so) approve it there. <strong>Only now does money move.</strong></p><p>Mercury emits <code>transaction.created</code>; a webhook could tell the chat it went through. Today there is no event for the approval itself — one of the API changes we’d ask for.</p><div class="wire">on the wire · webhook</div><pre>{ <span class="k">"resourceType"</span>: <span class="s">"transaction"</span>, <span class="k">"operationType"</span>: <span class="s">"create"</span>,\n  <span class="k">"mergePatch"</span>: { <span class="k">"kind"</span>: <span class="p">"internalTransfer"</span>, <span class="k">"amount"</span>: -3000.00, <span class="k">"status"</span>: <span class="p">"pending"</span> } }</pre>',
+      focus: ['mercury', 'dashboard', 'you'], packets: [['mercury', 'dashboard', 'money'], ['you', 'dashboard', 'gate'], ['dashboard', 'mercury', 'money'], ['mercury', 'steward', 'read']]
+    },
+    {
+      t: 'What Mercury’s MCP does today, and what we’re showing',
+      dots: 'n',
+      body: '<p>Mercury’s official MCP stops at step 3: it can read, it can’t propose. The endpoints for steps 5–6 already exist in the REST API — they just aren’t exposed to agents.</p><p>Steward is that missing tier: <strong>read → propose → approve in chat → approve in Mercury</strong>. Two gates, no direct sends, no allowlists, no write token on a laptop.</p><p class="note">Recommendation: make this a first-class <code>propose</code> scope on Mercury’s MCP and API tokens. Full reasoning in the <a href="index.html">decision memo</a>.</p>',
+      focus: ['client', 'steward', 'mercury', 'dashboard', 'you'], packets: [['client', 'steward', 'read'], ['steward', 'mercury', 'read'], ['steward', 'client', 'gate'], ['steward', 'mercury', 'money'], ['mercury', 'dashboard', 'money']]
+    }
+  ];
+
+  // ---------- scene ----------
+  var stage = document.getElementById('stage');
+  var canvas = document.getElementById('c');
+  var labelsEl = document.getElementById('labels');
+  var renderer = null;
+  try {
+    if (window.THREE) {
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+      renderer.setClearColor(0x0B0F14, 1);
+    }
+  } catch (e) { renderer = null; }
+  if (!renderer) {
+    // No WebGL (or Three.js failed to load): keep the walkthrough usable with a flat 2D layout.
+    canvas.hidden = true;
+    stage.classList.add('flat');
+    runFlat();
+    return;
+  }
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+  camera.position.set(0, 7.5, 13);
+  camera.lookAt(0, 0, 0);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+  var key = new THREE.DirectionalLight(0xffffff, 0.9); key.position.set(4, 8, 6); scene.add(key);
+
+  var grid = new THREE.GridHelper(20, 20, 0x1C2633, 0x141C26);
+  grid.position.y = -0.55; scene.add(grid);
+
+  var COLORS = { client: 0x6FA8FF, steward: 0xE8ECF1, mercury: 0xB39CFF, dashboard: 0x3FBF8F, you: 0xE0A04A };
+  var PACKET = { read: 0x6FA8FF, money: 0xE0A04A, gate: 0x3FBF8F };
+
+  // Layout on the XZ plane: client left, steward center, mercury right, dashboard behind mercury, "you" in front-left.
+  var NODES = {
+    client:    { pos: new THREE.Vector3(-4.6, 0, 0.4), size: [1.9, 0.9, 1.2], label: 'Chat client', sub: 'ChatGPT · Claude · web UI', cls: 'client' },
+    steward:   { pos: new THREE.Vector3(0, 0, 0),      size: [2.2, 1.0, 1.4], label: 'Steward', sub: 'MCP server on Vercel', cls: '' },
+    mercury:   { pos: new THREE.Vector3(4.6, 0, 0.4),  size: [1.9, 0.9, 1.2], label: 'Mercury API', sub: 'api.mercury.com', cls: 'mercury' },
+    dashboard: { pos: new THREE.Vector3(4.6, 0, -3.2), size: [1.9, 0.9, 1.2], label: 'Mercury dashboard', sub: 'human approval', cls: 'gate' },
+    you:       { pos: new THREE.Vector3(-4.6, 0, 3.6), size: [1.1, 0.7, 1.1], label: 'You', sub: 'the only one who can click', cls: 'gate' }
+  };
+
+  var meshes = {};
+  Object.keys(NODES).forEach(function (id) {
+    var n = NODES[id];
+    var geo = new THREE.BoxGeometry(n.size[0], n.size[1], n.size[2]);
+    var mat = new THREE.MeshStandardMaterial({ color: 0x1A2330, roughness: 0.85, metalness: 0.05, emissive: COLORS[id], emissiveIntensity: 0.08 });
+    var m = new THREE.Mesh(geo, mat);
+    m.position.copy(n.pos);
+    scene.add(m);
+    var edges = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: COLORS[id], transparent: true, opacity: 0.9 }));
+    edges.position.copy(n.pos);
+    scene.add(edges);
+    meshes[id] = { mesh: m, edges: edges, mat: mat, lineMat: edges.material };
+
+    var l = document.createElement('div');
+    l.className = 'lbl ' + n.cls; l.id = 'lbl-' + id;
+    l.innerHTML = '<b>' + n.label + '</b>' + n.sub;
+    labelsEl.appendChild(l);
+  });
+
+  // Static edges (faint lines) between nodes that ever talk.
+  var LINKS = [['you', 'client'], ['client', 'steward'], ['steward', 'mercury'], ['mercury', 'dashboard'], ['you', 'dashboard']];
+  var linkMat = new THREE.LineBasicMaterial({ color: 0x2A3646 });
+  LINKS.forEach(function (ab) {
+    var pts = curveFor(ab[0], ab[1]).getPoints(24);
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), linkMat));
+  });
+
+  function curveFor(a, b) {
+    var pa = NODES[a].pos, pb = NODES[b].pos;
+    var mid = pa.clone().add(pb).multiplyScalar(0.5);
+    mid.y += 0.9 + pa.distanceTo(pb) * 0.08;
+    return new THREE.QuadraticBezierCurve3(pa.clone().setY(0.55), mid, pb.clone().setY(0.55));
+  }
+
+  // Packets
+  var packetGeo = new THREE.SphereGeometry(0.13, 16, 16);
+  var packets = [];
+  function launch(a, b, kind, delay) {
+    var mat = new THREE.MeshBasicMaterial({ color: PACKET[kind] });
+    var m = new THREE.Mesh(packetGeo, mat);
+    m.visible = false; scene.add(m);
+    packets.push({ mesh: m, curve: curveFor(a, b), t: -delay, speed: 0.55, kind: kind });
+  }
+  function clearPackets() {
+    packets.forEach(function (p) { scene.remove(p.mesh); p.mesh.material.dispose(); });
+    packets = [];
+  }
+
+  // ---------- step state ----------
+  var idx = 0;
+  var stepK = document.getElementById('stepK'), stepT = document.getElementById('stepT'), stepBody = document.getElementById('stepBody');
+  var prev = document.getElementById('prev'), next = document.getElementById('next'), dots = document.getElementById('dots');
+
+  STEPS.forEach(function (s, i) {
+    var d = document.createElement('button');
+    d.type = 'button'; d.setAttribute('role', 'tab'); d.setAttribute('aria-label', 'Step ' + (i + 1) + ': ' + s.t);
+    if (s.dots === 'g') d.className = 'gate';
+    d.addEventListener('click', function () { go(i); });
+    dots.appendChild(d);
+  });
+
+  function go(i) {
+    idx = Math.max(0, Math.min(STEPS.length - 1, i));
+    var s = STEPS[idx];
+    stepK.textContent = 'Step ' + (idx + 1) + ' of ' + STEPS.length;
+    stepT.textContent = s.t;
+    stepBody.innerHTML = s.body;
+    stepBody.scrollTop = 0;
+    prev.disabled = idx === 0; next.disabled = idx === STEPS.length - 1;
+    Array.prototype.forEach.call(dots.children, function (d, j) { if (j === idx) d.setAttribute('aria-current', 'step'); else d.removeAttribute('aria-current'); });
+
+    Object.keys(NODES).forEach(function (id) {
+      var on = s.focus.indexOf(id) !== -1;
+      meshes[id].mat.emissiveIntensity = on ? 0.35 : 0.06;
+      meshes[id].lineMat.opacity = on ? 1 : 0.28;
+      document.getElementById('lbl-' + id).classList.toggle('dim', !on);
+    });
+
+    clearPackets();
+    s.packets.forEach(function (p, k) { launch(p[0], p[1], p[2], reduced ? 0 : k * 0.9); });
+    try { history.replaceState(null, '', '#step-' + (idx + 1)); } catch (e) {}
+  }
+
+  prev.addEventListener('click', function () { go(idx - 1); });
+  next.addEventListener('click', function () { go(idx + 1); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(idx + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(idx - 1); }
+  });
+
+  // ---------- render loop ----------
+  function resize() {
+    var w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  var clock = new THREE.Clock();
+  var v = new THREE.Vector3();
+  function frame() {
+    var dt = Math.min(clock.getDelta(), 0.05);
+    var t = clock.elapsedTime;
+    if (!reduced) {
+      camera.position.x = Math.sin(t * 0.08) * 1.2;
+      camera.position.z = 13 + Math.cos(t * 0.08) * 0.4;
+      camera.lookAt(0, 0.2, 0);
+    }
+    packets.forEach(function (p) {
+      if (reduced) { p.t = 0.5; p.mesh.visible = true; p.curve.getPoint(0.5, p.mesh.position); return; }
+      p.t += dt * p.speed;
+      if (p.t < 0) { p.mesh.visible = false; return; }
+      var u = p.t % 1.6; // pause at end before looping
+      if (u > 1) { p.mesh.visible = false; return; }
+      p.mesh.visible = true;
+      p.curve.getPoint(u, p.mesh.position);
+    });
+    // project labels
+    var w = stage.clientWidth, h = stage.clientHeight;
+    Object.keys(NODES).forEach(function (id) {
+      v.copy(NODES[id].pos); v.y -= NODES[id].size[1] / 2 + 0.15;
+      v.project(camera);
+      var el = document.getElementById('lbl-' + id);
+      el.style.left = ((v.x + 1) / 2 * w) + 'px';
+      el.style.top = ((1 - v.y) / 2 * h + 6) + 'px';
+    });
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+
+  var start = 0;
+  var m = /#step-(\d+)/.exec(location.hash);
+  if (m) start = parseInt(m[1], 10) - 1;
+  go(start);
+  frame();
+
+  // ---------- flat fallback (no WebGL) ----------
+  function runFlat() {
+    var POS = { client: [16, 42], steward: [50, 42], mercury: [84, 42], dashboard: [84, 78], you: [16, 78] };
+    var NAMES = { client: ['Chat client', 'ChatGPT · Claude · web UI', 'client'], steward: ['Steward', 'MCP server on Vercel', ''], mercury: ['Mercury API', 'api.mercury.com', 'mercury'], dashboard: ['Mercury dashboard', 'human approval', 'gate'], you: ['You', 'the only one who can click', 'gate'] };
+    Object.keys(POS).forEach(function (id) {
+      var l = document.createElement('div');
+      l.className = 'lbl flat ' + NAMES[id][2]; l.id = 'lbl-' + id;
+      l.style.left = POS[id][0] + '%'; l.style.top = POS[id][1] + '%';
+      l.innerHTML = '<b>' + NAMES[id][0] + '</b>' + NAMES[id][1];
+      labelsEl.appendChild(l);
+    });
+    var stepK = document.getElementById('stepK'), stepT = document.getElementById('stepT'), stepBody = document.getElementById('stepBody');
+    var prev = document.getElementById('prev'), next = document.getElementById('next'), dots = document.getElementById('dots');
+    var idx = 0;
+    STEPS.forEach(function (s, i) {
+      var d = document.createElement('button'); d.type = 'button'; d.setAttribute('role', 'tab');
+      d.setAttribute('aria-label', 'Step ' + (i + 1) + ': ' + s.t); if (s.dots === 'g') d.className = 'gate';
+      d.addEventListener('click', function () { go(i); }); dots.appendChild(d);
+    });
+    function go(i) {
+      idx = Math.max(0, Math.min(STEPS.length - 1, i));
+      var s = STEPS[idx];
+      stepK.textContent = 'Step ' + (idx + 1) + ' of ' + STEPS.length; stepT.textContent = s.t; stepBody.innerHTML = s.body; stepBody.scrollTop = 0;
+      prev.disabled = idx === 0; next.disabled = idx === STEPS.length - 1;
+      Array.prototype.forEach.call(dots.children, function (d, j) { if (j === idx) d.setAttribute('aria-current', 'step'); else d.removeAttribute('aria-current'); });
+      Object.keys(POS).forEach(function (id) { document.getElementById('lbl-' + id).classList.toggle('dim', s.focus.indexOf(id) === -1); });
+    }
+    prev.addEventListener('click', function () { go(idx - 1); });
+    next.addEventListener('click', function () { go(idx + 1); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(idx + 1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); go(idx - 1); }
+    });
+    var m = /#step-(\d+)/.exec(location.hash);
+    go(m ? parseInt(m[1], 10) - 1 : 0);
+  }
+})();
+</script>
+</body>
+</html>

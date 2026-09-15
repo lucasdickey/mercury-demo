@@ -12,3 +12,10 @@ Key constraints from the brief:
 - Sandbox: https://sandbox.mercury.com/signup · API docs: https://docs.mercury.com/docs/welcome · Demo: https://demo.mercury.com
 - Note sandbox limitations as you hit them; they're part of the deliverable discussion.
 - Timebox is ~2 hours. Quality of thinking > polish or volume.
+
+## Where things are (updated 2026-09-15)
+- `PLAN.md` — execution plan for the build. Start here if you're implementing.
+- `docs/index.html` — decision memo (what / why / API findings / architecture). Served at `/docs` once the app exists.
+- `docs/explainer.html` — Three.js step-through of one conversation across both approval gates.
+- `docs/direction.md`, `docs/landscape.md`, `docs/api-friction-log.md` — research behind the decision.
+- Guardrails: read-only prod token only; all writes go to sandbox via `request-*` endpoints; never direct sends. See PLAN.md §6.

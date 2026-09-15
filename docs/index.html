@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Steward — Mercury API Spike</title>
+<meta name="description" content="What we're building on Mercury's API, why this spike, and what the API taught us — including why serverless hosting forces a propose-only agent.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    color-scheme: light dark;
+    --paper: #F3F5F8;
+    --surface: #FFFFFF;
+    --ink: #151B24;
+    --muted: #5B6572;
+    --rule: #D3D9E1;
+    --rule-strong: #A9B3BF;
+    --approve: #1E7A5A;
+    --approve-bg: #E3F2EB;
+    --propose: #B5731A;
+    --propose-bg: #FBEFDD;
+    --critical: #B4362F;
+    --critical-bg: #F9E4E2;
+    --code-bg: #E9EDF2;
+    --display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0E1319; --surface: #151C25; --ink: #E6EAF0; --muted: #96A0AD;
+      --rule: #263040; --rule-strong: #3A4658;
+      --approve: #3FBF8F; --approve-bg: #12302A;
+      --propose: #E0A04A; --propose-bg: #33260F;
+      --critical: #E06A63; --critical-bg: #3A1A18;
+      --code-bg: #1B242F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0E1319; --surface: #151C25; --ink: #E6EAF0; --muted: #96A0AD;
+    --rule: #263040; --rule-strong: #3A4658;
+    --approve: #3FBF8F; --approve-bg: #12302A;
+    --propose: #E0A04A; --propose-bg: #33260F;
+    --critical: #E06A63; --critical-bg: #3A1A18;
+    --code-bg: #1B242F;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--body); font-size: 17px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration-color: var(--rule-strong); text-underline-offset: 3px; }
+  a:hover { text-decoration-color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--propose); outline-offset: 3px; }
+
+  .page { max-width: 1040px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  header.masthead {
+    display: grid; grid-template-columns: 160px 1fr; gap: 24px 40px;
+    padding-bottom: 28px; border-bottom: 2px solid var(--ink);
+  }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    font-family: var(--display); font-weight: 700; font-size: clamp(34px, 5vw, 52px);
+    line-height: 1.05; letter-spacing: -.02em; margin: 6px 0 14px; text-wrap: balance;
+  }
+  .dek { font-size: 20px; max-width: 62ch; margin: 0; color: var(--ink); }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 18px; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+
+  section {
+    display: grid; grid-template-columns: 160px minmax(0, 68ch); gap: 8px 40px;
+    padding: 36px 0; border-bottom: 1px solid var(--rule);
+  }
+  section > .label { position: sticky; top: 24px; align-self: start; }
+  section > .label .eyebrow { display: block; }
+  section > .label .n { font-family: var(--display); font-weight: 700; font-size: 28px; line-height: 1; margin-top: 6px; color: var(--ink); }
+  section > .content { min-width: 0; }
+  h2 { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1.15; letter-spacing: -.01em; margin: 0 0 14px; text-wrap: balance; }
+  h3 { font-family: var(--display); font-weight: 700; font-size: 18px; margin: 28px 0 8px; }
+  p { margin: 0 0 14px; max-width: 68ch; }
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  li::marker { color: var(--muted); }
+  strong { font-weight: 600; }
+  code { font-family: var(--mono); font-size: .86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+  pre { font-family: var(--mono); font-size: 13.5px; line-height: 1.5; background: var(--code-bg); padding: 14px 16px; border-radius: 4px; overflow-x: auto; margin: 0 0 16px; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .thesis {
+    border-left: 3px solid var(--propose); padding: 10px 18px; margin: 18px 0 22px;
+    font-family: var(--display); font-weight: 500; font-size: 21px; line-height: 1.35; text-wrap: balance;
+  }
+
+  /* pipeline */
+  .pipe { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 20px 0 24px; border: 1px solid var(--rule-strong); border-radius: 4px; overflow: hidden; background: var(--surface); }
+  .pipe > div { padding: 14px 14px 12px; border-right: 1px solid var(--rule); min-width: 0; }
+  .pipe > div:last-child { border-right: 0; }
+  .pipe .k { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .pipe .v { font-family: var(--display); font-weight: 700; font-size: 17px; margin-top: 4px; }
+  .pipe .d { font-size: 14px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+  .pipe .gate { background: var(--approve-bg); }
+  .pipe .gate .v { color: var(--approve); }
+
+  /* capability table */
+  table { width: 100%; border-collapse: collapse; font-size: 15px; margin: 8px 0 20px; }
+  .tablewrap { overflow-x: auto; }
+  th { text-align: left; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 400; padding: 0 10px 8px 0; border-bottom: 1px solid var(--rule-strong); }
+  td { padding: 10px 10px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  td code { white-space: nowrap; }
+  .num { font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 13.5px; }
+
+  .stamp {
+    display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 3px; border: 1px solid transparent; white-space: nowrap;
+  }
+  .stamp.approve { color: var(--approve); background: var(--approve-bg); border-color: color-mix(in srgb, var(--approve) 35%, transparent); }
+  .stamp.propose { color: var(--propose); background: var(--propose-bg); border-color: color-mix(in srgb, var(--propose) 35%, transparent); }
+  .stamp.critical { color: var(--critical); background: var(--critical-bg); border-color: color-mix(in srgb, var(--critical) 35%, transparent); }
+  .stamp.neutral { color: var(--muted); background: var(--code-bg); border-color: var(--rule); }
+
+  /* findings ledger */
+  .ledger { border-top: 2px solid var(--ink); margin: 14px 0 8px; }
+  .ledger .row { display: grid; grid-template-columns: 96px 1fr; gap: 0 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .ledger .row .t { font-weight: 600; }
+  .ledger .row .s { color: var(--muted); font-size: 15px; margin-top: 2px; }
+  .ledger .fix { font-family: var(--mono); font-size: 13px; margin-top: 6px; color: var(--ink); }
+  .ledger .fix::before { content: "→ "; color: var(--muted); }
+
+  .callout { background: var(--surface); border: 1px solid var(--rule-strong); border-radius: 4px; padding: 16px 18px; margin: 18px 0; }
+  .callout h3 { margin-top: 0; }
+  .callout.critical { border-color: color-mix(in srgb, var(--critical) 50%, var(--rule-strong)); }
+
+  /* architecture diagram */
+  figure { margin: 18px 0 20px; }
+  figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; }
+  svg.arch { width: 100%; height: auto; display: block; background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; }
+  svg.arch text { font-family: var(--body); font-size: 13px; fill: var(--ink); }
+  svg.arch text.mono { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+  svg.arch .box { fill: var(--paper); stroke: var(--rule-strong); }
+  svg.arch .box.ours { stroke: var(--ink); stroke-width: 1.5; }
+  svg.arch .box.gate { fill: var(--approve-bg); stroke: var(--approve); stroke-width: 1.5; }
+  svg.arch .edge { stroke: var(--rule-strong); fill: none; stroke-width: 1.5; }
+  svg.arch .edge.money { stroke: var(--propose); }
+  svg.arch .arrow { fill: var(--rule-strong); }
+  svg.arch .arrow.money { fill: var(--propose); }
+
+  .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .links a { font-family: var(--mono); font-size: 13px; padding: 6px 10px; border: 1px solid var(--rule-strong); border-radius: 4px; text-decoration: none; background: var(--surface); }
+  .links a:hover { border-color: var(--ink); }
+
+  footer { padding-top: 28px; font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+
+  @media (max-width: 760px) {
+    header.masthead, section { grid-template-columns: 1fr; }
+    section > .label { position: static; display: flex; gap: 12px; align-items: baseline; }
+    section > .label .n { font-size: 20px; margin-top: 0; }
+    .pipe { grid-template-columns: 1fr 1fr; }
+    .pipe > div:nth-child(2) { border-right: 0; }
+    .pipe > div:nth-child(-n+2) { border-bottom: 1px solid var(--rule); }
+    .ledger .row { grid-template-columns: 1fr; gap: 4px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .links a { transition: border-color .15s ease; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="masthead">
+  <div>
+    <span class="eyebrow">Mercury API spike</span>
+    <div class="meta" style="flex-direction:column; gap:4px; margin-top:10px">
+      <span>2026-09-15</span>
+      <span>status: planned</span>
+      <span>rev 1</span>
+    </div>
+  </div>
+  <div>
+    <h1>Steward: an agent that proposes, never executes</h1>
+    <p class="dek">A propose-only tier for Mercury's MCP — built on the approval-queue endpoints Mercury already ships, demonstrated in ChatGPT and Claude, and forced on us by where agents actually run.</p>
+    <div class="links">
+      <a href="explainer.html">Interactive explainer ↗</a>
+      <a href="api-friction-log.md">Friction log</a>
+      <a href="landscape.md">Landscape</a>
+      <a href="../PLAN.md">Execution plan</a>
+    </div>
+  </div>
+</header>
+
+<section id="what">
+  <div class="label"><span class="eyebrow">Section</span><div class="n">What</div></div>
+  <div class="content">
+    <h2>What we decided to build</h2>
+    <p>An MCP server plus a thin chat UI that reads a Mercury account, finds money that's leaking or idle, and turns each finding into a <em>typed proposal</em>. Proposals with money side-effects are queued for human approval inside Mercury — the agent has no path to move money on its own.</p>
+
+    <div class="pipe" role="list">
+      <div role="listitem"><div class="k">1 · read</div><div class="v">Transactions, balances</div><div class="d">Read-only token. MCC, category, counterparty, FX fees.</div></div>
+      <div role="listitem"><div class="k">2 · analyze</div><div class="v">Streams, idle cash</div><div class="d">Recurring-charge detection, floor-vs-balance, fee leakage.</div></div>
+      <div class="gate" role="listitem"><div class="k">3 · propose</div><div class="v">Ask in the chat</div><div class="d">MCP elicitation: the client renders Approve / Decline. The model can't click.</div></div>
+      <div class="gate" role="listitem"><div class="k">4 · approve</div><div class="v">Queue in Mercury</div><div class="d"><code>request-transfer-money</code> / <code>request-send-money</code>. Money moves only after dashboard approval.</div></div>
+    </div>
+
+    <div class="tablewrap">
+    <table>
+      <thead><tr><th>Capability</th><th>Mercury calls</th><th>Second source</th><th>Proposal</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Recurring-spend audit</strong></td><td><code>GET /transactions</code></td><td>Curated plan catalog (~40 subscription merchants: tiers, prices, cancel URLs)</td><td><span class="stamp propose">downgrade</span> <span class="stamp propose">cancel</span> — no money moves; writes a note/category</td></tr>
+        <tr><td><strong>Idle-cash sweep</strong></td><td><code>GET /accounts</code>, <code>POST …/request-transfer-money</code></td><td>Published savings / treasury APY</td><td><span class="stamp approve">sweep</span> → Mercury approval queue</td></tr>
+        <tr><td><strong>Pay a person or bill</strong></td><td><code>GET /recipients</code>, <code>POST …/request-send-money</code></td><td>—</td><td><span class="stamp approve">pay</span> → Mercury approval queue, always</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p>Three ways in, one engine: a hosted MCP endpoint you attach to <strong>ChatGPT, Claude, or Grok</strong> (a surface we don't own); a <strong>web chat</strong> on the Vercel AI SDK (a surface we do); and a <strong>CLI pipe</strong> — <code>mercury transactions list --format jsonl | steward audit</code>.</p>
+  </div>
+</section>
+
+<section id="why">
+  <div class="label"><span class="eyebrow">Section</span><div class="n">Why</div></div>
+  <div class="content">
+    <h2>Why this is the spike</h2>
+    <p>Mercury has already shipped the obvious things: <strong>Command</strong> (natural language inside the dashboard), an official <strong>CLI</strong>, a hosted <strong>MCP</strong>, and <strong>agent cards</strong>. Rebuilding any of those would be table stakes. What they have <em>not</em> shipped is an agent-safe write path outside the dashboard.</p>
+    <p class="thesis">Their MCP is read-only because they don't trust the model to act. The answer to "we don't trust it" doesn't have to be "so it can't do anything." It can be "so it has to ask — twice."</p>
+    <p>The REST API already contains the pattern: <code>request-send-money</code> and <code>request-transfer-money</code> queue an action for a human to approve in the dashboard, and neither needs an IP allowlist because the approval <em>is</em> the control. Those endpoints are absent from the MCP, along with harmless writes like categorizing a transaction — which Mercury says is the #1 thing early users want.</p>
+    <p>So the spike is a working demonstration of the tier we think Mercury's MCP should add next, built on their own API, with the API critique carried by the artifact rather than a slide.</p>
+
+    <h3>How it maps to the brief</h3>
+    <ul>
+      <li><strong>Business judgment.</strong> Efficiency over upsell — the agent's job is to make the customer need Mercury <em>less</em> per dollar, which is the relationship Mercury says it wants.</li>
+      <li><strong>API / CLI / MCP understanding.</strong> We consume the official CLI's JSON, wrap the REST API, and ship a sibling MCP that exercises OAuth-free elicitation and the approval endpoints.</li>
+      <li><strong>Trust and simplicity.</strong> One mental model — propose, approve — identical to Command's.</li>
+      <li><strong>Regulatory and operational tradeoffs.</strong> IP allowlists, dual approval, 45-day token hygiene, PII kept out of the model's context, and careful "advice" language.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="discovered">
+  <div class="label"><span class="eyebrow">Section</span><div class="n">Found</div></div>
+  <div class="content">
+    <h2>What the API taught us</h2>
+
+    <div class="callout critical">
+      <h3>Serverless hosts have no fixed IP. Mercury's write tokens require one.</h3>
+      <p>A <strong>Read and Write</strong> token must be bound to an IP allowlist. Vercel functions, Cloudflare Workers, Lambda, and most agent runtimes egress from rotating, shared address pools; a laptop's residential IP changes too. Mercury's docs are candid — "we do not offer a way to circumvent this security requirement" — and point at NAT gateways and static-IP add-ons.</p>
+      <p>The consequence is not a nuisance; it's architectural. From Vercel, the only Mercury write path that works at all is the <strong>approval-queue path</strong> (<code>request-send-money</code>, <code>request-transfer-money</code>), because those endpoints trade the allowlist for dashboard approval. Propose-only isn't just the safe design — <strong>it's the only design the platform allows</strong> where agents actually get deployed. Mercury's own hosted MCP is presumably running into the same wall, which may be part of why it's read-only.</p>
+      <p style="margin:0">Recommendation: make the approval-queue tier a first-class OAuth scope (<code>propose:payments</code>, <code>propose:transfers</code>, <code>write:categories</code>) for MCP and API tokens, no allowlist required, and say so on the token-creation modal.</p>
+    </div>
+
+    <p>Selected findings. The full log — 24 entries, each with a proposed fix — is in <a href="api-friction-log.md">the friction log</a>.</p>
+
+    <div class="ledger">
+      <div class="row">
+        <div><span class="stamp critical">blocks</span></div>
+        <div><div class="t">No single OpenAPI document.</div><div class="s">Each reference page inlines its own fragment with the entire schema tree. <code>listtransactions.md</code> is 45 KB, mostly international-wire schemas irrelevant to a GET. Five pages ≈ 200 KB of duplicate JSON into an agent's context.</div><div class="fix">publish /openapi.json; prune per-page fragments to referenced schemas</div></div>
+      </div>
+      <div class="row">
+        <div><span class="stamp critical">blocks</span></div>
+        <div><div class="t">Scope catalog is undocumented.</div><div class="s">Custom tokens have per-endpoint scopes; some need an allowlist. The list exists only in the dashboard modal. The spec says <code>bearerAuth</code> for everything. An agent can't reason about what token it needs.</div><div class="fix">x-mercury-scope + x-requires-ip-allowlist on every operation</div></div>
+      </div>
+      <div class="row">
+        <div><span class="stamp critical">blocks</span></div>
+        <div><div class="t">No error schema.</div><div class="s">Every 4xx is a bare description — <code>"400": "Invalid body"</code>. Agents self-correct from structured errors; here they get prose. Rate limits are unpublished.</div><div class="fix">RFC 9457 problem+json with code / field / hint; document limits and Retry-After</div></div>
+      </div>
+      <div class="row">
+        <div><span class="stamp critical">blocks</span></div>
+        <div><div class="t">No recurring-stream or merchant-enrichment endpoints.</div><div class="s">Transactions carry MCC, merchant id, and a 39-value category enum — the raw material — but nothing says "this is a subscription," and <code>merchant.id</code> has no lookup. Plaid ships both.</div><div class="fix">GET /recurring (cadence, avg, last seen) and GET /merchant/{id}, also as MCP tools</div></div>
+      </div>
+      <div class="row">
+        <div><span class="stamp propose">costs</span></div>
+        <div><div class="t">Approval requests emit no events or webhooks.</div><div class="s">An agent that proposed a payment has no way to learn it was approved or rejected except polling.</div><div class="fix">approvalRequest.updated event</div></div>
+      </div>
+      <div class="row">
+        <div><span class="stamp propose">costs</span></div>
+        <div><div class="t">MCP has no aggregate tools.</div><div class="s">"Spend by category, last 90 days" means paging 1,000 rows into context. Mercury already computes these for the dashboard.</div><div class="fix">spendSummary, recurringStreams, idleCash server-side</div></div>
+      </div>
+      <div class="row">
+        <div><span class="stamp propose">costs</span></div>
+        <div><div class="t">Personal accounts are invisible in the docs.</div><div class="s">Yet <code>personalBankingSubscriptionFee</code> is in the enum, Command covers personal, and a personal account can mint tokens (we did). Which endpoints 403 on personal is undocumented.</div><div class="fix">a "Personal accounts" page listing supported endpoints</div></div>
+      </div>
+      <div class="row">
+        <div><span class="stamp approve">good</span></div>
+        <div><div class="t">llms.txt and the .md suffix work — genuinely.</div><div class="s">Every page opens by pointing agents at the index. The Send Money guide's Supported / Client-Side / Not Available tables are best-in-class. OAuth on the MCP uses dynamic client registration with PKCE and a reserved-name rule so third parties can't pose as Mercury.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="arch">
+  <div class="label"><span class="eyebrow">Section</span><div class="n">Shape</div></div>
+  <div class="content">
+    <h2>Architecture</h2>
+    <figure>
+      <svg class="arch" viewBox="0 0 880 330" role="img" aria-label="Architecture: chat clients and a web UI call the Steward MCP server on Vercel, which reads Mercury's API and queues money movement for approval in the Mercury dashboard.">
+        <defs>
+          <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrow"/></marker>
+          <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrow money"/></marker>
+        </defs>
+        <!-- clients -->
+        <rect class="box" x="24" y="40" width="170" height="64" rx="4"/>
+        <text x="40" y="66">ChatGPT · Claude · Grok</text>
+        <text class="mono" x="40" y="86">surface we don't own</text>
+        <rect class="box ours" x="24" y="130" width="170" height="64" rx="4"/>
+        <text x="40" y="156">Web chat (AI SDK)</text>
+        <text class="mono" x="40" y="176">surface we own</text>
+        <rect class="box ours" x="24" y="220" width="170" height="64" rx="4"/>
+        <text x="40" y="246">CLI pipe</text>
+        <text class="mono" x="40" y="266">mercury … | steward audit</text>
+        <!-- steward -->
+        <rect class="box ours" x="290" y="96" width="220" height="132" rx="4"/>
+        <text x="306" y="122" style="font-weight:600">Steward on Vercel</text>
+        <text class="mono" x="306" y="142">/api/mcp · streamable HTTP</text>
+        <text class="mono" x="306" y="160">analyzers · intent schema</text>
+        <text class="mono" x="306" y="178">no fixed egress IP</text>
+        <text class="mono" x="306" y="206">read token · sandbox write token</text>
+        <!-- gate 1 -->
+        <rect class="box gate" x="140" y="300" width="0" height="0"/>
+        <!-- mercury api -->
+        <rect class="box" x="600" y="40" width="250" height="90" rx="4"/>
+        <text x="616" y="66" style="font-weight:600">Mercury API</text>
+        <text class="mono" x="616" y="86">GET /transactions · /accounts</text>
+        <text class="mono" x="616" y="104">POST …/request-transfer-money</text>
+        <text class="mono" x="616" y="120">POST …/request-send-money</text>
+        <!-- dashboard gate -->
+        <rect class="box gate" x="600" y="180" width="250" height="64" rx="4"/>
+        <text x="616" y="206" style="font-weight:600">Mercury dashboard — approve</text>
+        <text class="mono" x="616" y="226">gate 2 · money moves only after this</text>
+        <!-- elicitation gate label -->
+        <rect class="box gate" x="290" y="250" width="220" height="48" rx="4"/>
+        <text x="306" y="270" style="font-weight:600">Elicitation — approve in chat</text>
+        <text class="mono" x="306" y="288">gate 1 · client renders, model can't click</text>
+        <!-- edges -->
+        <path class="edge" d="M194 72 C 250 72, 250 130, 290 130" marker-end="url(#a)"/>
+        <path class="edge" d="M194 162 L 290 162" marker-end="url(#a)"/>
+        <path class="edge" d="M194 252 C 250 252, 250 196, 290 196" marker-end="url(#a)"/>
+        <path class="edge" d="M510 130 C 560 130, 560 85, 600 85" marker-end="url(#a)"/>
+        <text class="mono" x="522" y="98">read</text>
+        <path class="edge money" d="M510 196 C 560 196, 560 112, 600 112" marker-end="url(#am)"/>
+        <text class="mono" x="522" y="176">propose</text>
+        <path class="edge money" d="M725 130 L 725 180" marker-end="url(#am)"/>
+        <path class="edge" d="M400 228 L 400 250" marker-end="url(#a)"/>
+      </svg>
+      <figcaption>Two gates. Gate 1 is MCP elicitation: the server pauses and the client (ChatGPT, Claude, our web UI) renders Approve / Decline. Gate 2 is Mercury's own approval queue. A proposal must pass both before money moves.</figcaption>
+    </figure>
+
+    <h3>Where the tokens live</h3>
+    <ul>
+      <li><strong>Read-only production token</strong> (personal account) — Vercel env var. Powers the audit on real data. Cannot move money by construction.</li>
+      <li><strong>Sandbox write token</strong> — Vercel env var. Every proposal that would move money is queued against <code>api-sandbox.mercury.com</code>; the demo narrates that the production call is identical.</li>
+      <li><strong>MCP endpoint protection</strong> — a long random path segment plus a server-side check. Right for a demo we tear down; the presentation describes the real answer (we become an OAuth authorization server, as Mercury does).</li>
+    </ul>
+  </div>
+</section>
+
+<section id="next">
+  <div class="label"><span class="eyebrow">Section</span><div class="n">Next</div></div>
+  <div class="content">
+    <h2>What would change about the API</h2>
+    <ol>
+      <li>A <strong>propose scope tier</strong> for MCP and tokens, backed by the existing <code>request-*</code> endpoints, with no IP allowlist.</li>
+      <li><strong>Non-financial writes in the MCP</strong>: note, category, recipient invite.</li>
+      <li><strong>Aggregate tools</strong> server-side: spend summary, recurring streams, idle cash.</li>
+      <li>One <strong>OpenAPI document</strong>, a <strong>scope catalog</strong>, and a real <strong>error schema</strong>.</li>
+      <li><strong>Events for approval requests</strong>, so an agent learns the outcome of what it proposed.</li>
+      <li><strong>Agent cards via API</strong> — today <code>isAgentCard</code> is read-only — plus a guide on funding x402 / MPP / AP2 sessions from an agent card.</li>
+    </ol>
+    <p>What we'd do next with the prototype: replace the shared-secret with real OAuth, add Plaid for non-Mercury accounts so the audit sees the whole picture, and wire webhooks so the chat learns when a queued transfer is approved.</p>
+  </div>
+</section>
+
+<footer>
+  <div>Prototype for the Mercury PM take-home. Discussion artifact, not a deliverable Mercury would act on. Mercury retains its IP; we retain ours.</div>
+</footer>
+
+</div>
+</body>
+</html>
