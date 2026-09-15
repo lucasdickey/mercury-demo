@@ -205,3 +205,18 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
     token path (`RequestSendMoney` + reads, no asterisk) should work — verify.
     **Ship:** relax the allowlist for sandbox tokens, or at least say in the
     sandbox guide which token type to create.
+39. 🔴 `[api]` `[docs]` `[sandbox]` **"Send Money with Approval" requires an IP
+    allowlist — contradicting the docs.** API Token Security Policies says the
+    request-send-money endpoint is usable "without IP whitelisting" via a
+    Custom token whose scopes have no asterisk. In the sandbox token dialog the
+    scope has no asterisk and the whitelist is still mandatory. Consequences:
+    the one write path that is supposed to work from serverless hosts doesn't
+    (at least in sandbox); a Vercel-hosted agent can read but never queue.
+    **Ship:** make the docs and the dialog agree; if the approval path truly
+    needs an allowlist, say so and offer a static-egress guide — or drop it,
+    since dashboard approval is the control.
+40. 🟡 `[docs]` **Scope names in the docs don't match the picker.** Docs:
+    `RequestSendMoney`. Picker: "Send Money with Approval". Search is
+    substring-on-display-name, so "request" doesn't find it. The asterisk is
+    the only allowlist signal and is unexplained in the dialog.
+    **Ship:** a scope catalog with both the display name and the identifier.
