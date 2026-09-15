@@ -198,3 +198,10 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
     hosted, stateless, write-capable MCP will hit this. **Ship (Mercury MCP
     docs):** state the protocol version the server speaks and that
     2025-era clients are served statelessly; recommend clients upgrade.
+38. 🟠 `[sandbox]` **The sandbox enforces the production IP-allowlist rule.**
+    Creating a Read and Write token in the sandbox demands an IP whitelist,
+    same as production, even though no real money exists. A builder on a
+    laptop (or a plane) can't get a write token for *testing*. The Custom
+    token path (`RequestSendMoney` + reads, no asterisk) should work — verify.
+    **Ship:** relax the allowlist for sandbox tokens, or at least say in the
+    sandbox guide which token type to create.
