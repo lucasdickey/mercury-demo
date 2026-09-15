@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Steward — Mercury API Spike</title>
-<meta name="description" content="What we're building on Mercury's API, why this spike, and what the API taught us — including why serverless hosting forces a propose-only agent.">
+<meta name="description" content="A month-end close agent for a founder in Claude Code, built on Mercury's approval-queue endpoints — and what the API, MCP, and CLI taught us along the way.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
@@ -180,12 +180,12 @@
     <div class="meta" style="flex-direction:column; gap:4px; margin-top:10px">
       <span>2026-09-15</span>
       <span>status: planned</span>
-      <span>rev 1</span>
+      <span>rev 2 · business, sandbox</span>
     </div>
   </div>
   <div>
     <h1>Steward: an agent that proposes, never executes</h1>
-    <p class="dek">A propose-only tier for Mercury's MCP — built on the approval-queue endpoints Mercury already ships, demonstrated in ChatGPT and Claude, and forced on us by where agents actually run.</p>
+    <p class="dek">A month-end close agent for a technical founder, run from Claude Code: it reads the company's Mercury account, proposes payments and a treasury sweep, and queues every dollar for human approval. Built on endpoints Mercury already ships — and shaped by where agents actually run.</p>
     <div class="links">
       <a href="explainer.html">Interactive explainer ↗</a>
       <a href="api-friction-log.md">Friction log</a>
@@ -199,27 +199,28 @@
   <div class="label"><span class="eyebrow">Section</span><div class="n">What</div></div>
   <div class="content">
     <h2>What we decided to build</h2>
-    <p>An MCP server plus a thin chat UI that reads a Mercury account, finds money that's leaking or idle, and turns each finding into a <em>typed proposal</em>. Proposals with money side-effects are queued for human approval inside Mercury — the agent has no path to move money on its own.</p>
+    <p>An MCP server plus a thin chat UI that runs <strong>month-end close</strong> for a small company on Mercury: cash position, overdue receivables, bills due, and the surplus that should be earning yield. Each finding becomes a <em>typed proposal</em>. Anything that moves money is queued for human approval inside Mercury — the agent has no path to move it on its own.</p>
 
     <div class="pipe" role="list">
-      <div role="listitem"><div class="k">1 · read</div><div class="v">Transactions, balances</div><div class="d">Read-only token. MCC, category, counterparty, FX fees.</div></div>
-      <div role="listitem"><div class="k">2 · analyze</div><div class="v">Streams, idle cash</div><div class="d">Recurring-charge detection, floor-vs-balance, fee leakage.</div></div>
-      <div class="gate" role="listitem"><div class="k">3 · propose</div><div class="v">Ask in the chat</div><div class="d">MCP elicitation: the client renders Approve / Decline. The model can't click.</div></div>
-      <div class="gate" role="listitem"><div class="k">4 · approve</div><div class="v">Queue in Mercury</div><div class="d"><code>request-transfer-money</code> / <code>request-send-money</code>. Money moves only after dashboard approval.</div></div>
+      <div role="listitem"><div class="k">1 · read</div><div class="v">Accounts, invoices, recipients</div><div class="d">Balances by kind, unpaid AR, the vendor list, recent outflows.</div></div>
+      <div role="listitem"><div class="k">2 · analyze</div><div class="v">Position, due, surplus</div><div class="d">Operating floor, overdue invoices, bills due this week, cash above floor after AP.</div></div>
+      <div class="gate" role="listitem"><div class="k">3 · propose</div><div class="v">Ask in the client</div><div class="d">MCP elicitation: Claude Code renders Approve / Decline. The model can't click.</div></div>
+      <div class="gate" role="listitem"><div class="k">4 · approve</div><div class="v">Queue in Mercury</div><div class="d"><code>request-send-money</code> / <code>request-transfer-money</code>. Money moves only after dashboard approval.</div></div>
     </div>
 
     <div class="tablewrap">
     <table>
       <thead><tr><th>Capability</th><th>Mercury calls</th><th>Second source</th><th>Proposal</th></tr></thead>
       <tbody>
-        <tr><td><strong>Recurring-spend audit</strong></td><td><code>GET /transactions</code></td><td>Curated plan catalog (~40 subscription merchants: tiers, prices, cancel URLs)</td><td><span class="stamp propose">downgrade</span> <span class="stamp propose">cancel</span> — no money moves; writes a note/category</td></tr>
-        <tr><td><strong>Idle-cash sweep</strong></td><td><code>GET /accounts</code>, <code>POST …/request-transfer-money</code></td><td>Published savings / treasury APY</td><td><span class="stamp approve">sweep</span> → Mercury approval queue</td></tr>
-        <tr><td><strong>Pay a person or bill</strong></td><td><code>GET /recipients</code>, <code>POST …/request-send-money</code></td><td>—</td><td><span class="stamp approve">pay</span> → Mercury approval queue, always</td></tr>
+        <tr><td><strong>Cash position</strong></td><td><code>GET /accounts</code>, <code>GET /treasury</code>, <code>GET /credit</code></td><td>—</td><td>Operating floor and surplus; no proposal on its own</td></tr>
+        <tr><td><strong>Receivables</strong></td><td><code>GET /invoices</code>, <code>GET /customers</code></td><td>—</td><td><span class="stamp propose">follow up</span> — drafts the reminder; Mercury has no API to send one</td></tr>
+        <tr><td><strong>Payables</strong></td><td><code>GET /recipients</code>, <code>POST …/request-send-money</code></td><td>Bills-due list (Mercury has no Bill Pay API)</td><td><span class="stamp approve">pay</span> → Mercury approval queue, always</td></tr>
+        <tr><td><strong>Treasury sweep</strong></td><td><code>POST …/request-transfer-money</code></td><td>—</td><td><span class="stamp approve">sweep</span> → Mercury approval queue</td></tr>
       </tbody>
     </table>
     </div>
 
-    <p>Three ways in, one engine: a hosted MCP endpoint you attach to <strong>ChatGPT, Claude, or Grok</strong> (a surface we don't own); a <strong>web chat</strong> on the Vercel AI SDK (a surface we do); and a <strong>CLI pipe</strong> — <code>mercury transactions list --format jsonl | steward audit</code>.</p>
+    <p>Three ways in, one engine: a hosted MCP endpoint attached to <strong>Claude Code</strong> (the hero — a surface we don't own, and the founder's actual tool); the same endpoint in Claude.ai, ChatGPT, or Grok for reads, with approvals handed to a page we host; a <strong>web chat</strong> on the Vercel AI SDK (a surface we do own); and a <strong>CLI pipe</strong> — <code>mercury transactions list --format jsonl | steward close</code>. Everything runs against one Mercury <strong>sandbox</strong> org, which plays the company.</p>
   </div>
 </section>
 
@@ -234,8 +235,8 @@
 
     <h3>How it maps to the brief</h3>
     <ul>
-      <li><strong>Business judgment.</strong> Efficiency over upsell — the agent's job is to make the customer need Mercury <em>less</em> per dollar, which is the relationship Mercury says it wants.</li>
-      <li><strong>API / CLI / MCP understanding.</strong> We consume the official CLI's JSON, wrap the REST API, and ship a sibling MCP that exercises OAuth-free elicitation and the approval endpoints.</li>
+      <li><strong>Business judgment.</strong> Month-end close is the workflow every founder actually runs, and the one Mercury says its CLI users reach for first: cash position, pay what's due, put the rest to work. The agent does the assembly; the human keeps the signature.</li>
+      <li><strong>API / CLI / MCP understanding.</strong> We consume the official CLI's JSON, wrap the REST API, and ship a sibling MCP that exercises stateless elicitation (MCP 2026-07-28) and the approval endpoints — and we catalog every paper cut by layer as we go.</li>
       <li><strong>Trust and simplicity.</strong> One mental model — propose, approve — identical to Command's.</li>
       <li><strong>Regulatory and operational tradeoffs.</strong> IP allowlists, dual approval, 45-day token hygiene, PII kept out of the model's context, and careful "advice" language.</li>
     </ul>
@@ -254,7 +255,7 @@
       <p style="margin:0">Recommendation: make the approval-queue tier a first-class OAuth scope (<code>propose:payments</code>, <code>propose:transfers</code>, <code>write:categories</code>) for MCP and API tokens, no allowlist required, and say so on the token-creation modal.</p>
     </div>
 
-    <p>Selected findings. The full log — 24 entries, each with a proposed fix — is in <a href="api-friction-log.md">the friction log</a>.</p>
+    <p>Selected findings. The full log — 32 entries so far, tagged by layer (API · MCP · CLI · docs · sandbox · ecosystem), each with a proposed fix — is in <a href="api-friction-log.md">the friction log</a>. It keeps growing through the build.</p>
 
     <div class="ledger">
       <div class="row">
@@ -282,8 +283,16 @@
         <div><div class="t">MCP has no aggregate tools.</div><div class="s">"Spend by category, last 90 days" means paging 1,000 rows into context. Mercury already computes these for the dashboard.</div><div class="fix">spendSummary, recurringStreams, idleCash server-side</div></div>
       </div>
       <div class="row">
+        <div><span class="stamp critical">blocks</span></div>
+        <div><div class="t">Consumer chat clients can't render an approval.</div><div class="s">MCP elicitation works in Claude Code, Cursor, VS Code, and the Vercel AI SDK. Claude.ai has an open request since April and errors on the new-spec result; Grok's client is tools-only and times out; ChatGPT shows no support. "Approve in chat" is a developer-client story today.</div><div class="fix">Mercury: return a dashboardLink on approval requests so any client can finish the loop by URL</div></div>
+      </div>
+      <div class="row">
+        <div><span class="stamp critical">blocks</span></div>
+        <div><div class="t">Creating an invoice needs a read-write token with an IP allowlist.</div><div class="s">Invoices don't move money, but AR writes carry the same allowlist rule as direct sends — so a Vercel-hosted agent can read receivables and never create one. There is no request-style analog.</div><div class="fix">drop the allowlist for AR writes, or add them to the no-allowlist Custom scopes</div></div>
+      </div>
+      <div class="row">
         <div><span class="stamp propose">costs</span></div>
-        <div><div class="t">Personal accounts are invisible in the docs.</div><div class="s">Yet <code>personalBankingSubscriptionFee</code> is in the enum, Command covers personal, and a personal account can mint tokens (we did). Which endpoints 403 on personal is undocumented.</div><div class="fix">a "Personal accounts" page listing supported endpoints</div></div>
+        <div><div class="t">No Bill Pay API, no invoice-reminder API, no documented sandbox contents.</div><div class="s">Payables exist in the product but not the API, so "bills due" has to live outside Mercury. Overdue-invoice reminders are dashboard-only. The sandbox guide doesn't say what's seeded or what's missing beyond webhooks.</div><div class="fix">GET /bills; POST /invoice/{id}/remind; a "what's in the sandbox" table</div></div>
       </div>
       <div class="row">
         <div><span class="stamp approve">good</span></div>
@@ -305,8 +314,8 @@
         </defs>
         <!-- clients -->
         <rect class="box" x="24" y="40" width="170" height="64" rx="4"/>
-        <text x="40" y="66">ChatGPT · Claude · Grok</text>
-        <text class="mono" x="40" y="86">surface we don't own</text>
+        <text x="40" y="66">Claude Code · Claude.ai · ChatGPT</text>
+        <text class="mono" x="40" y="86">surfaces we don't own</text>
         <rect class="box ours" x="24" y="130" width="170" height="64" rx="4"/>
         <text x="40" y="156">Web chat (AI SDK)</text>
         <text class="mono" x="40" y="176">surface we own</text>
@@ -319,13 +328,13 @@
         <text class="mono" x="306" y="142">/api/mcp · streamable HTTP</text>
         <text class="mono" x="306" y="160">analyzers · intent schema</text>
         <text class="mono" x="306" y="178">no fixed egress IP</text>
-        <text class="mono" x="306" y="206">read token · sandbox write token</text>
+        <text class="mono" x="306" y="206">one sandbox token · no prod</text>
         <!-- gate 1 -->
         <rect class="box gate" x="140" y="300" width="0" height="0"/>
         <!-- mercury api -->
         <rect class="box" x="600" y="40" width="250" height="90" rx="4"/>
         <text x="616" y="66" style="font-weight:600">Mercury API</text>
-        <text class="mono" x="616" y="86">GET /transactions · /accounts</text>
+        <text class="mono" x="616" y="86">GET /accounts · /invoices · /recipients</text>
         <text class="mono" x="616" y="104">POST …/request-transfer-money</text>
         <text class="mono" x="616" y="120">POST …/request-send-money</text>
         <!-- dashboard gate -->
@@ -335,7 +344,7 @@
         <!-- elicitation gate label -->
         <rect class="box gate" x="290" y="250" width="220" height="48" rx="4"/>
         <text x="306" y="270" style="font-weight:600">Elicitation — approve in chat</text>
-        <text class="mono" x="306" y="288">gate 1 · client renders, model can't click</text>
+        <text class="mono" x="306" y="288">gate 1 · Claude Code renders it; others get a URL</text>
         <!-- edges -->
         <path class="edge" d="M194 72 C 250 72, 250 130, 290 130" marker-end="url(#a)"/>
         <path class="edge" d="M194 162 L 290 162" marker-end="url(#a)"/>
@@ -347,13 +356,13 @@
         <path class="edge money" d="M725 130 L 725 180" marker-end="url(#am)"/>
         <path class="edge" d="M400 228 L 400 250" marker-end="url(#a)"/>
       </svg>
-      <figcaption>Two gates. Gate 1 is MCP elicitation: the server pauses and the client (ChatGPT, Claude, our web UI) renders Approve / Decline. Gate 2 is Mercury's own approval queue. A proposal must pass both before money moves.</figcaption>
+      <figcaption>Two gates. Gate 1 is MCP elicitation: the tool returns "input required," Claude Code (or our web UI) renders Approve / Decline, and the client retries the call with the answer. Clients that can't render it get a link to our approve page instead. Gate 2 is Mercury's own approval queue and works from every client. A proposal must pass both before money moves.</figcaption>
     </figure>
 
-    <h3>Where the tokens live</h3>
+    <h3>Environment and tokens</h3>
     <ul>
-      <li><strong>Read-only production token</strong> (personal account) — Vercel env var. Powers the audit on real data. Cannot move money by construction.</li>
-      <li><strong>Sandbox write token</strong> — Vercel env var. Every proposal that would move money is queued against <code>api-sandbox.mercury.com</code>; the demo narrates that the production call is identical.</li>
+      <li><strong>One sandbox org plays the company.</strong> Every read and every queued write hits <code>api-sandbox.mercury.com</code>, and the approval shows up in the same sandbox dashboard. No production token exists anywhere in the build.</li>
+      <li><strong>Only the request-* endpoints are called.</strong> Direct sends and direct internal transfers are not wired, so even a bug can't move money past a human.</li>
       <li><strong>MCP endpoint protection</strong> — a long random path segment plus a server-side check. Right for a demo we tear down; the presentation describes the real answer (we become an OAuth authorization server, as Mercury does).</li>
     </ul>
   </div>
@@ -370,8 +379,10 @@
       <li>One <strong>OpenAPI document</strong>, a <strong>scope catalog</strong>, and a real <strong>error schema</strong>.</li>
       <li><strong>Events for approval requests</strong>, so an agent learns the outcome of what it proposed.</li>
       <li><strong>Agent cards via API</strong> — today <code>isAgentCard</code> is read-only — plus a guide on funding x402 / MPP / AP2 sessions from an agent card.</li>
+      <li><strong>A payables surface</strong> (<code>GET /bills</code>) and an invoice-reminder endpoint, so month-end close can be fully agent-assembled.</li>
+      <li><strong>CLI:</strong> a <code>--sandbox</code> flag and auto-detection of the <code>mercury_sandbox_</code> token prefix; <strong>sandbox docs:</strong> say what's seeded and what's missing.</li>
     </ol>
-    <p>What we'd do next with the prototype: replace the shared-secret with real OAuth, add Plaid for non-Mercury accounts so the audit sees the whole picture, and wire webhooks so the chat learns when a queued transfer is approved.</p>
+    <p>What we'd do next with the prototype: replace the shared secret with real OAuth, wire webhooks so the chat learns when a queued payment is approved (production only — the sandbox has none), and point the same tools at a personal account read-only as an epilogue.</p>
   </div>
 </section>
 

@@ -14,7 +14,7 @@ press coverage; items marked **unverified** need a real token or sandbox login.
 | **Mercury MCP** `https://mcp.mercury.com/mcp` | Beta | Hosted, streamable HTTP, OAuth 2.0 w/ DCR (RFC 7591) + PKCE S256. Scopes: `read`, `offline_access` only. **~30 tools, all reads** — no writes, no `requestSendMoney`, no categorize. Works in Claude, ChatGPT, Claude Code, Codex. |
 | **Agent cards + Vault API** (Aug 11 2026, "Mercury Spend") | GA for business | Virtual cards an agent can use autonomously; budget / merchant lock / category lock enforced at auth time; PAN/CVC reveal via `vault-api.mercury.com` for `isAgentCard: true` cards only. `POST /cards` cannot *create* an agent card (flag is read-only; set in dashboard). |
 | **Webhooks / Events** | GA (prod only) | `transaction.created/updated`, `*.balance.updated`. JSON Merge Patch bodies with `changedPaths` + `previousValues`. HMAC-SHA256 `Mercury-Signature`. Events retained 90 days. **Not available in sandbox.** |
-| **Sandbox** `api-sandbox.mercury.com` | GA | Pre-seeded dummy org. Separate tokens. No webhooks. Unknown: cards, vault, events, MCC data. |
+| **Sandbox** `api-sandbox.mercury.com` | GA | Pre-seeded org with accounts, transactions, balances. AR (invoicing) and recipients/payments confirmed to work there. Separate tokens (`mercury_sandbox_` prefix). OAuth sandbox at `oauth2-sandbox.mercury.com`. **No webhooks.** Undocumented: treasury, credit, cards, vault, events, approval-queue UI, MCC/category on seeded txns, seed counts. |
 | **Plaid** | Mercury is a Plaid institution | Supports Auth, Balance, Transactions, Assets (depository + investment). |
 | **n8n community node** | Community | Exists; signals no-code automation demand. |
 

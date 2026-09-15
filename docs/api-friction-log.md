@@ -131,3 +131,34 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
     deprecated sampling/roots. Mercury's MCP docs don't state which protocol
     version the server speaks or which client features it uses. Add a
     "protocol version + capabilities" line to *Connecting Mercury MCP*.
+
+## Added 2026-09-15 (business pivot; layer-tagged)
+
+27. 🟠 `[sandbox]` `[docs]` **Sandbox contents are undocumented.** The guide says
+    "pre-loaded with organizations, accounts, transactions, and balances" and
+    that AR and payments work; it does not say whether treasury, credit, cards,
+    approval queues, events, or MCC/category data exist in the sandbox, or how
+    many recipients/invoices are seeded. A builder has to discover this by
+    probing. **Ship:** a "What's in the sandbox" table (seeded objects + counts)
+    and a "Not available in sandbox" list (webhooks is the only one stated).
+28. 🔴 `[api]` **Invoice creation requires a read-write token bound to an IP
+    allowlist** (Invoicing guide, "API Token Scopes"). Same serverless problem
+    as direct sends — but invoices don't move money. There is no
+    `request-invoice` analog. **Ship:** drop the allowlist for AR writes, or
+    add them to the no-allowlist Custom scopes.
+29. 🟠 `[api]` **No Bill Pay / accounts-payable API.** The Invoicing API is
+    receivables only. Payables exist in the product (Bill Pay) but an agent
+    can't list bills due, so AP has to be modeled outside Mercury. **Ship:**
+    `GET /bills` (due date, vendor, amount, status) + `request-send-money`
+    accepting a `billId`.
+30. 🟡 `[api]` **No API for invoice reminders.** Overdue-invoice follow-up is a
+    dashboard action; an agent can draft the message but not send it through
+    Mercury. **Ship:** `POST /invoice/{id}/remind`.
+31. 🟡 `[cli]` **No `--sandbox` flag on the official CLI.** `--base-url` exists;
+    whether sandbox tokens + sandbox base URL work end-to-end is unverified.
+    **Ship:** `MERCURY_ENV=sandbox` / `--sandbox`, and detect `mercury_sandbox_`
+    token prefixes automatically (the prefix already encodes the environment).
+32. 🔴 `[ecosystem]` **Grok's connector client is `tools/list` + `tools/call`
+    only** — an elicitation makes the call time out. Together with Claude.ai
+    and ChatGPT, none of the three consumer chat surfaces can render an
+    approval today.

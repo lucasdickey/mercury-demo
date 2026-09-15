@@ -119,3 +119,24 @@ allows. Interactive walkthrough > static deck.
 - [ ] Plaid: include (sandbox only, +30–45 min) or defer to "what's next"?
 - [ ] Second demo client: ChatGPT (needs Plus/Pro dev mode) or Grok?
 - [ ] Deck: Remotion (recommended) vs Three.js.
+
+---
+
+## Rev 2 (2026-09-15): Personal → Business, sandbox-only
+
+Superseded by `PLAN.md` rev 2. Summary of the change and why:
+
+- **Persona:** technical founder running month-end close from Claude Code —
+  the persona Mercury cites for its own CLI. Business is the brief's audience.
+- **Workflow:** cash position → overdue AR follow-ups → AP payments to vendors
+  (approval queue) → treasury sweep of the surplus (approval queue).
+- **Environment:** everything in one sandbox org. Reads and writes are
+  coherent; the approval shows up in the same dashboard you're reading from.
+- **Clients:** research showed Claude.ai, ChatGPT, and Grok cannot render MCP
+  elicitation. Claude Code can. So gate 1 (approve-in-chat) is demoed in
+  Claude Code and our own web UI; consumer clients get an approve URL. Gate 2
+  (Mercury's approval queue) works from every client and is the gate that
+  matters.
+- **Dropped:** calendar reminders as a stand-in gate (Mercury already notifies
+  on pending approvals); production reads on a personal account (optional
+  epilogue only).

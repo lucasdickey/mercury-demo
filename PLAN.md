@@ -1,170 +1,167 @@
-# Steward — execution plan
+# Steward — execution plan (rev 2: business, sandbox-only)
 
-Hand-off document. Written 2026-09-15 for whichever model/agents execute the
-build. Read `CLAUDE.md`, `docs/direction.md`, `docs/landscape.md`, and
+Hand-off document for whichever model/agents execute the build. Read
+`CLAUDE.md`, `docs/direction.md`, `docs/landscape.md`, and
 `docs/api-friction-log.md` first; this file is the *what to do*, those are the
-*why*.
+*why*. Rev 1 (personal account, production reads) is superseded — see §9.
 
 ## 0. Decisions already made (do not relitigate)
 
 | Decision | Choice |
 |---|---|
-| Concept | **Steward** — propose-only agent tier on Mercury. Read → analyze → propose → approve in chat (MCP elicitation) → approve in Mercury (approval-queue endpoints). |
-| Capabilities | (1) recurring-spend audit, (2) idle-cash sweep, (3) pay a saved recipient. |
-| Hosting | Vercel, one Next.js app. MCP at `/api/mcp/[secret]`, chat UI at `/`, docs at `/docs`. |
-| Data | Personal **read-only** production token for reads. **Sandbox** write token for anything that writes. Never a read-write production token anywhere. |
-| MCP auth | Approach 1: long random path segment + server-side check. Real OAuth is a "what's next" slide, not built. |
-| Clients to demo | **Hero for gate 1: Claude Code** (`claude mcp add --transport http steward <url>`) — it renders elicitation. Claude.ai and ChatGPT connect for the read/audit half and get the **URL-mode fallback** for approvals (a link to our own approve page). Our web chat (AI SDK, form-mode elicitation) is the surface we own. CLI pipe. See §7 findings. |
-| Model | Claude via Vercel AI SDK. `claude-sonnet-5` default. |
-| Presentation | `docs/index.html` (memo) + `docs/explainer.html` (Three.js walkthrough) already drafted. Remotion render is a stretch goal. |
-| Timebox | Brief says ~2 h. We are past that on research; keep the build to MVP. Quality of thinking > polish. |
+| Concept | **Steward** — a propose-only agent tier on Mercury for a technical founder running **month-end close from the terminal**. Read → analyze → propose → approve (gate 1: in the client when it can render it) → approve in Mercury (gate 2: approval queue). The agent has no path to move money. |
+| Persona | Founder/CFO of a small startup. The sandbox org *is* the company. |
+| Workflow | (1) cash position across accounts, (2) AR: overdue invoices we sent → follow-ups, (3) AP: pay vendors from the recipient list → approval queue, (4) sweep operating surplus to treasury/savings → approval queue. |
+| Environment | **Sandbox only.** `https://api-sandbox.mercury.com/api/v1` for every call. One sandbox token (read-write is fine in sandbox; there is no real money). No production tokens in the build. |
+| Hosting | Vercel, one Next.js app. MCP at `/api/mcp/[secret]`, chat UI at `/`, approve page at `/approve/[token]`, docs at `/docs`. |
+| Hero client | **Claude Code** — renders MCP elicitation (gate 1) and is the persona's actual tool. `claude mcp add --transport http steward https://<app>/api/mcp/<secret>`. |
+| Other clients | Claude.ai, ChatGPT, Grok: connect for reads + proposals; approvals fall back to the **approve URL** (surface we own). Web chat (AI SDK): full flow. `mercury … \| steward` CLI pipe: audit only. |
+| MCP auth | Long random path segment + server-side check. Real OAuth is a "what's next" slide. |
+| Model | Claude via Vercel AI SDK, `claude-sonnet-5`. |
+| Presentation | `docs/index.html` memo + `docs/explainer.html` walkthrough. Remotion render = stretch. |
+| Standing task | **Keep cataloging.** Every paper cut goes in `docs/api-friction-log.md` under the right layer (API · MCP · CLI · docs · sandbox · ecosystem) with severity and a proposed fix. This is a deliverable, not a side effect. |
 
 ## 1. Preconditions (human)
 
-- [ ] `.env.local` in repo root with `MERCURY_API_TOKEN=secret-token:mercury_production_…` (read-only). **As of writing, the file is not on disk** — first verify it exists.
-- [ ] Sandbox account at https://sandbox.mercury.com/signup and a sandbox token → `MERCURY_SANDBOX_API_TOKEN`.
-- [ ] `ANTHROPIC_API_KEY`.
-- [ ] Vercel project linked (`vercel link`), env vars added for Production + Preview. Deployment Protection **off** for the MCP route (or the whole preview) so connector clients can reach it.
+- [ ] Sandbox account at https://sandbox.mercury.com/signup → sandbox API token (read-write, no allowlist needed? **verify** — if the sandbox modal also demands an IP allowlist for read-write, log it and use a Custom token with `RequestSendMoney` + reads).
+- [ ] `.env.local` in repo root: `MERCURY_SANDBOX_API_TOKEN=secret-token:mercury_sandbox_…`, `ANTHROPIC_API_KEY`, `MCP_PATH_SECRET` (32+ random chars), `STATE_SECRET` (32+ random chars).
+- [ ] Vercel project linked; same vars in Production + Preview; Deployment Protection **off** for the MCP route.
 
-## 2. Step 1 — verify the personal-account surface (30 min, blocking)
+## 2. Step 1 — sandbox recon (30 min, blocking)
 
-Run against `https://api.mercury.com/api/v1` with the read-only token and record
-status + a redacted sample for each. Put results in `docs/personal-account-surface.md`.
+Sweep the sandbox and write `docs/sandbox-surface.md`: status, row counts, and a
+redacted sample per endpoint. This is both our data-availability check and a
+friction-log source (the docs don't enumerate what the sandbox seeds).
 
 ```
-GET /accounts
-GET /transactions?limit=50            # note: merchant.categoryCode present? mercuryCategory populated?
-GET /categories
-GET /merchants?limit=5
-GET /recipients
+GET /accounts                 # kinds present? checking/savings/treasury/credit? balances?
+GET /transactions?limit=200   # merchant.categoryCode? mercuryCategory? counterpartyName? kinds?
+GET /recipients               # how many vendors seeded? payment methods?
+GET /invoices  GET /customers # AR seeded? statuses (unpaid/overdue)?
+GET /treasury                 # exists in sandbox?
 GET /credit
-GET /treasury
-GET /organization
-GET /users
+GET /categories  GET /merchants?limit=5
+GET /organization  GET /users
 GET /cards
-GET /request-send-money               # list approval requests — does personal have the concept?
-GET /events?limit=3
-GET /webhooks
-GET /customers, /invoices, /safes     # expect 403/404 on personal — that's a finding
+GET /request-send-money       # approval-request list — does the concept exist here?
+GET /events?limit=3           # events in sandbox? (webhooks are documented as unavailable)
 ```
 
-Then against `https://api-sandbox.mercury.com/api/v1` with the sandbox token:
-`POST /account/{id}/request-transfer-money` and `POST /account/{id}/request-send-money`
-(dry: small amount, unique `idempotencyKey`) — confirm they 200 and appear in
-the sandbox dashboard's approval queue. If **personal** lacks approval-queue
-endpoints, note it: the demo still works because the sandbox is a business org,
-and it becomes a friction-log entry ("personal accounts have no agent-safe write path").
+Then the writes we depend on, each with a unique `idempotencyKey`, small amounts:
+```
+POST /account/{checkingId}/request-send-money      {recipientId, amount, paymentMethod:"ach", idempotencyKey}
+POST /account/{checkingId}/request-transfer-money  {destinationAccountId, amount, idempotencyKey}   # treasury or savings
+POST /invoices  (only if AR create works without IP allowlist in sandbox; else log it)
+```
+Confirm each 200s **and appears in the sandbox dashboard's approval queue**, then
+approve one in the dashboard and confirm the resulting transaction shows in
+`GET /transactions`. If the sandbox has no approval queue UI, that's a 🔴 finding
+and gate 2 becomes "status polling on `GET /request-send-money/{id}`" for the demo.
 
-Redact `accountNumber`, `routingNumber` in anything committed.
+If seed data is thin (few recipients, no invoices), seed it via API:
+`POST /recipients` ×5 vendors, `POST /customers` ×3, `POST /invoices` ×4 (two overdue).
+Record what had to be seeded — that's a friction entry ("sandbox needs a
+realistic seed profile").
 
 ## 3. Repo layout
 
 ```
 mercury-demo/
   PLAN.md  CLAUDE.md  .env.example
-  docs/                      # served statically at /docs by the Next app
-    index.html explainer.html direction.md landscape.md api-friction-log.md take-home-brief.md
-  packages/core/             # framework-free TS
-    src/mercury/client.ts    # fetch wrapper: base URL per env, bearer auth, cursor pagination, redaction
-    src/mercury/types.ts     # Transaction, Account, Recipient (hand-typed from llms.txt fragments; no codegen)
-    src/analyze/recurring.ts # streams: group by normalized counterparty+merchant.id, cadence, avg, last seen
-    src/analyze/idle.ts      # floor = p10 of daily min balance over 60d (or user-set); idle = available - floor
-    src/analyze/fees.ts      # kinds: wireFee, cardInternationalTransactionFee, personalBankingSubscriptionFee; FX feeAmount
-    src/catalog/plans.json   # ~40 subscription merchants: name, match patterns, tiers[{name,price}], cancelUrl
-    src/intents.ts           # zod: Proposal = downgrade | cancel | sweep | pay; {why, evidence[], requires_approval, reversible}
-    src/steward.ts           # audit(), proposeSweep(), proposePayment() — pure, no HTTP framework
-  apps/web/                  # Next.js (App Router)
-    app/api/mcp/[secret]/route.ts   # mcp-handler; tools: audit_spend, propose_sweep, propose_payment, list_accounts
-    app/api/chat/route.ts           # AI SDK streamText with the same tools via experimental_createMCPClient OR direct import
-    app/page.tsx                    # chat UI; proposal cards; Approve/Decline buttons that call the same elicitation path
-    app/docs/[[...path]]            # or next.config rewrite to /docs static
-  apps/cli/                  # optional: `steward audit` reading jsonl from stdin (mercury CLI output)
+  docs/                          # static, served at /docs
+    index.html explainer.html direction.md landscape.md api-friction-log.md sandbox-surface.md take-home-brief.md
+  packages/core/                 # framework-free TS
+    src/mercury/client.ts        # sandbox base URL, bearer auth, cursor pagination, redaction of accountNumber/routingNumber
+    src/mercury/types.ts         # hand-typed from llms.txt fragments (no codegen — no single OpenAPI file exists; log it)
+    src/analyze/cash.ts          # position by account kind; operating floor = max(60-day min balance, 2× monthly outflow)
+    src/analyze/ar.ts            # invoices: unpaid, overdue (dueDate < today), days late, amount → follow-up proposals
+    src/analyze/ap.ts            # recipients + a small "bills due" list (seeded JSON: vendor→amount→due) → pay proposals
+    src/analyze/sweep.ts         # surplus = available − floor − AP due → sweep proposal to treasury (or savings if no treasury)
+    src/intents.ts               # zod: Proposal = followup | pay | sweep ; {why, evidence[], amount, requires_approval, reversible}
+    src/steward.ts               # closeMonth(): runs all analyzers → proposals[] ; propose*() → sandbox request-* calls
+  apps/web/                      # Next.js App Router, Node runtime
+    app/api/mcp/[secret]/route.ts
+    app/api/chat/route.ts
+    app/approve/[token]/page.tsx # fallback gate 1 for clients without elicitation
+    app/page.tsx                 # chat + proposal cards
+  apps/cli/                      # optional: `steward close` reading jsonl from stdin
 ```
 
-pnpm workspaces. TypeScript strict. No ORM, no DB — stateless; proposals are
-recomputed per request. Approval state lives in Mercury.
+pnpm workspaces, TypeScript strict, no DB. Approval state lives in Mercury.
 
 ## 4. Work packages (parallelizable)
 
-### A. `core` — Mercury client + analyzers
-- Client: `MERCURY_ENV=production|sandbox` picks host; helper `listAllTransactions({start})` follows `page.nextPage`; strip `accountNumber`/`routingNumber` before returning anywhere.
-- Recurring: normalize name (lowercase, strip digits/`*`/city suffixes), group by `merchant.id ?? normalizedName`; keep groups with ≥3 charges; cadence = median gap (weekly/monthly/annual within ±20 %); output `{merchant, cadence, avgAmount, lastAmount, lastSeen, count, category, mcc, evidence: txnIds}`.
-- Catalog match: by pattern → tiers; proposal `downgrade` if current avg ≈ a higher tier and a lower tier exists; `cancel` if `lastSeen` > 2 cadences ago but still charged (zombie) — keep it simple.
-- Idle cash: needs balances only; floor heuristic documented in code comment.
-- Fees: sum by `kind`; FX via `currencyExchangeInfo.feeAmount`.
-- Acceptance: `pnpm test` with fixtures built from redacted real rows; `steward.audit()` returns proposals in <2 s for 1,000 txns.
+### A. `core`
+- Client + types as above. `listAll*` helpers follow `page.nextPage`.
+- `cash.ts`: group `GET /accounts` by `kind`; sum available; compute floor.
+- `ar.ts`: `GET /invoices` → filter unpaid; overdue if `dueDate < now`; proposal `followup {customer, invoiceId, amount, daysLate}` (`requires_approval:false` — it's a message draft, no API for reminders; log that).
+- `ap.ts`: bills-due list is a seeded JSON in `src/catalog/bills.json` mapping recipient names → amount/due (Mercury has no Bill Pay API — log it). Proposal `pay {recipientId, amount, memo, due}`.
+- `sweep.ts`: surplus after AP; target = treasury account if present else savings; proposal `sweep {from, to, amount, why}`.
+- Acceptance: unit tests on fixtures from `docs/sandbox-surface.md`; `closeMonth()` < 2 s.
 
-### B. `mcp` route
-- Stack: `mcp-handler@^2` + `@modelcontextprotocol/server@^2` + `zod@^4` (Node 20+). Stateless Streamable HTTP, protocol **2026-07-28**. Do **not** use the v1 `@modelcontextprotocol/sdk` package.
-- Path secret from `MCP_PATH_SECRET` (`app/api/mcp/[secret]/route.ts`); 404 on mismatch. `export const maxDuration = 60`.
-- Tools (zod-described; descriptions say what they do *and don't*):
-  - `list_accounts()` → redacted accounts + balances
-  - `audit_spend({days?: 90})` → proposals
-  - `propose_sweep({fromAccountId, toAccountId, amount})` and `propose_payment({recipientId, amount, memo})` → the **approval gate** (below).
-- **Approval gate — MRTR pattern (2026-07-28).** Elicitation is no longer a server→client request; the tool *returns* `inputRequired({ inputRequests, requestState })`, the client shows a form, then **retries the same tool call** with `inputResponses` + the echoed `requestState`. Shape:
-  ```ts
-  import { inputRequired, acceptedContent, createRequestStateCodec } from "@modelcontextprotocol/server";
-  const codec = createRequestStateCodec<{ kind: "sweep"; from: string; to: string; amount: number }>({ key: process.env.STATE_SECRET! });
-  // first call: no state → return inputRequired({ inputRequests: { approve: inputRequired.elicit({ type: "form", fields: [{ name: "approve", type: "boolean", required: true, label: "Queue $X Checking → Savings for approval in Mercury?" }] }) }, requestState: await codec.mint({...}) })
-  // re-entry: state present → acceptedContent(ctx.mcpReq.inputResponses, "approve") → if true, POST sandbox request-transfer-money; else return declined
-  ```
-  Always include `inputRequests` (never a state-only result — claude.ai turns those into "Error occurred during tool execution", issue anthropics/claude-ai-mcp#1027).
-- **Capability detection + fallback.** Read `ctx.mcpReq.envelope?.clientCapabilities?.elicitation`. If absent (Claude.ai, ChatGPT today), do **not** execute and do not fake a confirmation via a second tool. Return a proposal with `approve_url: https://<app>/approve/<signed-token>` and text telling the user to open it. The approve page (surface we own) renders the same Approve/Decline and performs the sandbox `request-*` call. This is URL-mode elicitation in spirit and also the right answer for the deck: consumer chat clients can't render approvals yet.
-- Acceptance: `npx @modelcontextprotocol/inspector` lists 4 tools; **Claude Code** connected via `claude mcp add --transport http` shows an Approve/Decline form on `propose_sweep`; after Approve the sandbox dashboard shows the queued transfer; **Claude.ai** connector gets the approve link and the link works.
+### B. MCP route
+- `mcp-handler@^2` + `@modelcontextprotocol/server@^2` + `zod@^4`, Node 20+, protocol 2026-07-28, `maxDuration = 60`. Not the v1 `@modelcontextprotocol/sdk`.
+- Tools: `cash_position()`, `close_month({asOf?})` → proposals, `propose_payment({recipientId, amount, memo})`, `propose_sweep({fromAccountId, toAccountId, amount})`.
+- **Gate 1 — MRTR elicitation.** First call returns `inputRequired({ inputRequests: { approve: inputRequired.elicit({ type:"form", fields:[{name:"approve", type:"boolean", required:true, label:"Queue $X to <vendor> for approval in Mercury?"}] }) }, requestState: await codec.mint({...}) })`; on re-entry read `acceptedContent(ctx.mcpReq.inputResponses, "approve")`; if true → sandbox `request-*` call; else declined. **Always include `inputRequests`** (state-only results break Claude.ai, anthropics/claude-ai-mcp#1027).
+- **Capability fallback.** If `ctx.mcpReq.envelope?.clientCapabilities?.elicitation` is absent → return the proposal with `approve_url: https://<app>/approve/<signed token>` and instructions. Never execute, never fake a confirm via a second tool.
+- Acceptance: Inspector lists 4 tools; Claude Code shows Approve/Decline on `propose_payment`; sandbox dashboard shows the queued payment; Claude.ai gets the approve link and it works.
 
-### C. Web chat
-- AI SDK `useChat` + `streamText`; tools imported directly from `core` (don't loop back through our own MCP over HTTP). If you *do* want to prove the MCP path end-to-end in our UI, `@ai-sdk/mcp` supports form-mode elicitation via `onElicitationRequest` — optional.
-- Add `app/approve/[token]/page.tsx`: verifies the signed token, shows the proposal, Approve → sandbox `request-*` call → "queued in Mercury" state. This page is the fallback gate for clients without elicitation.
-- Proposal cards: kind stamp, amount, why, evidence count, Approve/Decline for `requires_approval` items. Approve calls a server action that runs the same sandbox `request-*` call.
-- Show "queued in Mercury — approve in dashboard" state with the sandbox dashboard link.
-- Keep the visual language of `docs/index.html` (tokens, fonts). Don't build a marketing page.
+### C. Web chat + approve page
+- AI SDK `useChat`/`streamText`, tools imported from `core`. Proposal cards with Approve/Decline for `requires_approval` items → same sandbox `request-*` call → "queued in Mercury" state with dashboard link.
+- `/approve/[token]`: verify signed token, render one proposal, Approve → queue. This is the fallback gate for Claude.ai/ChatGPT/Grok.
+- Visual language from `docs/index.html` tokens.
 
-### D. Docs + deck
-- Wire `/docs` to serve the static HTML.
-- Add `docs/personal-account-surface.md` from step 2.
-- Update `api-friction-log.md` with anything new (sandbox gaps, elicitation support per client, mcp-handler quirks).
-- Stretch: Remotion composition that replays `explainer.html` steps as a 60-second video.
+### D. Docs + friction log (continuous)
+- `docs/sandbox-surface.md` from §2.
+- Append to `docs/api-friction-log.md` as you go, tagged by layer: `[api]` `[mcp]` `[cli]` `[docs]` `[sandbox]` `[ecosystem]`.
+- Update `docs/index.html` findings ledger with the top new items at the end.
 
-### E. CLI pipe (optional, 20 min)
-`apps/cli/steward.ts`: read jsonl transactions on stdin, print proposals as a table / `--json`. Demo line:
-`mercury transactions list --format jsonl | steward audit`.
+### E. CLI pipe (optional)
+`mercury accounts list --format jsonl` + `mercury transactions list --format jsonl` piped into `steward close --json`. Note whether the official CLI honors `--base-url https://api-sandbox.mercury.com/api/v1` with a sandbox token (it has no `--sandbox` flag — log it).
 
-## 5. Demo script (target 6–8 minutes)
+## 5. Demo script (6–8 min, in Claude Code)
 
-1. `docs/index.html` — 60 s on the thesis and the serverless/IP finding.
-2. Claude.ai (or ChatGPT) with the Steward connector: "Where am I wasting money?" → real findings from the personal account.
-3. "Sweep the idle cash." → Approve prompt in the chat (gate 1) → "queued in Mercury."
-4. Switch to sandbox dashboard → pending transfer with Steward's note (gate 2) → approve.
-5. Same flow in our web UI, 30 s, to show the surface we own.
-6. `mercury … | steward audit` in a terminal, 20 s.
-7. `docs/explainer.html` as the wrap: what Mercury's MCP does today vs. this tier; the API changes we'd ask for.
+1. `docs/index.html` — 60 s: thesis, serverless/IP finding, client matrix.
+2. Claude Code, Steward connected: "Run month-end close." → cash position, overdue invoices, bills due, surplus.
+3. "Pay the two bills that are due this week." → Approve/Decline form (gate 1) → "queued in Mercury."
+4. Sandbox dashboard → pending payments with Steward's note (gate 2) → approve one.
+5. "Sweep the surplus to treasury." → same two gates.
+6. 30 s: same conversation in Claude.ai → approve link → our page. Shows the client gap honestly.
+7. `docs/explainer.html` wrap: what Mercury's MCP does today vs. this tier; the API/MCP/CLI changes we'd ask for.
 
 ## 6. Guardrails
 
-- Never log or return `accountNumber`/`routingNumber`/full card data.
-- Never call `POST /account/{id}/transactions` (direct send) or `POST /transfer` (direct internal transfer). Only `request-*` endpoints, only against sandbox.
-- No production write token. If one is ever needed, stop and ask.
-- Token hygiene: the read-only prod token dies after 45 days unused — irrelevant for the demo window; note it in the deck.
-- Language: proposals say "you could," not "you should"; no tax/investment advice phrasing.
+- Sandbox only. If any code path can reach `api.mercury.com`, that's a bug.
+- Never call `POST /account/{id}/transactions` (direct send) or `POST /transfer` (direct internal transfer). Only `request-*`.
+- Never log/return `accountNumber`, `routingNumber`, card data.
+- Proposals say "you could," not "you should."
 
-## 7. Findings that changed the plan (2026-09-15 research, no token needed)
+## 7. Client matrix (verified 2026-09-15)
 
-**Elicitation support by client (form mode = Approve/Decline in the chat):**
+| Client | MCP | Elicitation (gate 1) | Role in demo |
+|---|---|---|---|
+| Claude Code | ✓ | ✓ form | **Hero** |
+| Cursor / VS Code | ✓ | ✓ form | Alternate |
+| Vercel AI SDK (`@ai-sdk/mcp`) | ✓ | ✓ form | Our web UI |
+| Claude.ai | ✓ | ✗ (#153 open since Apr; state-only results error, #1027) | Reads + approve-URL |
+| ChatGPT Dev Mode | ✓ | no evidence | Reads + approve-URL |
+| Grok (grok.com connectors) | ✓ tools only | ✗ — elicitation times out (`emrgim/marriott-mcp#16`) | Reads + approve-URL |
 
-| Client | Elicitation | Consequence |
-|---|---|---|
-| Claude Code | ✓ form | **Hero demo for gate 1.** `claude mcp add --transport http steward https://…/api/mcp/<secret>` |
-| Cursor / VS Code | ✓ form | Alternate hero if needed |
-| Vercel AI SDK (`@ai-sdk/mcp`) | ✓ form only | Our web UI can render gate 1 natively |
-| Claude.ai connectors | ✗ (open request #153 since Apr 2026; state-only results surface as an error, #1027) | Read/audit works; approvals via **approve URL** fallback |
-| ChatGPT Developer Mode | no evidence of support | Same as Claude.ai: audit + approve-URL fallback |
+Spec note: MCP 2026-07-28 made elicitation stateless (MRTR); sampling/roots deprecated. Don't use them.
 
-**Spec change:** MCP 2026-07-28 replaced server-initiated elicitation with MRTR (`InputRequiredResult` → client retries with `inputResponses`). It is stateless by design, which fits Vercel; state travels in a signed `requestState`. Sampling and roots are deprecated — don't use them.
+## 8. Still open (need sandbox)
 
-**Ecosystem finding for the deck:** approval-in-chat is only renderable in developer clients today. Consumer chat surfaces can't show a structured Approve/Decline. That is a second, independent reason Mercury's MCP is read-only — and an argument for Mercury to ship a hosted **approval page** (URL-mode) rather than wait for clients.
+- What the sandbox seeds (accounts kinds, recipients, invoices, treasury, MCC on txns).
+- Whether the sandbox has an approval-queue UI and whether `request-*` requests appear there.
+- Whether sandbox read-write tokens demand an IP allowlist.
+- Whether the official CLI works against the sandbox via `--base-url`.
 
-## 8. Still open (need token / sandbox)
+## 9. Why rev 2 replaced rev 1
 
-- Which personal-account endpoints 403 (PLAN §2).
-- Does sandbox seed data carry `merchant.categoryCode` / `mercuryCategory`? If not, the audit demo runs on production reads only.
-- Do `request-transfer-money` / `request-send-money` exist for personal orgs?
+Rev 1 audited a personal account on production reads and queued writes to the
+sandbox. Problems: the brief targets business customers; personal accounts may
+lack approval-queue endpoints; splitting reads (prod) and writes (sandbox) made
+the demo incoherent; consumer chat clients can't render approvals, so the
+"approve in ChatGPT" moment wasn't real. Rev 2 puts the whole loop in one
+business sandbox org with Claude Code as the hero — the persona Mercury itself
+cites for its CLI. The personal token is an optional epilogue if time allows.

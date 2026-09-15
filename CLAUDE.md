@@ -1,6 +1,6 @@
 # mercury-demo
 
-Prototype for the Mercury PM take-home ("Command").
+Prototype for the Mercury PM take-home ("Command"). **Rev 2:** a month-end close agent for a founder in Claude Code, sandbox-only, propose-only. See `PLAN.md`.
 
 The assignment brief lives at `docs/take-home-brief.md` — read it before
 planning or building. Source doc:
@@ -18,4 +18,5 @@ Key constraints from the brief:
 - `docs/index.html` — decision memo (what / why / API findings / architecture). Served at `/docs` once the app exists.
 - `docs/explainer.html` — Three.js step-through of one conversation across both approval gates.
 - `docs/direction.md`, `docs/landscape.md`, `docs/api-friction-log.md` — research behind the decision.
-- Guardrails: read-only prod token only; all writes go to sandbox via `request-*` endpoints; never direct sends. See PLAN.md §6.
+- Guardrails: sandbox only (no production tokens); writes only via `request-*` endpoints; never direct sends. See PLAN.md §6.
+- Standing task: log every paper cut in `docs/api-friction-log.md`, tagged `[api]` `[mcp]` `[cli]` `[docs]` `[sandbox]` `[ecosystem]`.
