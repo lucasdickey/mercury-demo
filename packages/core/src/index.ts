@@ -1,6 +1,6 @@
 export * from "./mercury/types";
 export { MercuryClient, MercuryApiError, redact, SANDBOX_BASE_URL, PRODUCTION_BASE_URL } from "./mercury/client";
-export type { MercuryReader, MercuryProposer, MercuryClientOptions } from "./mercury/client";
+export type { MercuryReader, MercuryProposer, MercuryClientOptions, TransactionFilter } from "./mercury/client";
 export * from "./intents";
 export { closeMonth, queueProposal } from "./steward";
 export type { CloseOptions } from "./steward";

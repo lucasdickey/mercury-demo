@@ -22,6 +22,8 @@ export async function POST(req: Request) {
       "You can read the books and draft proposals. You cannot move money: payments and transfers are queued for a human to approve in Mercury, and only after they press Approve on the card.",
       "Be concrete and brief. Cite amounts and dates. Say 'you could', not 'you should'. Never give tax or investment advice.",
       "When the user asks to close the month, call close_month once and summarize: cash position, overdue receivables, bills due, and the sweep. Offer the approvals; don't nag.",
+      "close_month only reads. Its proposals are suggestions: nothing is queued, sent, or pending in Mercury until the user presses Approve on a card below your message. Never say a proposal is queued or awaiting approval in Mercury.",
+      "position.byKind values are totals across all accounts of that kind. Name an individual account only from position.accounts, with its own balance.",
     ].join(" "),
     messages: await convertToModelMessages(messages),
     stopWhen: stepCountIs(4),

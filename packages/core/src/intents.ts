@@ -66,7 +66,10 @@ export type SweepProposal = z.infer<typeof SweepProposal>;
 
 export const CashPosition = z.object({
   asOf: z.string(),
-  byKind: z.record(z.string(), z.number()),
+  byKind: z.record(z.string(), z.number()).describe("Totals across every active account of each kind, not single accounts"),
+  accounts: z
+    .array(z.object({ accountId: z.string(), name: z.string(), kind: z.string(), available: z.number() }))
+    .describe("Each active account; name individual accounts only from here"),
   operating: z.object({ accountId: z.string(), name: z.string(), available: z.number() }).nullable(),
   totalAvailable: z.number(),
   floor: z.number(),
@@ -89,5 +92,18 @@ export const QueuedResult = z.object({
   status: z.enum(["pendingApproval", "approved", "rejected", "cancelled"]),
   environment: z.enum(["sandbox", "production", "custom"]),
   next: z.string().describe("What the human does now"),
+  approveUrl: z.string().nullable().describe("Where to approve it in Mercury's dashboard, when known"),
 });
 export type QueuedResult = z.infer<typeof QueuedResult>;
+
+/** Mercury refused to queue it. Nothing was created; `remedy` says what would fix it. */
+export const NotQueuedResult = z.object({
+  proposalId: z.string(),
+  notQueued: z.literal(true),
+  reason: z.enum(["needs_second_approver", "missing_scope", "already_used_key", "mercury_error"]),
+  message: z.string(),
+  remedy: z.string(),
+  mercuryStatus: z.number().int(),
+});
+export type NotQueuedResult = z.infer<typeof NotQueuedResult>;
+export type QueueOutcome = QueuedResult | NotQueuedResult;

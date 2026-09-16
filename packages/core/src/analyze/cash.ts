@@ -15,12 +15,21 @@ export function pickOperatingAccount(accounts: Account[]): Account | null {
   return candidates.reduce((best, a) => (a.availableBalance > best.availableBalance ? a : best));
 }
 
+/**
+ * The date a transaction counts toward a period: `postedAt`, falling back to `createdAt`
+ * while pending. Mercury uses `0001-01-01T00:00:00Z` as a null sentinel (friction log #53).
+ */
+export function effectiveDate(t: Transaction): Date {
+  const posted = t.postedAt && !t.postedAt.startsWith("0001-") ? t.postedAt : null;
+  return new Date(posted ?? t.createdAt);
+}
+
 /** Average monthly external outflow over the window covered by `transactions`. */
 export function averageMonthlyOutflow(transactions: Transaction[], asOf: Date, windowDays = 90): number {
   const since = new Date(asOf.getTime() - windowDays * 86_400_000);
   const outflow = transactions
     .filter((t) => t.amount < 0 && !OUTFLOW_EXCLUDED_KINDS.has(t.kind) && t.status !== "failed" && t.status !== "cancelled")
-    .filter((t) => new Date(t.createdAt) >= since && new Date(t.createdAt) <= asOf)
+    .filter((t) => effectiveDate(t) >= since && effectiveDate(t) <= asOf)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
   return round2(outflow / (windowDays / 30));
 }
@@ -43,6 +52,7 @@ export function computeCashPosition(accounts: Account[], transactions: Transacti
   return {
     asOf: asOf.toISOString().slice(0, 10),
     byKind,
+    accounts: active.map((a) => ({ accountId: a.id, name: a.nickname ?? a.name, kind: a.kind, available: a.availableBalance })),
     operating: operating ? { accountId: operating.id, name: operating.nickname ?? operating.name, available: operating.availableBalance } : null,
     totalAvailable: round2(active.reduce((s, a) => s + a.availableBalance, 0)),
     floor,

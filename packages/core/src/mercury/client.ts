@@ -51,9 +51,21 @@ export function redact<T>(value: T): T {
   return value;
 }
 
+/**
+ * `start`/`end` filter on createdAt; `postedStart`/`postedEnd` on postedAt, which is
+ * what the dashboard shows and what a period close needs (friction log #47).
+ */
+export interface TransactionFilter {
+  start?: string;
+  end?: string;
+  postedStart?: string;
+  postedEnd?: string;
+  accountId?: string[];
+}
+
 export interface MercuryReader {
   listAccounts(): Promise<Account[]>;
-  listTransactions(opts?: { start?: string; end?: string; accountId?: string[] }): Promise<Transaction[]>;
+  listTransactions(opts?: TransactionFilter): Promise<Transaction[]>;
   listRecipients(): Promise<Recipient[]>;
   listInvoices(): Promise<Invoice[]>;
   listCustomers(): Promise<Customer[]>;
@@ -129,8 +141,9 @@ export class MercuryClient implements MercuryReader, MercuryProposer {
   listAccounts() {
     return this.paginate<Account>("/accounts", "accounts");
   }
-  listTransactions(opts: { start?: string; end?: string; accountId?: string[] } = {}) {
-    return this.paginate<Transaction>("/transactions", "transactions", { start: opts.start, end: opts.end, accountId: opts.accountId });
+  listTransactions(opts: TransactionFilter = {}) {
+    const { start, end, postedStart, postedEnd, accountId } = opts;
+    return this.paginate<Transaction>("/transactions", "transactions", { start, end, postedStart, postedEnd, accountId });
   }
   listRecipients() {
     return this.paginate<Recipient>("/recipients", "recipients");
@@ -149,7 +162,7 @@ export class MercuryClient implements MercuryReader, MercuryProposer {
     return this.paginate<SendMoneyApprovalRequest>("/request-send-money", "requests");
   }
 
-  /** Queues a payment for dashboard approval. No IP allowlist required. Never sends directly. */
+  /** Queues a payment for dashboard approval. Never sends directly. Needs an org member other than the token owner who can approve (friction log #58). */
   requestSendMoney(accountId: string, body: SendMoneyRequestBody) {
     return this.request<SendMoneyApprovalRequest>("POST", `/account/${accountId}/request-send-money`, undefined, body);
   }

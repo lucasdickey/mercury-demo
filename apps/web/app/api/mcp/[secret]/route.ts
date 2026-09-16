@@ -1,7 +1,7 @@
 import { createMcpHandler } from "mcp-handler";
 import { acceptedContent, createRequestStateCodec, inputRequired, type McpServer, type ServerContext } from "@modelcontextprotocol/server";
 import { z } from "zod";
-import { closeMonth, queueProposal, PayProposal, SweepProposal, type Proposal } from "@steward/core";
+import { closeMonth, queueProposal, PayProposal, SweepProposal, type NotQueuedResult, type Proposal } from "@steward/core";
 import { mercury, requireEnv } from "@/lib/mercury";
 import { approveUrl } from "@/lib/approve-token";
 
@@ -25,6 +25,18 @@ let _codec: ReturnType<typeof createRequestStateCodec<PendingState>> | null = nu
 const codec = () => (_codec ??= createRequestStateCodec<PendingState>({ key: requireEnv("STATE_SECRET", 32), ttlSeconds: 600 }));
 
 const Approve = z.object({ approve: z.boolean().describe("Queue this in Mercury's approval queue?") });
+
+/**
+ * Mercury has no way to ask "would you accept this request?" before creating it
+ * (friction log #58), so the first refusal is only learned after the human says yes.
+ * Remember refusals that won't fix themselves, per proposal kind, and don't ask again.
+ */
+const REFUSAL_TTL_MS = 10 * 60_000;
+const refusals = new Map<Proposal["kind"], { result: NotQueuedResult; at: number }>();
+function knownRefusal(kind: Proposal["kind"]): NotQueuedResult | null {
+  const hit = refusals.get(kind);
+  return hit && Date.now() - hit.at < REFUSAL_TTL_MS ? hit.result : null;
+}
 
 const handler = createMcpHandler(
   (server) => {
@@ -131,9 +143,17 @@ async function gate(server: McpServer, ctx: ServerContext, proposal: PayProposal
   if (state) {
     const answer = acceptedContent(ctx.mcpReq.inputResponses, "approve", Approve);
     if (!answer?.approve) return text(`Declined. Nothing was queued for ${describe(state.proposal)}.`);
-    const queued = await queueProposal(mercury(), state.proposal as PayProposal | SweepProposal);
-    return json({ queued, gate2: queued.next });
+    const outcome = await queueProposal(mercury(), state.proposal as PayProposal | SweepProposal);
+    if ("notQueued" in outcome) {
+      if (outcome.reason === "needs_second_approver" || outcome.reason === "missing_scope") refusals.set(state.proposal.kind, { result: outcome, at: Date.now() });
+      return refused(outcome);
+    }
+    refusals.delete(state.proposal.kind);
+    return json({ queued: outcome, gate2: outcome.next, approve_in_mercury: outcome.approveUrl });
   }
+
+  const known = knownRefusal(proposal.kind);
+  if (known) return refused({ ...known, proposalId: proposal.id, message: `Not asking you to approve: ${known.message}` });
 
   // First call: can this client render a form?
   if (!clientSupportsElicitation(server, ctx)) {
@@ -174,6 +194,10 @@ function hash(s: string): string {
   let h = 0;
   for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return h.toString(16).padStart(8, "0");
+}
+/** Not an MCP tool error: the call worked, Mercury declined. The model should relay the remedy verbatim. */
+function refused(r: NotQueuedResult) {
+  return { content: [{ type: "text" as const, text: `${r.message}\n${r.remedy}` }], structuredContent: r as unknown as Record<string, unknown> };
 }
 function text(t: string) {
   return { content: [{ type: "text" as const, text: t }] };

@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { Proposal, QueuedResult } from "@steward/core";
+import type { Proposal, QueueOutcome } from "@steward/core";
 import { approveFromToken, approveProposal } from "@/app/actions";
 
 const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
 export function ProposalCard({ proposal, token }: { proposal: Proposal; token?: string }) {
   const [pending, start] = useTransition();
-  const [result, setResult] = useState<QueuedResult | { error: string } | { declined: true } | null>(null);
+  const [result, setResult] = useState<QueueOutcome | { error: string } | { declined: true } | null>(null);
   const needsApproval = proposal.requires_approval && (proposal.kind === "pay" || proposal.kind === "sweep");
 
   const title =
@@ -52,10 +52,26 @@ export function ProposalCard({ proposal, token }: { proposal: Proposal; token?: 
 
       {result && "declined" in result ? <p className="outcome muted">Declined. Nothing was queued.</p> : null}
       {result && "error" in result ? <p className="outcome error">{result.error}</p> : null}
+      {result && "notQueued" in result ? (
+        <div className="outcome error">
+          <strong>Not queued.</strong> {result.message}
+          <p>{result.remedy}</p>
+        </div>
+      ) : null}
       {result && "mercuryRequestId" in result ? (
         <div className="outcome queued">
           <strong>Queued in Mercury ({result.environment})</strong> · request <code>{result.mercuryRequestId}</code> · status <code>{result.status}</code>
-          <p>{result.next}</p>
+          <p>
+            {result.next}
+            {result.approveUrl ? (
+              <>
+                {" "}
+                <a href={result.approveUrl} target="_blank" rel="noreferrer">
+                  Open in Mercury ↗
+                </a>
+              </>
+            ) : null}
+          </p>
         </div>
       ) : null}
     </article>
