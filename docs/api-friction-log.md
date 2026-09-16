@@ -222,3 +222,18 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
     substring-on-display-name, so "request" doesn't find it. The asterisk is
     the only allowlist signal and is unexplained in the dialog.
     **Ship:** a scope catalog with both the display name and the identifier.
+41. 🔴 `[api]` **No Custom-token scope for `request-transfer`.** "Send Money
+    with Approval" exists; "Transfer with Approval" does not. The approval-
+    gated internal transfer — the safest money movement in the API — can't be
+    granted without a full Read and Write token (allowlisted). Steward's
+    treasury sweep therefore stops at "proposed" under a Custom token.
+    **Ship:** a `Transfer with Approval` scope, allowlist-free.
+42. 🔴 `[api]` **"Update Transactions" requires an IP allowlist.** Adding a
+    note or category moves no money and is the write Mercury's own launch
+    coverage says early users want most ("transaction cleanup"). Allowlisting
+    it rules out every hosted agent. **Ship:** drop the asterisk on
+    non-monetary writes (transactions, invoices, categories).
+43. 🟡 `[docs]` The Custom scope picker *is* the scope catalog — 27 scopes,
+    seven groups, asterisk convention, one "Experimental" badge — and it lives
+    only in a modal. Transcribed to `docs/scope-catalog.md`; Mercury should
+    publish the equivalent with identifiers and endpoint mappings.

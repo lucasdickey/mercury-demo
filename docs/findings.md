@@ -1,6 +1,6 @@
 # Findings — ranked
 
-Executive summary of `api-friction-log.md` (40 items as of 2026-09-15) and the
+Executive summary of `api-friction-log.md` (43 items as of 2026-09-16) and the
 recommendations that fall out of building Steward. Numbers in brackets point
 at log entries. Ranking weighs: does it *block* an agent or just cost it;
 how many builders hit it; how cheap the fix is; and whether it advances what
@@ -17,12 +17,13 @@ MCP can ship writes safely. Everything else is polish.
 
 ## Top five, in order
 
-### 1. Ship a **propose** tier: the approval-queue endpoints, exposed to agents, with no IP allowlist  [8, 14, 39, 6]
+### 1. Ship a **propose** tier: the approval-queue endpoints, exposed to agents, with no IP allowlist  [8, 14, 39, 41, 42, 6]
 `request-send-money` and `request-transfer` are the agent-safe writes: a
 human in the dashboard is the control, so the allowlist is redundant. Today
 they're absent from the MCP, and in the sandbox the approval scope still
 demands an allowlist despite the docs saying otherwise. Make "Send Money with
-Approval" + "Transfer with Approval" + `updateTransaction` (note/category) a
+Approval" + a new "Transfer with Approval" (there is none today, #41) +
+`updateTransaction` (note/category — allowlisted today, #42) a
 first-class scope tier for both API tokens and MCP OAuth, allowlist-free, and
 say so in the token dialog. **This is the single change that turns Command's
 "propose, then approve" model into something third-party agents can use.**
@@ -35,7 +36,7 @@ IP. Today that means: reads only, no invoice creation, no queued payments
 writes, or (b) publish a static-egress guide and a sandbox exemption. Pick one
 and document it on the token page. Effort: S (docs) / M (policy).
 
-### 3. Make the API legible to a model  [2, 6, 10, 11, 33, 35, 40]
+### 3. Make the API legible to a model  [2, 6, 10, 11, 33, 35, 40, 43]
 One `openapi.json` (today: per-page fragments with the whole schema tree
 inlined, 200 KB of duplicate JSON for five pages); a scope catalog mapping
 each operation to its scope identifier *and* display name, plus whether it
