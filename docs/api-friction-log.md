@@ -4,7 +4,8 @@
 
 Running log. Each entry: what I hit → why it hurts an agent/MCP/CLI consumer →
 what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
-🟡 polish. Add to this as we build.
+🟡 polish. ⬇ = below the line: sandbox or docs polish, worth flagging but not
+leading with. The lead is the API, MCP, and CLI. Add to this as we build.
 
 ## Discovery & AEO
 
@@ -113,7 +114,7 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
 
 ## Sandbox
 
-24. 🟠 No webhooks in sandbox (documented). Unknown: cards, agent cards, vault,
+24. ⬇ No webhooks in sandbox (documented). Unknown: cards, agent cards, vault,
     events, MCC coverage on seeded data. Will log as we hit them.
 
 ## Ecosystem (not Mercury's fault, but shapes what Mercury should build)
@@ -136,7 +137,7 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
 
 ## Added 2026-09-15 (business pivot; layer-tagged)
 
-27. 🟠 `[sandbox]` `[docs]` **Sandbox contents are undocumented.** The guide says
+27. ⬇ `[sandbox]` `[docs]` **Sandbox contents are undocumented.** The guide says
     "pre-loaded with organizations, accounts, transactions, and balances" and
     that AR and payments work; it does not say whether treasury, credit, cards,
     approval queues, events, or MCC/category data exist in the sandbox, or how
@@ -200,7 +201,7 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
     hosted, stateless, write-capable MCP will hit this. **Ship (Mercury MCP
     docs):** state the protocol version the server speaks and that
     2025-era clients are served statelessly; recommend clients upgrade.
-38. 🟠 `[sandbox]` **The sandbox enforces the production IP-allowlist rule.**
+38. ⬇ `[sandbox]` **The sandbox enforces the production IP-allowlist rule.**
     Creating a Read and Write token in the sandbox demands an IP whitelist,
     same as production, even though no real money exists. A builder on a
     laptop (or a plane) can't get a write token for *testing*. The Custom
@@ -217,7 +218,7 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
     **Ship:** make the docs and the dialog agree; if the approval path truly
     needs an allowlist, say so and offer a static-egress guide — or drop it,
     since dashboard approval is the control.
-40. 🟡 `[docs]` **Scope names in the docs don't match the picker.** Docs:
+40. ⬇ `[docs]` **Scope names in the docs don't match the picker.** Docs:
     `RequestSendMoney`. Picker: "Send Money with Approval". Search is
     substring-on-display-name, so "request" doesn't find it. The asterisk is
     the only allowlist signal and is unexplained in the dialog.
@@ -233,7 +234,7 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
     coverage says early users want most ("transaction cleanup"). Allowlisting
     it rules out every hosted agent. **Ship:** drop the asterisk on
     non-monetary writes (transactions, invoices, categories).
-43. 🟡 `[docs]` The Custom scope picker *is* the scope catalog — 27 scopes,
+43. ⬇ `[docs]` The Custom scope picker *is* the scope catalog — 27 scopes,
     seven groups, asterisk convention, one "Experimental" badge — and it lives
     only in a modal. Transcribed to `docs/scope-catalog.md`; Mercury should
     publish the equivalent with identifiers and endpoint mappings.
@@ -248,25 +249,16 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
     **Ship:** accept IPv6 prefixes (/64) in the allowlist, and add an
     `ipFamily` hint to the `ipNotWhitelisted` error.
 
-## Sandbox recon (2026-09-16) — ranked by expected impact
+## Sandbox recon (2026-09-16)
 
 Probed read-only with a Custom token; evidence in `sandbox-surface.md`,
-reproducible via `scripts/recon/sweep.mjs`. Ordered most → least impact.
+reproducible via `scripts/recon/sweep.mjs`. API findings first; sandbox and docs
+notes are marked ⬇.
 
-45. 🔴 `[sandbox]` **The seed org can't rehearse an agent, and you can't seed it
-    without allowlisted scopes.** 0 invoices, 0 customers, 0 treasury, 0
-    statements, 0 approval requests. 79 recipients, but 71 are "Currency Cloud
-    Recipient N" international wires, 3 are "Banned Recipient" (all `active`),
-    4 are ACH, none look like a vendor. Running Steward's real `closeMonth`
-    against it: 0 AR follow-ups, 0 payments, 3 unmatched bills, and one $1.44M
-    sweep that can't be queued (#41). Creating recipients, customers, and
-    invoices needs asterisked scopes (#28, `scope-catalog.md`), so a builder
-    on a laptop with the recommended propose-only token can't fix the data.
-    Mercury's most ambitious API customers are building exactly these
-    workflows (close, AP, AR, treasury) and have nothing to test them on.
-    **Ship:** selectable seed profiles at sandbox creation ("seed-stage SaaS,
-    month 18": vendors with ACH details, customers, overdue invoices, a
-    treasury account, statements, pending approvals) and a one-click reset.
+45. ⬇ `[sandbox]` Seed data doesn't cover close/AP/AR/treasury: 0 invoices,
+    customers, treasury, statements; recipients are mostly "Currency Cloud
+    Recipient N". Seeding needs allowlisted create scopes (#28). A richer seed
+    profile would help; not a blocker for the API story.
 46. 🔴 `[api]` **Unknown and malformed query params are silently ignored.**
     `postedstart=` (case typo of `postedStart`) returns all 150 rows unfiltered
     with 200; `order=newest` returns 200 in `asc`. But `status=bogus` and
@@ -285,12 +277,8 @@ reproducible via `scripts/recon/sweep.mjs`. Ordered most → least impact.
     fell into this (uses `start` and `createdAt` for the outflow window).
     **Ship:** `createdStart`/`createdEnd` aliases and deprecate the bare names;
     seed `createdAt` consistently with `postedAt`.
-48. 🟠 `[sandbox]` **No categorization or merchant data to build against.**
-    `mercuryCategory` 0/150, `categoryData` 0/150, `generalLedgerCodeName`
-    0/150; `merchant` on 3 rows, all with placeholder id `1234567890`; MCC on 2
-    (both 6011, ATM). 23 categories exist and none are applied. Spend,
-    subscription, and cleanup agents (#14, #19, #20) are untestable.
-    **Ship:** seed real MCCs, merchant ids, and categories on card spend.
+48. ⬇ `[sandbox]` No category, merchant, or MCC data on seeded transactions
+    (0/150 categorized), so spend and categorization agents can't be tested.
 49. 🟠 `[api]` **The credit account is invisible to `/accounts` but a third of
     `/transactions` belongs to it.** 49 of 150 rows carry an `accountId` that
     `/accounts` doesn't list and `GET /account/{id}` 404s on; you have to know
@@ -332,52 +320,86 @@ reproducible via `scripts/recon/sweep.mjs`. Ordered most → least impact.
     bearer-token calls, which cookie-jar HTTP clients will persist.
     **Ship:** rate-limit headers; strip deploy metadata and cookies from the
     API host.
-55. 🟡 `[sandbox]` **Account nicknames carry the wrong last four.** Checking
-    ••6579 is nicknamed "Evolve Checking ••4124"; ••1047 is "Mercury Checking
-    ••5234". Steward proposed a sweep "from Evolve Checking ••4124", which
-    the user can't find. Since account numbers are (rightly) redacted, the
-    name is the only human handle. **Ship:** fix seeds; add
-    `accountNumberLast4` as a first-class field.
-56. 🟡 `[sandbox]` **The sandbox writes the developer's real email into
-    seeded transaction data** (`details.creditCardInfo.email`, all 32 credit-
-    card rows). Sandbox payloads end up in fixtures, screenshots, LLM
-    contexts, and bug reports. **Ship:** seed a placeholder address.
-57. 🟡 `[docs]` **`GET /account/{id}` works but isn't in the API reference.**
-    Neither `llms.txt` nor any reference page lists it (only
-    `/account/{id}/transactions`, `/cards`, `/statements`, and the
-    request-send-money POST). Agents that only trust the spec won't use it.
-
-## Write tests (2026-09-16) — ranked by expected impact
+55. ⬇ `[sandbox]` Seeded account nicknames carry the wrong last four
+    ("Evolve Checking ••4124" on ••6579). Related API ask: a first-class
+    `accountNumberLast4`, since account numbers are rightly redacted.
+56. ⬇ `[sandbox]` Seeded credit-card transactions include the developer's
+    signup email (`details.creditCardInfo.email`).
+57. ⬇ `[docs]` `GET /account/{id}` works but isn't in the API reference.
+## Write tests (2026-09-16)
 
 `request-send-money` / `request-transfer` from the propose-only Custom token,
 directly and through Steward's MCP (elicitation accepted → `queueProposal`).
 
-58. 🔴 `[api]` `[docs]` **The approval queue needs a second human. A solo
-    founder can't propose anything.** `POST /account/{id}/request-send-money`
-    ($12.34 ACH to a seeded ACH recipient) → `400 {"errors":{"invalidApproval":
+58. 🔴 `[api]` **The approval queue rejects requests nobody else can approve,
+    so a one-member org can't propose anything.** With one org member,
+    `POST /account/{id}/request-send-money` → `400 {"errors":{"invalidApproval":
     ["Nobody else in this organization can approve this payment, so it can't
-    be submitted for approval."]}}`. The sandbox org has one user, so the
-    token's owner is the only possible approver and self-approval isn't
-    allowed. The API reference says only "will require approval based on your
-    organization's approval policies"; nothing says a single-member org is
-    rejected outright. Consequences: the one write path documented as safe
-    for agents (#8, #39) is unavailable to the smallest companies, who are
-    exactly who wants an agent to do the close; and gate 2 can't be tested in
-    a default sandbox at all. Through Steward the user *approves in chat
-    (gate 1), then gets a raw 400* — the worst place to learn it. **Ship:**
-    let the requester approve their own agent-originated request in the
-    dashboard (the dashboard step with 2FA is the control, not a second
-    person); document the rule on the endpoint; add a
-    `GET /organization/approval-policy` so an agent can check *before* asking
-    the human; seed sandbox orgs with a second approver.
-59. 🟠 `[api]` **A fifth error envelope, and validation runs before
-    idempotency.** `invalidApproval` is `{errors:{<name>:[message]}}` with no
-    `errorCode` (cf. #51). Repeating the request with the same
-    `idempotencyKey` but a different amount returns the same 400, so whether
-    the key is honored (or conflicts are detected) can't be observed until a
-    request succeeds. **Ship:** `code: approver_unavailable`; document
-    idempotency-key conflict behavior (409 on same key, different body).
+    be submitted for approval."]}}`. After adding a second member it → 200
+    `pendingApproval`, `numberOfApproversRequired: 1`,
+    `requesterMayApprove: false`. So the agent-safe write path (#8, #39)
+    is unavailable to the smallest companies, who most want an agent doing
+    the close, and there is no way to check before asking the human to
+    approve: Steward's user approves in chat (gate 1), then gets a raw 400.
+    **Ship:** allow the requester to approve their own agent-originated
+    request in the dashboard (the 2FA'd dashboard step is the control); expose
+    `GET /organization/approval-policy` (or `requesterMayApprove` as a dry-run
+    on the request) so an agent can check first; document the rule on the
+    endpoint.
+59. 🔴 `[api]` **Idempotency keys reject retries instead of replaying them.**
+    Repeating a successful `request-send-money` with the **same key and the
+    same body** → `400 {"errors":{"sendMoneyWithApproval":["It looks like you
+    have already used this idempotency key before. Please contact
+    help@mercury.com…"]}}`, not the original `requestId`. Same response for
+    same key with a different amount, so replay and conflict are
+    indistinguishable. An agent retrying after a timeout sees a failure and
+    either gives up on a request that exists, or mints a new key and queues a
+    duplicate. Also a fifth error envelope (no `errorCode`; cf. #51), and a
+    `createdAt` that differs between the POST response and the GET for the same
+    request. **Ship:** Stripe semantics: same key + same body → the original
+    200 response; same key + different body → 409
+    `idempotency_key_conflict`.
 60. 🟡 `[api]` **`request-transfer` fails with a scope error, not a
-    capability error.** 403 `tokenNotInScope` (expected, #41) — confirmed live.
-    Even if a scope existed, #58 would likely reject it too; there's no way
-    to tell from the API which will fire first.
+    capability error.** 403 `tokenNotInScope` (expected, #41), confirmed live.
+    The same 403 also comes back for `GET` on a POST-only path, where a 405
+    would be correct.
+61. ⬇ `[sandbox]` Invitee onboarding showed a generic "Error processing your
+    request" at the phone step; a refresh advanced past it (stale UI state).
+62. ⬇ `[sandbox]` Testing two-person approval needs a second real user, SMS
+    opt-in, and mandatory 2FA, for fake money. A Stripe-style test helper
+    (`POST /sandbox/request-send-money/{id}/approve`) would make gate 2
+    testable in CI and agent evals.
+63. 🟠 `[api]` **The dashboard's approval queue has items the API can't see.**
+    Payments → Needs Approval lists two requests: our $12.34 ACH (0 of 1
+    approvals) and a $100.00 payment to "Trina Lyon" (1 of 2 approvals).
+    `GET /request-send-money` returns only the first, under every status
+    filter; no recipient or transaction matches "Trina Lyon" either. So an
+    agent can't see the full set of payments waiting to go out, which is
+    exactly what it needs before proposing a sweep or a new payment
+    ("$100 is already committed"). **Ship:** one approval-requests resource
+    covering every request type the dashboard queue shows (payments to
+    non-API recipients, bill pay, transfers, multi-approver), with `type`.
+64. 🟠 `[api]` **Approval requests have no `dashboardLink`, though the deep
+    link exists.** The approve page is
+    `https://sandbox.mercury.com/payments/approvals?requestId=<requestId>`;
+    the API response doesn't return it, so the human hunts for it (it isn't
+    under Tasks; it's Payments → Needs Approval). Accounts and transactions
+    already carry `dashboardLink`. **Ship:** add it to
+    `SendMoneyApprovalRequest` (and transfer requests), so any client, MCP
+    or not, can hand the approver one click (#25).
+65. ⬇ `[dashboard]` A payment awaiting your approval doesn't appear in Tasks.
+66. 🟡 `[api]` **Approval outcomes emit no event, and the resulting
+    transaction's event omits `requestId`.** Approving the $12.34 request
+    (verified end to end: request → `approved` with `reviews[{reviewerUserId,
+    reviewedAt}]`, then an ACH `outgoingPayment` whose `requestId` points back)
+    produced `transaction/create` and `checkingAccount/update` events, but
+    nothing for the request, and the create event's `changedPaths` don't
+    include `requestId`. An agent waiting on its proposal must poll
+    `GET /request-send-money/{id}` or fetch every new transaction. Evidence
+    for #22. **Ship:** `resourceType: sendMoneyApprovalRequest` events, and
+    `requestId` in the transaction create patch.
+67. ⬇ `[dashboard]` Approving in the dashboard: the Approve button ignored
+    accessibility-tree clicks while reporting success (only a coordinate
+    click worked), so a computer-use agent can think it approved when it
+    didn't. No confirmation step, and no notification or Tasks entry for the
+    pending approval (#65).

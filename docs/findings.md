@@ -1,6 +1,6 @@
 # Findings — ranked
 
-Executive summary of `api-friction-log.md` (60 items as of 2026-09-16) and the
+Executive summary of `api-friction-log.md` (67 items as of 2026-09-16) and the
 recommendations that fall out of building Steward. Numbers in brackets point
 at log entries. Ranking weighs: does it *block* an agent or just cost it;
 how many builders hit it; how cheap the fix is; and whether it advances what
@@ -12,22 +12,19 @@ Mercury is already doing (Command, MCP, CLI, agent cards).
 primitive already exists — queue an action for human approval — but it is
 (a) not exposed to agents (the MCP is read-only), (b) inconsistent about the
 IP allowlist that makes serverless hosting impossible, (c) **unavailable to
-any org with one member**, because the requester can't be the approver (#58;
-verified live: `400 invalidApproval`), and (d) undiscoverable (scopes,
-paths, and errors aren't legible to a model). Fix those three and the
-MCP can ship writes safely.
+any org with one member**, because the requester can't be the approver [58],
+and (d) unsafe to retry: an idempotency key replayed with the same body
+returns a 400, not the original request [59]. Fix those and the MCP can ship
+writes safely.
 
-Two things make that harder for builders than it needs to be. The sandbox
-can't rehearse the workflows ambitious customers are building (no invoices,
-vendors, treasury, or categories, and no way to seed them without an
-allowlisted token) [45, 48]. And the API fails *silently* on exactly the
-mistakes models make: misspelled filters are ignored and return unfiltered
-data, and `start`/`end` quietly mean `createdAt` [46, 47]. Everything else is
-polish.
+The API also fails *silently* on exactly the mistakes models make:
+misspelled filters are ignored and return unfiltered data, and `start`/`end`
+quietly mean `createdAt` [46, 47]. Sandbox and docs issues are real but
+secondary; they're listed below the line.
 
 ## Top five, in order
 
-### 1. Ship a **propose** tier: the approval-queue endpoints, exposed to agents, with no IP allowlist, usable by a solo founder  [58, 8, 14, 39, 41, 42, 6]
+### 1. Ship a **propose** tier: the approval-queue endpoints, exposed to agents, with no IP allowlist, usable by a solo founder, safe to retry  [58, 59, 8, 14, 39, 41, 42, 6]
 `request-send-money` and `request-transfer` are the agent-safe writes: a
 human in the dashboard is the control, so the allowlist is redundant. Today
 they're absent from the MCP, and in the sandbox the approval scope still
@@ -42,7 +39,10 @@ payment"), so the smallest customers, the ones who most want an agent doing
 the close, can't queue anything (#58). The dashboard step with 2FA is the
 control; a second person is a policy choice, not a safety requirement.
 Expose the policy (`GET /organization/approval-policy`) so an agent can check
-before it asks the human to approve. **This is the single change that turns Command's
+before it asks the human to approve. Make retries safe: same idempotency
+key + same body should return the original request, not a 400 (#59), or an
+agent that times out will either abandon a real request or queue a
+duplicate. **This is the single change that turns Command's
 "propose, then approve" model into something third-party agents can use.**
 Effort: M. Unlocks: everything below.
 
@@ -53,7 +53,7 @@ IP. Today that means: reads only, no invoice creation, no queued payments
 writes, or (b) publish a static-egress guide and a sandbox exemption. Pick one
 and document it on the token page. Effort: S (docs) / M (policy).
 
-### 3. Make the API legible to a model — and loud when it's misused  [46, 47, 2, 6, 10, 51, 49, 11, 33, 35, 40, 43]
+### 3. Make the API legible to a model — and loud when it's misused  [46, 47, 2, 6, 10, 51, 59, 49, 11, 33, 35]
 First, fail loudly: 400 on unknown query params and invalid enums instead of
 returning unfiltered data (`postedstart=` and `order=newest` both 200 today,
 #46), and rename `start`/`end` to say they filter `createdAt` (#47). Those two
@@ -61,26 +61,14 @@ turn "plausible but wrong" answers into self-correcting errors. Then: one
 `openapi.json` (today: per-page fragments with the whole schema tree
 inlined, 200 KB of duplicate JSON for five pages); a scope catalog mapping
 each operation to its scope identifier *and* display name, plus whether it
-needs an allowlist; one problem+json error shape (four envelopes observed,
+needs an allowlist; one problem+json error shape (five envelopes observed,
 `tokenNotInScope` doesn't name the scope, #51); published rate limits and
 rate-limit headers; enum `Account.kind` and list credit in `/accounts` (a
 third of sandbox transactions belong to an account `/accounts` omits, #49);
-a path table for the `/ar/*` and `/request-*` outliers. All docs-and-spec work. Effort: S–M. Highest
-leverage per hour of anything here.
+a path table for the `/ar/*` and `/request-*` outliers. Mostly spec work.
+Effort: S–M. Highest leverage per hour of anything here.
 
-### 4. Give builders a sandbox that can rehearse an agent  [45, 48, 27, 38, 55]
-Running Steward's real month-end close against the seed org yields 0
-receivable follow-ups, 0 payments, 3 unmatched bills, and a $1.44M sweep that
-can't be queued. The org has no invoices, customers, treasury, statements,
-or categorized spend; its 79 recipients are mostly "Currency Cloud Recipient
-N". Seeding the gaps needs Create Recipients / Modify Invoices, which are
-allowlisted, so the recommended propose-only token can't do it. Ship seed
-profiles at sandbox creation (vendors with ACH details, customers with overdue
-invoices, treasury, real MCCs and categories, pending approvals) plus a reset,
-and relax the allowlist in sandbox. This is the first thing every API customer
-touches, before they write a line of production code. Effort: M.
-
-### 5. Close the approval loop from any client  [25, 22, 50, 37]
+### 4. Close the approval loop from any client  [64, 63, 66, 25, 22, 50, 37]
 Consumer chat clients (Claude.ai, ChatGPT, Grok) can't render an MCP
 approval prompt; only developer clients can, and stateless servers can't even
 detect 2025-era clients' capabilities. So the *dashboard* has to be reachable
@@ -88,12 +76,26 @@ by URL from a tool result: add `dashboardLink` to approval-request responses
 (accounts and transactions already have one) and emit
 `approvalRequest.updated` events so an agent learns the outcome. Transfer
 requests also need a `GET` at all: today an agent that queues a sweep can
-never read its status (#50). Effort: S.
+never read its status (#50). `request-send-money` already returns
+`requesterMayApprove` and `numberOfApproversRequired`, which is the right
+shape; add `dashboardLink` beside them. The page already exists
+(`/payments/approvals?requestId=…`) and isn't under Tasks, so without the
+link the approver goes hunting (#64). And make the API's view of the queue
+match the dashboard's: a $100 request waiting there is invisible to
+`GET /request-send-money`, so an agent can't count what's already committed
+(#63). Approval outcomes emit no event today; the only signal is a new
+transaction whose `requestId` points back (#66). Effort: S–M.
+
+### 5. Serve the aggregates and fill the data gaps  [15, 19, 20, 29, 52]
+A hosted MCP should answer "spend by category, 90 days" and "recurring
+streams" server-side instead of paging transactions into context (150 rows ≈
+182 KB ≈ 45k tokens, #52); Mercury already computes these for the dashboard.
+Add sparse fieldsets for everything else. Payables (`GET /bills`) and merchant
+lookup (`GET /merchant/{id}`) are the two missing nouns. Effort: M–L.
 
 ## Everything else, by tier
 
 **Tier A — cheap, do this quarter**
-- Token dialog and docs agree on scope names and the asterisk rule [40]
 - `--sandbox` flag / auto-detect `mercury_sandbox_` prefix in the CLI [31]
 - Protocol version + capabilities stated on the MCP docs page [26]
 - Fix the OpenAPI `info.description` boilerplate; put the official MCP URL on `docs/welcome` [4, 5]
@@ -102,10 +104,9 @@ never read its status (#50). Effort: S.
 - Token-downgrade error code + `GET /token/self` [9]
 - `null` instead of the `0001-01-01T00:00:00Z` sentinel [53]
 - Rate-limit headers; strip `git-commit` / ECS / Honeycomb headers and session cookies from the API host [54]
-- Document `GET /account/{id}`; accept IPv6 /64s in allowlists [57, 44]
+- Accept IPv6 /64s in allowlists, or say they're IPv4-only in the error [44]
 
 **Tier B — product**
-- Serve aggregates server-side ("spend by category, 90 days", recurring streams) and sparse fieldsets, instead of paging 45k tokens of transactions into context; add the missing nouns `GET /bills` and `GET /merchant/{id}` [15, 19, 20, 29, 52]. *Was #5; moved below the sandbox because it's M–L effort and only analytics agents hit it, while every builder hits the sandbox.*
 - Agent cards creatable via API; funding guide for x402 / ACP / AP2 / MPP [21]
 - Invoice reminder endpoint [30]
 - Personal-account endpoint matrix [23]
@@ -116,13 +117,22 @@ never read its status (#50). Effort: S.
 - MCP 2026-07-28 moved elicitation to stateless MRTR; sampling/roots deprecated [26, 36, 37]
 - OAuth metadata gaps in Mercury's own MCP (401 without `resource_metadata`, PRM only at root) [17]
 
+**⬇ Below the line — sandbox and docs (flag, don't lead)**
+- Richer sandbox seed data for close/AP/AR/treasury, plus categories and MCCs [45, 48, 27]
+- Sandbox test helper to approve/reject a queued request by API, so gate 2 is testable without a second real user and 2FA [62, 61]
+- Sandbox allowlist relaxed for test tokens [38]
+- Scope catalog published; token dialog and docs agree on names and the asterisk rule [43, 40]
+- Minor: seeded nicknames with wrong last four, signup email in seed data, `GET /account/{id}` undocumented, approvals missing from Tasks; dashboard Approve button ignores accessibility clicks [55, 56, 57, 65, 67]
+
 **Things that are good and should stay**
 `llms.txt` + `.md` suffix; the Send Money guide's Supported / Client-Side /
 Not-Available tables; DCR + PKCE on the MCP with the reserved `Mercury` client
 name; deterministic cursor pagination on org-scoped lists; `dashboardLink` on
 accounts and transactions; `x-mercury-request-id` + `traceparent` on every
 response; strict validation of dates and transaction status (the model to
-extend to every param).
+extend to every param); on approval requests, `requesterMayApprove`,
+`numberOfApproversRequired`, and `reviews[]` with reviewer and timestamp;
+`requestId` on the resulting transaction, which closes the audit trail.
 
 ## What Steward proves
 
