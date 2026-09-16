@@ -17,6 +17,7 @@ Key constraints from the brief:
 - `PLAN.md` — execution plan for the build. Start here if you're implementing.
 - `docs/index.html` — decision memo (what / why / API findings / architecture). Served at `/docs` once the app exists.
 - `docs/explainer.html` — Three.js step-through of one conversation across both approval gates.
+- `docs/findings.md` — **ranked BLUF** of the friction log; update it when the log grows.
 - `docs/direction.md`, `docs/landscape.md`, `docs/api-friction-log.md` — research behind the decision.
 - Guardrails: sandbox only (no production tokens); writes only via `request-*` endpoints; never direct sends. See PLAN.md §6.
 - Standing task: log every paper cut in `docs/api-friction-log.md`, tagged `[api]` `[mcp]` `[cli]` `[docs]` `[sandbox]` `[ecosystem]`.

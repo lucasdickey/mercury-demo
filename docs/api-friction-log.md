@@ -1,5 +1,7 @@
 # API & docs friction log — agent-consumption lens
 
+> **Start with [`findings.md`](findings.md)** — the BLUF and top five. This file is the raw, numbered log it summarizes.
+
 Running log. Each entry: what I hit → why it hurts an agent/MCP/CLI consumer →
 what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
 🟡 polish. Add to this as we build.
