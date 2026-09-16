@@ -346,3 +346,38 @@ reproducible via `scripts/recon/sweep.mjs`. Ordered most → least impact.
     Neither `llms.txt` nor any reference page lists it (only
     `/account/{id}/transactions`, `/cards`, `/statements`, and the
     request-send-money POST). Agents that only trust the spec won't use it.
+
+## Write tests (2026-09-16) — ranked by expected impact
+
+`request-send-money` / `request-transfer` from the propose-only Custom token,
+directly and through Steward's MCP (elicitation accepted → `queueProposal`).
+
+58. 🔴 `[api]` `[docs]` **The approval queue needs a second human. A solo
+    founder can't propose anything.** `POST /account/{id}/request-send-money`
+    ($12.34 ACH to a seeded ACH recipient) → `400 {"errors":{"invalidApproval":
+    ["Nobody else in this organization can approve this payment, so it can't
+    be submitted for approval."]}}`. The sandbox org has one user, so the
+    token's owner is the only possible approver and self-approval isn't
+    allowed. The API reference says only "will require approval based on your
+    organization's approval policies"; nothing says a single-member org is
+    rejected outright. Consequences: the one write path documented as safe
+    for agents (#8, #39) is unavailable to the smallest companies, who are
+    exactly who wants an agent to do the close; and gate 2 can't be tested in
+    a default sandbox at all. Through Steward the user *approves in chat
+    (gate 1), then gets a raw 400* — the worst place to learn it. **Ship:**
+    let the requester approve their own agent-originated request in the
+    dashboard (the dashboard step with 2FA is the control, not a second
+    person); document the rule on the endpoint; add a
+    `GET /organization/approval-policy` so an agent can check *before* asking
+    the human; seed sandbox orgs with a second approver.
+59. 🟠 `[api]` **A fifth error envelope, and validation runs before
+    idempotency.** `invalidApproval` is `{errors:{<name>:[message]}}` with no
+    `errorCode` (cf. #51). Repeating the request with the same
+    `idempotencyKey` but a different amount returns the same 400, so whether
+    the key is honored (or conflicts are detected) can't be observed until a
+    request succeeds. **Ship:** `code: approver_unavailable`; document
+    idempotency-key conflict behavior (409 on same key, different body).
+60. 🟡 `[api]` **`request-transfer` fails with a scope error, not a
+    capability error.** 403 `tokenNotInScope` (expected, #41) — confirmed live.
+    Even if a scope existed, #58 would likely reject it too; there's no way
+    to tell from the API which will fire first.

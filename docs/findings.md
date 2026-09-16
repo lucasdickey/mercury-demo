@@ -1,6 +1,6 @@
 # Findings — ranked
 
-Executive summary of `api-friction-log.md` (57 items as of 2026-09-16) and the
+Executive summary of `api-friction-log.md` (60 items as of 2026-09-16) and the
 recommendations that fall out of building Steward. Numbers in brackets point
 at log entries. Ranking weighs: does it *block* an agent or just cost it;
 how many builders hit it; how cheap the fix is; and whether it advances what
@@ -11,8 +11,10 @@ Mercury is already doing (Command, MCP, CLI, agent cards).
 **Mercury's API is agent-readable but not agent-actionable.** The right
 primitive already exists — queue an action for human approval — but it is
 (a) not exposed to agents (the MCP is read-only), (b) inconsistent about the
-IP allowlist that makes serverless hosting impossible, and (c) undiscoverable
-(scopes, paths, and errors aren't legible to a model). Fix those three and the
+IP allowlist that makes serverless hosting impossible, (c) **unavailable to
+any org with one member**, because the requester can't be the approver (#58;
+verified live: `400 invalidApproval`), and (d) undiscoverable (scopes,
+paths, and errors aren't legible to a model). Fix those three and the
 MCP can ship writes safely.
 
 Two things make that harder for builders than it needs to be. The sandbox
@@ -25,7 +27,7 @@ polish.
 
 ## Top five, in order
 
-### 1. Ship a **propose** tier: the approval-queue endpoints, exposed to agents, with no IP allowlist  [8, 14, 39, 41, 42, 6]
+### 1. Ship a **propose** tier: the approval-queue endpoints, exposed to agents, with no IP allowlist, usable by a solo founder  [58, 8, 14, 39, 41, 42, 6]
 `request-send-money` and `request-transfer` are the agent-safe writes: a
 human in the dashboard is the control, so the allowlist is redundant. Today
 they're absent from the MCP, and in the sandbox the approval scope still
@@ -33,7 +35,14 @@ demands an allowlist despite the docs saying otherwise. Make "Send Money with
 Approval" + a new "Transfer with Approval" (there is none today, #41) +
 `updateTransaction` (note/category — allowlisted today, #42) a
 first-class scope tier for both API tokens and MCP OAuth, allowlist-free, and
-say so in the token dialog. **This is the single change that turns Command's
+say so in the token dialog. And let the requester approve their own
+agent-originated request in the dashboard: today a one-person company gets
+`400 invalidApproval` ("Nobody else in this organization can approve this
+payment"), so the smallest customers, the ones who most want an agent doing
+the close, can't queue anything (#58). The dashboard step with 2FA is the
+control; a second person is a policy choice, not a safety requirement.
+Expose the policy (`GET /organization/approval-policy`) so an agent can check
+before it asks the human to approve. **This is the single change that turns Command's
 "propose, then approve" model into something third-party agents can use.**
 Effort: M. Unlocks: everything below.
 

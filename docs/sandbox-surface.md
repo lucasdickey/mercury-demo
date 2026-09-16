@@ -15,9 +15,9 @@ routing numbers redacted. Friction entries referenced as [#n].
 | Overdue AR follow-ups | ❌ 0 invoices, 0 customers | 0 proposals |
 | Bills due → pay | ❌ 79 recipients, none vendor-like (71 "Currency Cloud Recipient N" intl-wire; 4 ACH) | 0 pay, 3 `unmatched_bill` |
 | Sweep to yield | ⚠️ 0 treasury; 2 savings. `request-transfer` has no Custom scope [#41] | 1 sweep of $1,443,600 → savings; **cannot be queued** with this token |
-| Approval queue | ✅ `GET /request-send-money` works (empty) | — (writes not yet tested) |
+| Approval queue | ❌ `GET /request-send-money` works (empty), but **`POST` → 400 `invalidApproval`**: one-user org, requester can't approve [#58] | Gate 1 accepted in chat → raw 400. Gate 2 untestable without a second org member |
 
-**Bottom line:** reads work; the seed data can't exercise AR, AP, or treasury.
+**Bottom line:** reads work; the seed data can't exercise AR, AP, or treasury, and no write can be queued: payments need a second approver in the org [#58], transfers need a scope that doesn't exist [#41].
 The demo needs seeding, and seeding recipients/customers/invoices needs
 asterisked (allowlisted) scopes this token deliberately doesn't have [#45].
 
