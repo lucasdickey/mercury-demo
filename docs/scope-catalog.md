@@ -16,7 +16,7 @@ picker. This list is not published anywhere in the docs (friction #6, #40).
 | Cards | Manage Cards | `*` | update / freeze / unfreeze / cancel |
 | Cards | Reveal Card PAN | `*` | Vault `reveal` (agent cards) |
 | Categories | Fetch Categories | — | `GET /categories` (create/edit/delete: not seen in picker) |
-| Invoices | Fetch Invoices | — | `GET /ar/invoices` (+ customers? unclear) |
+| Invoices | Fetch Invoices | — | `GET /ar/invoices`, `GET /ar/customers` (verified: customers 200 with this scope) |
 | Invoices | Modify Invoices | `*` | create / update / cancel invoice |
 | Recipients | Create Recipients | `*` | `POST /recipients` |
 | Recipients | Edit Recipients | `*` | `POST /recipient/{id}` |
@@ -42,3 +42,17 @@ the list; the two transfer endpoints appear to have no Custom scope at all.
 
 Selected for Steward: the eleven non-asterisk reads above plus Send Money with
 Approval. No asterisked scope.
+
+## Verified against the API (2026-09-16, `sandbox-surface.md`)
+
+With exactly the scopes above:
+- 200: accounts, `/account/{id}` (undocumented), transactions (org + account
+  scoped, incl. the credit account's), recipients, recipient attachments,
+  `/ar/invoices`, `/ar/customers`, treasury, credit, categories, organization,
+  `request-send-money`, account statements, **`/events`** (no events scope in
+  the picker, yet readable).
+- 403 `tokenNotInScope` (unselected, as expected): cards, account cards,
+  users, merchants, webhooks, SAFEs, recipient invites.
+- 403 `tokenNotInScope` on `GET /request-transfer` and
+  `GET /request-transfer/{id}`: neither is documented, and no scope in the
+  picker grants transfer requests (friction #41, #50).

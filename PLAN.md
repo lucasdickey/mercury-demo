@@ -28,7 +28,7 @@ Built and green without a sandbox token:
 - `apps/web`: MCP route with real MRTR elicitation + HMAC `requestState` + approve-URL fallback; chat UI on AI SDK 7; `/approve/[token]`; `/docs` served statically. **`next build` passes.**
 - `npm run smoke` — offline end-to-end with a mock Mercury and the real MCP client SDK: `tools/list`, `close_month`, approve-URL fallback for clients without elicitation, and the full MRTR round trip (form → accept → signed re-entry → `POST /request-transfer` with the proposal id as idempotencyKey → `pendingApproval`; decline → nothing queued). 7/7 checks.
 
-Blocked on the sandbox token: PLAN §2 recon, live `close_month`, live `request-*` calls, Claude Code end-to-end.
+~~Blocked on the sandbox token~~ Token in hand (Custom, IPv4-allowlisted). **§2 read recon done 2026-09-16 → `docs/sandbox-surface.md`, friction #45–57.** Live read-only `closeMonth`: 0 follow-ups, 0 pays, 3 unmatched bills, 1 un-queueable sweep — seed data can't exercise AR/AP/treasury. Still open: §2 writes, seeding, the `createdAt` fix in `closeMonth` (#47), Claude Code end-to-end. Requires Node ≥ 22 (`Object.groupBy`).
 
 ## 1. Preconditions (human)
 
@@ -160,9 +160,9 @@ Spec note: MCP 2026-07-28 made elicitation stateless (MRTR); sampling/roots depr
 
 ## 8. Still open (need sandbox)
 
-- What the sandbox seeds (accounts kinds, recipients, invoices, treasury, MCC on txns).
+- ~~What the sandbox seeds~~ → `docs/sandbox-surface.md`: 9 depository + 1 credit account, 150 txns, 79 recipients (not vendor-like), 0 invoices/customers/treasury/statements, no categories or MCCs applied.
 - Whether the sandbox has an approval-queue UI and whether `request-*` requests appear there.
-- Whether sandbox read-write tokens demand an IP allowlist.
+- ~~Whether sandbox read-write tokens demand an IP allowlist~~ → yes, and so does the approval scope (#38, #39); allowlist is effectively IPv4-only (#44).
 - Whether the official CLI works against the sandbox via `--base-url`.
 
 ## 9. Why rev 2 replaced rev 1

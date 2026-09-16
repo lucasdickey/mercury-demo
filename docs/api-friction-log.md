@@ -247,3 +247,102 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
     IPv4." Workaround: `curl -4`, `NODE_OPTIONS=--dns-result-order=ipv4first`.
     **Ship:** accept IPv6 prefixes (/64) in the allowlist, and add an
     `ipFamily` hint to the `ipNotWhitelisted` error.
+
+## Sandbox recon (2026-09-16) — ranked by expected impact
+
+Probed read-only with a Custom token; evidence in `sandbox-surface.md`,
+reproducible via `scripts/recon/sweep.mjs`. Ordered most → least impact.
+
+45. 🔴 `[sandbox]` **The seed org can't rehearse an agent, and you can't seed it
+    without allowlisted scopes.** 0 invoices, 0 customers, 0 treasury, 0
+    statements, 0 approval requests. 79 recipients, but 71 are "Currency Cloud
+    Recipient N" international wires, 3 are "Banned Recipient" (all `active`),
+    4 are ACH, none look like a vendor. Running Steward's real `closeMonth`
+    against it: 0 AR follow-ups, 0 payments, 3 unmatched bills, and one $1.44M
+    sweep that can't be queued (#41). Creating recipients, customers, and
+    invoices needs asterisked scopes (#28, `scope-catalog.md`), so a builder
+    on a laptop with the recommended propose-only token can't fix the data.
+    Mercury's most ambitious API customers are building exactly these
+    workflows (close, AP, AR, treasury) and have nothing to test them on.
+    **Ship:** selectable seed profiles at sandbox creation ("seed-stage SaaS,
+    month 18": vendors with ACH details, customers, overdue invoices, a
+    treasury account, statements, pending approvals) and a one-click reset.
+46. 🔴 `[api]` **Unknown and malformed query params are silently ignored.**
+    `postedstart=` (case typo of `postedStart`) returns all 150 rows unfiltered
+    with 200; `order=newest` returns 200 in `asc`. But `status=bogus` and
+    `start=yesterday` 400. An LLM that half-remembers a param name gets
+    *plausible, wrong* data and no signal — the worst failure mode for an
+    agent doing accounting. **Ship:** 400 on unknown params and invalid enums
+    (`code: unknown_parameter`, `hint: "did you mean postedStart?"`), behind an
+    API version if needed.
+47. 🟠 `[api]` `[docs]` `[sandbox]` **`start`/`end` filter `createdAt`; the
+    dashboard shows `postedAt`.** Documented in the param description, but the
+    obvious names are the wrong ones for any period-based task (month-end
+    close, spend by month). In the sandbox the gap is extreme: every
+    `createdAt` is the seed run (Aug 16–Sep 15) while `postedAt` spans Apr–Sep,
+    82 rows are posted *before* they were created, and `end=2026-06-30`
+    returns 0 rows though 16 posted before then. Steward's own `closeMonth`
+    fell into this (uses `start` and `createdAt` for the outflow window).
+    **Ship:** `createdStart`/`createdEnd` aliases and deprecate the bare names;
+    seed `createdAt` consistently with `postedAt`.
+48. 🟠 `[sandbox]` **No categorization or merchant data to build against.**
+    `mercuryCategory` 0/150, `categoryData` 0/150, `generalLedgerCodeName`
+    0/150; `merchant` on 3 rows, all with placeholder id `1234567890`; MCC on 2
+    (both 6011, ATM). 23 categories exist and none are applied. Spend,
+    subscription, and cleanup agents (#14, #19, #20) are untestable.
+    **Ship:** seed real MCCs, merchant ids, and categories on card spend.
+49. 🟠 `[api]` **The credit account is invisible to `/accounts` but a third of
+    `/transactions` belongs to it.** 49 of 150 rows carry an `accountId` that
+    `/accounts` doesn't list and `GET /account/{id}` 404s on; you have to know
+    to join `/credit`. `GET /account/{creditId}/transactions` *does* work. An
+    agent grouping spend by account gets an unknown bucket or crashes on a
+    lookup. **Ship:** list credit in `/accounts` with `kind: "credit"`, or put
+    `accountKind` on each transaction.
+50. 🟠 `[api]` **Transfer approval requests are write-only.** `POST
+    /request-transfer` exists; there is no documented `GET /request-transfer`
+    or `GET /request-transfer/{id}` (both 403 `tokenNotInScope`, not 404/405).
+    `request-send-money` has list + get + status filter. An agent that queued
+    a sweep can never check whether it was approved (compounds #22, #41).
+    **Ship:** list/get for transfer requests with the same status enum, and
+    return 405 for wrong methods.
+51. 🟠 `[api]` **Four error envelopes and two list envelopes.** Observed:
+    `{errors:{errorCode,message}}` (403 scope, 400 date),
+    `{errors:{errorCode:"resourceNotFound",message}}` (`/account/{id}`),
+    `{errors:{notFound:[…"contact help@mercury.com"]}}` (no code;
+    `/transaction/{id}`, unknown paths, and malformed UUIDs, which should be
+    400), `{errors:{message}}` (limit > 1000, no code). `tokenNotInScope`
+    doesn't name the missing scope. Lists: org-scoped transactions return
+    `{transactions, page}`; account-scoped return `{total, transactions}` with
+    no cursor. Evidence for #10 and #12. **Ship:** one problem+json shape with
+    `code`, and `requiredScope` on 403.
+52. 🟠 `[api]` `[mcp]` **Transactions are heavy for a context window.** 1.2 KB
+    per row in a list (4.4 KB from `GET /transaction/{id}`); 10 of 35 top-level
+    keys were null on all 150 rows. 150 rows ≈ 182 KB ≈ 45k tokens; 79
+    recipients ≈ 60 KB. **Ship:** `fields=` sparse fieldsets and an
+    omit-nulls option; the MCP should use both by default (see #15).
+53. 🟡 `[api]` **Zero-date sentinel instead of null.** `postedAt`,
+    `failedAt`, and `recipient.dateLastPaid` use `0001-01-01T00:00:00Z`, on
+    `sent` transactions too. Sorts first, parses as a valid date, breaks
+    "days since last paid." **Ship:** null.
+54. 🟡 `[api]` **Headers: no rate-limit info; internal metadata instead.**
+    Confirms #11 in practice — no `RateLimit-*` / `Retry-After`. Good:
+    `x-mercury-request-id` and `traceparent`. But every API response also
+    carries `git-commit`, `ecs-task-name`, `ecs-task-id`,
+    `mercury-honeycomb-link`, and four `Set-Cookie`s (incl. a `_SESSION`) on
+    bearer-token calls, which cookie-jar HTTP clients will persist.
+    **Ship:** rate-limit headers; strip deploy metadata and cookies from the
+    API host.
+55. 🟡 `[sandbox]` **Account nicknames carry the wrong last four.** Checking
+    ••6579 is nicknamed "Evolve Checking ••4124"; ••1047 is "Mercury Checking
+    ••5234". Steward proposed a sweep "from Evolve Checking ••4124", which
+    the user can't find. Since account numbers are (rightly) redacted, the
+    name is the only human handle. **Ship:** fix seeds; add
+    `accountNumberLast4` as a first-class field.
+56. 🟡 `[sandbox]` **The sandbox writes the developer's real email into
+    seeded transaction data** (`details.creditCardInfo.email`, all 32 credit-
+    card rows). Sandbox payloads end up in fixtures, screenshots, LLM
+    contexts, and bug reports. **Ship:** seed a placeholder address.
+57. 🟡 `[docs]` **`GET /account/{id}` works but isn't in the API reference.**
+    Neither `llms.txt` nor any reference page lists it (only
+    `/account/{id}/transactions`, `/cards`, `/statements`, and the
+    request-send-money POST). Agents that only trust the spec won't use it.

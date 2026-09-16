@@ -13,7 +13,7 @@
     "smoke": "scripts/smoke/run.sh"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.0.0"
