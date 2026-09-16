@@ -237,3 +237,13 @@ what I'd ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
     seven groups, asterisk convention, one "Experimental" badge — and it lives
     only in a modal. Transcribed to `docs/scope-catalog.md`; Mercury should
     publish the equivalent with identifiers and endpoint mappings.
+44. 🟠 `[api]` `[sandbox]` `[docs]` **IP allowlists are IPv4-in-practice on a
+    dual-stack API.** `api-sandbox.mercury.com` publishes AAAA records
+    (Cloudflare), so a Mac on a home/mobile ISP egresses over IPv6 — a
+    temporary SLAAC address that rotates. The dashboard hint and `ifconfig.me`
+    both nudge you to allowlist IPv4; curl and Node `fetch` then connect over
+    IPv6 and get `401 ipNotWhitelisted`. The error body does echo the observed
+    IP (good), but nothing says "you're on IPv6; allowlist a /64 or force
+    IPv4." Workaround: `curl -4`, `NODE_OPTIONS=--dns-result-order=ipv4first`.
+    **Ship:** accept IPv6 prefixes (/64) in the allowlist, and add an
+    `ipFamily` hint to the `ipNotWhitelisted` error.

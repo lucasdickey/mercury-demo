@@ -5,9 +5,9 @@
   "scripts": {
     "predev": "node scripts/copy-docs.mjs",
     "prebuild": "node scripts/copy-docs.mjs",
-    "dev": "next dev",
+    "dev": "NODE_OPTIONS=--dns-result-order=ipv4first next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_OPTIONS=--dns-result-order=ipv4first next start",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
