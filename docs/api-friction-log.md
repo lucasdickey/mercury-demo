@@ -91,9 +91,16 @@ leading with. The lead is the API, MCP, and CLI. Add to this as we build.
 17. 🟡 **OAuth metadata gaps Mercury itself documents**: 401 lacks
     `resource_metadata` in `WWW-Authenticate`; PRM only at root, not at
     `/.well-known/oauth-protected-resource/mcp`. Generic clients need hardcoding.
-18. 🟡 **No sandbox MCP host.** You can't demo the official MCP without a real
-    account. (Same for CLI — `--base-url` only.)
-
+18. 🟠 `[mcp]` `[docs]` **A sandbox MCP host exists, undocumented, and it
+    advertises write scopes.** (Updated 2026-09-16; originally "no sandbox MCP
+    host".) `https://mcp-sandbox.mercury.com/mcp` answers with the same OAuth
+    shape as production (DCR + PKCE S256), but its protected-resource metadata
+    lists `read offline_access transactions:request transfers:request
+    categories:create categories:edit transactions:update`, while
+    `mcp.mercury.com` lists only `read offline_access`. Neither host nor those
+    scopes appear in the MCP docs. That is the propose tier from #8 and #14,
+    apparently in progress. **Ship:** document the sandbox host so builders can
+    test against it, and say which scopes are coming to production.
 ## Data model gaps (the ones that block an efficiency agent)
 
 19. 🔴 **No recurring-stream signal.** No `isRecurring`, no cadence, no
@@ -157,10 +164,9 @@ leading with. The lead is the API, MCP, and CLI. Add to this as we build.
 30. 🟡 `[api]` **No API for invoice reminders.** Overdue-invoice follow-up is a
     dashboard action; an agent can draft the message but not send it through
     Mercury. **Ship:** `POST /invoice/{id}/remind`.
-31. 🟡 `[cli]` **No `--sandbox` flag on the official CLI.** `--base-url` exists;
-    whether sandbox tokens + sandbox base URL work end-to-end is unverified.
-    **Ship:** `MERCURY_ENV=sandbox` / `--sandbox`, and detect `mercury_sandbox_`
-    token prefixes automatically (the prefix already encodes the environment).
+31. 🟡 `[cli]` ~~No `--sandbox` flag on the official CLI.~~ Resolved: CLI
+    0.11.8 has `--environment sandbox` and `mercury status` shows sign-in per
+    environment. Verified against the sandbox on 2026-09-16 (#68–72).
 32. 🔴 `[ecosystem]` **Grok's connector client is `tools/list` + `tools/call`
     only** — an elicitation makes the call time out. Together with Claude.ai
     and ChatGPT, none of the three consumer chat surfaces can render an
@@ -403,3 +409,70 @@ directly and through Steward's MCP (elicitation accepted → `queueProposal`).
     click worked), so a computer-use agent can think it approved when it
     didn't. No confirmation step, and no notification or Tasks entry for the
     pending approval (#65).
+
+## Official CLI and MCP, tested against the sandbox (2026-09-16)
+
+Mercury CLI 0.11.8 (Go, Stainless-generated) with the propose-only sandbox
+token via `MERCURY_API_KEY` and `--environment sandbox`; Mercury MCP probed
+unauthenticated and via OAuth.
+
+68. 🔴 `[cli]` **`payments transfer` moves money directly, and sits next to
+    `payments request`.** The CLI has `payments request` (approval-gated
+    send), `payments create` (direct send), and `payments transfer`, which is
+    `POST /transfer`, a direct internal transfer. There is no command for
+    `request-transfer`. Our own agent, testing the CLI for the approval-gated
+    path, ran `payments transfer` expecting a request; only the token's missing
+    scope (403) stopped it. Command names don't say which ones need approval.
+    **Ship:** `payments request-transfer`; name direct movers unambiguously
+    (`payments send-now`, `transfers execute`); mark approval-gated commands in
+    help.
+69. 🟠 `[cli]` **Errors go to stdout, after "No results."** A failed call prints
+    `No results.`, the request line, and the error JSON on stdout (exit code
+    1). `mercury … --format json | jq` gets a non-JSON line followed by an error
+    object. **Ship:** errors on stderr, nothing on stdout on failure.
+70. 🟠 `[cli]` **No way to force IPv4.** The Go client connects over IPv6 when
+    available, so the same IPv4-allowlisted token that works with `curl -4`
+    gets `401 ipNotWhitelisted` (#44). The only workaround was a local IPv4
+    CONNECT proxy via `HTTPS_PROXY`. **Ship:** `--ip-family 4`, or fall back to
+    IPv4 on `ipNotWhitelisted`.
+71. 🟡 `[cli]` **The CLI passes the API's rough edges straight through.**
+    Replaying `payments request` with the same `--idempotency-key` → the same
+    400 "already used this idempotency key" (#59); `--order newest` is
+    accepted and ignored (#46). Output includes full account and routing
+    numbers, with no redaction option for piping into an agent.
+72. 🟡 `[cli]` **Good defaults worth keeping:** in a non-interactive shell,
+    money commands refuse to run without `--yes` instead of hanging on a
+    prompt; `--idempotency-key` is required; a misspelled flag gets "Did you
+    mean `--posted-start`?", which fixes #46 at the client; `--format jsonl`
+    and `--transform` (GJSON) are agent-friendly.
+
+
+## Checked against SaaStr's agent-friendly API checklist (2026-09-16)
+
+Source: Jason Lemkin, "The simplest way to make your product more agentic this
+month" (SaaStr). Mercury scores about 4 of 10 on its checklist, counting
+partial credit. Items below are the ones our log didn't already cover; each
+was verified against docs.mercury.com.
+
+73. 🟠 `[mcp]` `[docs]` **Auto-discovery points agents at the docs server, not
+    the bank.** Every docs page sends a `Link` header advertising
+    `rel="mcp-server"` → `/.well-known/mcp/server-card.json`, whose only remote
+    is `https://docs.mercury.com/mcp` (ReadMe's docs-search MCP), not
+    `mcp.mercury.com/mcp`. The same header advertises `rel="api-catalog"` →
+    `/.well-known/api-catalog`, which returns 404; `llms-full.txt` is also 404
+    (#1). An agent that follows the standard discovery path connects to the
+    wrong server. **Ship:** list both servers in the card with clear titles;
+    serve the api-catalog or remove the link.
+74. 🟠 `[api]` **Most write endpoints have no idempotency key.** In the
+    reference, `idempotencyKey` exists only on send money, request send money,
+    request transfer, and internal transfer (4 of 12 checked). Creating
+    recipients, invoices, customers, cards, categories, webhooks, and recipient
+    invites has none, so an agent retrying after a timeout can create
+    duplicates. Together with #59 (replay returns 400), retries are unsafe on
+    most writes. **Ship:** `Idempotency-Key` on every POST, with replay
+    semantics.
+75. 🟡 `[docs]` **The skills index is a placeholder.**
+    `/.well-known/agent-skills/index.json` exists but holds ReadMe's single
+    generic "read-the-docs" skill. Mercury already has Recipes that could be
+    task skills, and "request a payment for approval" is the pattern agents
+    most need to learn. **Ship:** task-level skills, starting there.
