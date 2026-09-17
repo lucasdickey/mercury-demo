@@ -61,3 +61,33 @@ x402/MPP facilitator would draw from; Mercury has no native 402 endpoint.
 3. Does the sandbox return MCC / `merchant` data and `mercuryCategory` on seeded txns?
 4. Are cards / agent cards / vault / events available in sandbox?
 5. Does `requestSendMoney` work on personal (approval UI exists there?).
+
+## Prior art: Michelle Bu, "Building a t-shirt factory factory" (Sep 2026)
+
+https://www.breakingchange.blog/p/building-a-t-shirt-factory-factory
+
+Michelle Bu (Stripe; owns APIs and developer tools there) ran the same
+experiment we did, at scale: seven coding agents × three runs each (21 runs,
+Sep 7–10 2026), each asked to build, deploy, and test a working t-shirt shop
+on Stripe + Prodigi with no human help after setup. Only 7 of 21 shops worked;
+2 were production-worthy. The failures clustered at the same places ours did:
+
+- **API handoff points** (payment → fulfillment) and error handling; silent failures.
+- **Version skew** between client library and webhook handler after a schema change.
+- **Discoverability**: agents searched the web once for React but 62 times for
+  the unfamiliar API — training data carries the famous ones, docs carry the rest.
+- **Onboarding**: no sandbox reachable by an agent before a human signs up;
+  launch-blocking config (ToS links, branding) with no programmatic path;
+  reluctance to put live keys in an agent transcript.
+
+What she'd ship, in her words: *"Any friction we reduce for agents is friction
+we'll reduce for humans as well,"* and *"If you're a developer tools provider,
+you should offer a limited sandbox environment to agents before you require a
+human."* The Stripe CLI's discoverability and metadata design came out well.
+
+Why it matters here: it is the same method (brute-force the integration, log
+where it breaks) from the seat that owns the surface, and it lands on the same
+top-tier findings we did for Mercury — sandbox before signup (#27, #38, #39),
+versioned/legible spec (#2, #33), and keys that shouldn't have to exist
+(#8, #42). Her conclusion is the thesis of our deck: agent-first fixes are
+not a niche; they're the ordinary DX backlog, prioritized by what breaks first.

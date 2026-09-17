@@ -145,6 +145,17 @@ closes the audit trail. In the CLI: `--environment sandbox`, required
 idempotency keys, `--yes` required when non-interactive, and "did you mean"
 on mistyped flags [72].
 
+## Corroboration
+
+Michelle Bu, who owns APIs and developer tools at Stripe, ran the same
+experiment against her own surface a week before we did — 21 agent runs
+building Stripe + Prodigi shops, 7 working, 2 shippable — and reached the same
+top-tier list: sandbox before a human signs up, versioning that agents can
+reason about, and keys that shouldn't have to exist. *"Any friction we reduce
+for agents is friction we'll reduce for humans as well."*
+[Building a t-shirt factory factory](https://www.breakingchange.blog/p/building-a-t-shirt-factory-factory)
+— summary in `landscape.md`.
+
 ## What Steward proves
 
 Built on the API as it exists: read → analyze → propose → approve in the

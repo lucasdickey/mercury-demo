@@ -233,6 +233,7 @@
     <p class="thesis">Their MCP is read-only because they don't trust the model to act. The answer to "we don't trust it" doesn't have to be "so it can't do anything." It can be "so it has to ask — twice."</p>
     <p>The REST API already contains the pattern: <code>request-send-money</code> and <code>request-transfer-money</code> queue an action for a human to approve in the dashboard, and neither needs an IP allowlist because the approval <em>is</em> the control. Those endpoints are absent from the MCP, along with harmless writes like categorizing a transaction — which Mercury says is the #1 thing early users want.</p>
     <p>So the spike is a working demonstration of the tier we think Mercury's MCP should add next, built on their own API, with the API critique carried by the artifact rather than a slide.</p>
+    <p>The method isn't ours alone. A week before this, Michelle Bu — who owns APIs and developer tools at Stripe — ran 21 coding-agent attempts at building shops on Stripe's own API and logged where they broke: 7 worked, 2 were shippable, and the failures clustered at sandbox access, version skew, and keys that shouldn't have to exist. Her line is the thesis of this memo: <em>"Any friction we reduce for agents is friction we'll reduce for humans as well."</em> <a href="https://www.breakingchange.blog/p/building-a-t-shirt-factory-factory">Building a t-shirt factory factory ↗</a></p>
 
     <h3>How it maps to the brief</h3>
     <ul>
