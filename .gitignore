@@ -3,6 +3,7 @@
 !.env.example
 node_modules/
 .DS_Store
+.demo/
 node_modules/
 .next/
 dist/

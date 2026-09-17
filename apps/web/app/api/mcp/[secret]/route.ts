@@ -3,6 +3,7 @@ import { acceptedContent, createRequestStateCodec, inputRequired, type McpServer
 import { z } from "zod";
 import { closeMonth, queueProposal, refusalFor, PayProposal, SweepProposal, type NotQueuedResult, type Proposal, type StickyRefusal } from "@steward/core";
 import { mercury, requireEnv } from "@/lib/mercury";
+import { loadBills } from "@/lib/bills";
 import { approveUrl } from "@/lib/approve-token";
 
 export const runtime = "nodejs";
@@ -68,7 +69,7 @@ const handler = createMcpHandler(
         }),
       },
       async ({ withinDays, floor }) => {
-        const report = await closeMonth(mercury(), { withinDays, floor });
+        const report = await closeMonth(mercury(), { withinDays, floor, bills: loadBills() });
         return json(report);
       },
     );
@@ -212,6 +213,21 @@ function json(v: unknown) {
 
 /** Path-secret check: the only auth on this demo endpoint (PLAN.md §0). */
 function guarded(req: Request, ctx: { params: Promise<{ secret: string }> }) {
-  return ctx.params.then(({ secret }) => (secret === requireEnv("MCP_PATH_SECRET", 16) ? handler(req) : new Response("Not found", { status: 404 })));
+  return ctx.params.then(async ({ secret }) => {
+    if (secret !== requireEnv("MCP_PATH_SECRET", 16)) return new Response("Not found", { status: 404 });
+    if (process.env.STEWARD_DEBUG) await logCall(req);
+    return handler(req);
+  });
+}
+
+/** STEWARD_DEBUG: name each call in the dev log, so a slow request can be traced to its method or tool. */
+async function logCall(req: Request) {
+  if (req.method !== "POST") return console.error(`[steward] ${req.method}`);
+  try {
+    const msg = await req.clone().json();
+    for (const m of Array.isArray(msg) ? msg : [msg]) console.error(`[steward] ${new Date().toISOString()} ${m.method ?? "response"}${m.params?.name ? ` ${m.params.name}` : ""}`);
+  } catch {
+    console.error("[steward] POST (unparsed body)");
+  }
 }
 export { guarded as GET, guarded as POST, guarded as DELETE };

@@ -10,7 +10,8 @@
     "test": "npm run test -w packages/core",
     "dev": "npm run dev -w apps/web",
     "typecheck": "npm run typecheck -ws --if-present",
-    "smoke": "scripts/smoke/run.sh"
+    "smoke": "scripts/smoke/run.sh",
+    "demo:prep": "node scripts/demo/prep.mjs"
   },
   "engines": {
     "node": ">=22"

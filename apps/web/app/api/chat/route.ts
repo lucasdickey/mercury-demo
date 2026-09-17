@@ -3,6 +3,7 @@ import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage }
 import { z } from "zod";
 import { closeMonth } from "@steward/core";
 import { mercury } from "@/lib/mercury";
+import { loadBills } from "@/lib/bills";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
       close_month: tool({
         description: "Run month-end close: cash position, overdue invoices, bills due, surplus sweep. Read-only.",
         inputSchema: z.object({ withinDays: z.number().int().optional(), floor: z.number().optional() }),
-        execute: async ({ withinDays, floor }) => closeMonth(mercury(), { withinDays, floor }),
+        execute: async ({ withinDays, floor }) => closeMonth(mercury(), { withinDays, floor, bills: loadBills() }),
       }),
       cash_position: tool({
         description: "Balances by kind, operating floor, average monthly outflow. Read-only.",

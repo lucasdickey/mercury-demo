@@ -16,7 +16,10 @@ npm install
 cp .env.example .env.local        # fill in: sandbox token, ANTHROPIC_API_KEY, MCP_PATH_SECRET, STATE_SECRET
 npm test                          # core analyzers against fixtures
 npm run dev                       # http://localhost:3000  (chat UI)  ·  /docs  (memo)
+npm run demo:prep                 # before a demo: bills due from today, queue check, close_month preview
 ```
+
+Demo walkthrough, prerequisites, and troubleshooting: `PLAN.md` §5.
 
 Everything runs against the Mercury **sandbox**. There is no production token
 slot; the client refuses `api.mercury.com` unless explicitly overridden in code.
