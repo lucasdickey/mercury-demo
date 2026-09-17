@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="What we built for a Mercury founder's month-end close in Claude Code, why it can't move money on its own, and the API walls we hit getting there.">
+<title>Steward Month-End Close</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --paper: #f5f7f9;
+    --panel: #ffffff;
+    --ink: #16202c;
+    --muted: #5b6877;
+    --rule: #dce1e7;
+    --accent: #1f6f5c;
+    --accent-soft: #e3f0ec;
+    --amber: #9a6414;
+    --amber-soft: #f8eedc;
+    --term: #111820;
+    --term-ink: #d9e2ea;
+    --term-dim: #7f8d9b;
+    --term-accent: #6fd0b3;
+    --term-amber: #e6b25c;
+    --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+      --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+      --term: #0a0f14; --term-ink: #d9e2ea; --term-dim: #7f8d9b; --term-accent: #6fd0b3; --term-amber: #e6b25c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+    --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+    --term: #0a0f14; --term-ink: #d9e2ea; --term-dim: #7f8d9b; --term-accent: #6fd0b3; --term-amber: #e6b25c;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 18px; line-height: 1.6; }
+  .wrap { max-width: 720px; margin: 0 auto; padding-inline: 20px; padding-block: 56px 96px; }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.15; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(2.1rem, 6vw, 3.2rem); font-weight: 700; letter-spacing: -0.02em; }
+  h2 { font-size: 1.55rem; font-weight: 700; letter-spacing: -0.01em; margin-top: 64px; }
+  h3 { font-size: 1.05rem; font-weight: 700; }
+  p { margin: 0; }
+  section > * + * { margin-top: 16px; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  code, .mono { font-family: var(--mono); font-size: 0.84em; }
+  code { background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .eyebrow { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .dek { font-size: 1.22rem; color: var(--muted); margin-top: 18px; max-width: 34em; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 24px; font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+
+  /* Video slot */
+  .video { margin-top: 40px; }
+  .frame { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: var(--term); border-radius: 10px; overflow: hidden; display: grid; place-items: center; }
+  .frame video { width: 100%; height: 100%; display: block; background: #000; }
+  .frame .pending { text-align: center; color: var(--term-dim); font-family: var(--mono); font-size: 0.85rem; padding: 24px; }
+  .frame .pending strong { display: block; color: var(--term-ink); font-family: var(--display); font-size: 1.15rem; font-weight: 500; margin-bottom: 6px; }
+  .caption { font-size: 0.9rem; color: var(--muted); margin-top: 10px; }
+
+  /* Two gates */
+  .gates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
+  .gate { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; }
+  .gate .step { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .gate h3 { margin-top: 6px; }
+  .gate p { font-size: 0.92rem; color: var(--muted); margin-top: 6px; line-height: 1.45; }
+  .gate.money { background: var(--accent-soft); border-color: transparent; }
+  @media (max-width: 620px) { .gates { grid-template-columns: 1fr; } }
+
+  /* Terminal transcript */
+  .term { background: var(--term); color: var(--term-ink); border-radius: 10px; padding: 18px 20px; font-family: var(--mono); font-size: 0.8rem; line-height: 1.65; overflow-x: auto; margin-top: 24px; }
+  .term .you { color: var(--term-accent); }
+  .term .dim { color: var(--term-dim); }
+  .term .warn { color: var(--term-amber); }
+  .term .box { display: inline-block; border: 1px solid var(--term-dim); border-radius: 4px; padding: 2px 8px; margin: 4px 0; }
+  .term p + p { margin-top: 10px; }
+  .term-label { font-size: 0.85rem; color: var(--muted); margin-top: 8px; }
+
+  /* Walls hit, in order */
+  .walls { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 0; border-top: 1px solid var(--rule); }
+  .walls li { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: 16px; padding-block: 16px; border-bottom: 1px solid var(--rule); }
+  .walls .where { font-family: var(--display); font-weight: 700; font-size: 0.98rem; line-height: 1.35; }
+  .walls .refs { display: block; font-family: var(--mono); font-weight: 400; font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+  .walls p { font-size: 0.98rem; line-height: 1.55; }
+  @media (max-width: 560px) { .walls li { grid-template-columns: 1fr; gap: 4px; } }
+
+  blockquote { margin: 28px 0 0; padding: 4px 0 4px 18px; border-left: 3px solid var(--accent); font-style: italic; color: var(--muted); }
+  blockquote cite { display: block; font-style: normal; font-family: var(--mono); font-size: 0.75rem; margin-top: 6px; }
+
+  /* Findings */
+  .asks { counter-reset: ask; list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 14px; }
+  .asks li { counter-increment: ask; display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: 10px; }
+  .asks li::before { content: counter(ask); font-family: var(--display); font-weight: 700; font-size: 1.25rem; color: var(--accent); line-height: 1.4; }
+  .note { background: var(--amber-soft); border-radius: 8px; padding: 14px 16px; font-size: 0.95rem; }
+  .note strong { color: var(--amber); }
+
+  .limits { padding-left: 1.1em; margin: 16px 0 0; display: grid; gap: 8px; }
+  .limits li { padding-left: 4px; }
+
+  footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--muted); display: grid; gap: 8px; }
+
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <p class="eyebrow">Mercury PM take-home · Prototype</p>
+    <h1>Closing the month from Claude Code</h1>
+    <p class="dek">Steward is a month-end close agent for a founder whose company banks with Mercury. It reads the books, proposes the payments and transfers, and can't move a dollar on its own.</p>
+    <div class="meta"><span>Built on Mercury's public API sandbox</span><span>Sandbox data only</span><span>September 2026</span></div>
+  </header>
+
+  <section class="video" aria-labelledby="watch">
+    <h2 id="watch" class="eyebrow" style="margin-top:0;font-family:var(--mono);font-size:0.78rem;font-weight:400;letter-spacing:0.08em">Watch the walkthrough</h2>
+    <div class="frame" id="walkthrough">
+      <div class="pending"><strong>Walkthrough video coming soon</strong>A recorded run of the demo below, in Claude Code, against the Mercury sandbox.</div>
+    </div>
+    <p class="caption">About 7 minutes: close the month, pay a bill through both approvals, and watch Mercury refuse a transfer.</p>
+  </section>
+
+  <section aria-labelledby="job">
+    <h2 id="job">The job</h2>
+    <p>I'm a technical founder, and every month-end I do the same dozen things in Mercury's dashboard: check where cash sits across accounts, see which bills are due this week and pay them, chase invoices that are late, and move idle cash out of checking into something that earns yield. None of it is hard. All of it is clicking.</p>
+    <p>I already work in Claude Code. I want to type <strong>“close the month”</strong> there, get back what needs doing with the payments ready to go, and have nothing move until I say so.</p>
+  </section>
+
+  <section aria-labelledby="why">
+    <h2 id="why">Why this shape</h2>
+    <p><strong>Why an agent in Claude Code.</strong> The brief asked for something headless on Mercury's API, aimed at its most ambitious API customers. They're technical founders and finance engineers who already work in a terminal with an agent beside them. An MCP server meets them there. Claude Code is also where approval works best today: it can show Approve / Decline inside the conversation. Claude.ai, ChatGPT, and Grok can't yet.</p>
+    <p><strong>Why month-end close.</strong> It recurs, it's specific, and it touches every part of the API that matters for money: balances, transactions, recipients, invoices, payments, transfers, and approvals. If an agent can close the month, it can do most of what a founder wants from their bank.</p>
+    <p><strong>The one rule: the agent can't move money.</strong> Steward only calls Mercury's <em>request</em> endpoints. There's no code path to a direct send, and it refuses production tokens outright. Every payment passes two gates:</p>
+    <div class="gates" role="list">
+      <div class="gate" role="listitem"><span class="step">Gate 1 · Claude Code</span><h3>You approve the proposal</h3><p>An Approve / Decline prompt inside the conversation.</p></div>
+      <div class="gate" role="listitem"><span class="step">Gate 2 · Mercury</span><h3>A teammate approves the request</h3><p>It waits in Mercury's own approval queue until someone approves it in the dashboard.</p></div>
+      <div class="gate money" role="listitem"><span class="step">Then</span><h3>Money moves</h3><p>The transaction carries the request id back, so the trail is complete.</p></div>
+    </div>
+    <p>That's not caution for its own sake. It's the model Mercury already uses with Command and approval policies. Steward tests whether a third-party agent can use it too.</p>
+  </section>
+
+  <section aria-labelledby="demo">
+    <h2 id="demo">What it does</h2>
+    <p>The demo is four prompts in Claude Code. The last one fails on purpose: the page shows where the API stops as well as where it works.</p>
+    <div class="term" role="region" aria-label="Example Claude Code session">
+      <p><span class="you">&gt; Run month-end close.</span></p>
+      <p><span class="dim">steward · close_month (read-only)</span><br>
+      Operating: Evolve Checking ••4124 <span class="num">$1,500,009.02</span> · floor <span class="num">$49,233.88</span><br>
+      Due this week: Alex Rivera <span class="num">$1,250.00</span>, payable by ACH<br>
+      No saved recipient: Acme Hosting, Northstar Legal (overdue)<br>
+      Surplus above the floor could move to savings. Nothing is queued.</p>
+      <p><span class="you">&gt; Pay the Alex Rivera bill.</span></p>
+      <p><span class="box">Queue $1,250 ACH to Alex Rivera for approval in Mercury? &nbsp;[Approve] [Decline]</span><br>
+      <span class="dim">steward · request-send-money</span> → <span class="you">pendingApproval</span><br>
+      Another approver in your org approves it in Mercury → Payments → Needs Approval.</p>
+      <p><span class="you">&gt; Sweep the surplus to savings.</span></p>
+      <p><span class="warn">Mercury didn't queue this transfer: this API token can't request transfers.</span><br>
+      Make the transfer yourself in Mercury → Transfer. Nothing was created.</p>
+    </div>
+    <p class="term-label">Example session against the Mercury sandbox; figures are seeded sandbox data.</p>
+    <p>Between the second and third prompt, a teammate opens the link in Mercury and approves. The ACH goes out, and the transaction records which request it came from.</p>
+  </section>
+
+  <section aria-labelledby="how">
+    <h2 id="how">How we got here: brute force</h2>
+    <p>We didn't start from a spec. We pointed the agent at Mercury's sandbox, let it walk into every wall, and logged each one. That's also the fairest test of an API meant for agents.</p>
+    <blockquote>“Can a frontier model, given only your docs, make this work on the first try.”<cite>Jason Lemkin, SaaStr, on testing whether an API is agent-friendly</cite></blockquote>
+    <p>It didn't. In the order it happened:</p>
+    <ol class="walls">
+      <li><span class="where">Getting a working token<span class="refs">#39 · #44 · #70</span></span><p>The propose-only token still required an IP allowlist, despite the docs. The first call failed anyway: the laptop connected over IPv6 and the allowlist was IPv4. Mercury's own CLI hits the same wall and has no way around it.</p></li>
+      <li><span class="where">Reading the books<span class="refs">#46 · #47 · #49</span></span><p>Reads worked, but could be quietly wrong. A misspelled filter returns <em>all</em> the data with a 200. <code>start</code> and <code>end</code> filter by creation date, not the posted date the dashboard shows. A third of transactions belong to a credit account that <code>/accounts</code> doesn't list.</p></li>
+      <li><span class="where">The first payment request<span class="refs">#58</span></span><p><code>400 invalidApproval</code>: “Nobody else in this organization can approve this payment.” A one-person company can't use the approval queue at all, and the solo founder is exactly who wants this agent.</p></li>
+      <li><span class="where">Adding a second approver<span class="refs">#62</span></span><p>A second real user, a phone number, and mandatory two-factor, all for fake money. Then the request went through.</p></li>
+      <li><span class="where">Retrying<span class="refs">#59 · #74</span></span><p>Sending the same request again with the same idempotency key returned an error instead of the original request. An agent that times out can't tell “already done” from “failed.” Most write endpoints don't take a key at all.</p></li>
+      <li><span class="where">Finding the approval<span class="refs">#63 · #64</span></span><p>The API gives no link to it, and it isn't under Tasks. It's under Payments → Needs Approval, next to a second request the API couldn't see.</p></li>
+      <li><span class="where">Mercury's own tools<span class="refs">#18 · #68 · #72</span></span><p>The CLI gets a lot right: it won't run a money command without <code>--yes</code> and it catches mistyped flags. But <code>payments transfer</code> is a <em>direct</em> transfer sitting next to <code>payments request</code>; our agent ran it expecting an approval request, and only a missing scope stopped it. And an undocumented sandbox MCP host advertises <code>transactions:request</code> and <code>transfers:request</code>: the capability this project argues for looks like it's already being built.</p></li>
+    </ol>
+    <p>Each wall is an entry in the friction log, with what to ship. Seventy-five in all, most of them small.</p>
+  </section>
+
+  <section aria-labelledby="tells">
+    <h2 id="tells">What it tells Mercury</h2>
+    <p><strong>Mercury's API is agent-readable but not agent-actionable.</strong> The right primitive exists: queue an action for a human to approve. Four things keep agents from using it:</p>
+    <ol class="asks">
+      <li><p>It isn't open to agents in production, and it's gated by an IP allowlist that hosted agents can't satisfy.</p></li>
+      <li><p>A one-person company can't use it.</p></li>
+      <li><p>Retries aren't safe.</p></li>
+      <li><p>The API fails silently on the mistakes models make.</p></li>
+    </ol>
+    <p>The sandbox MCP's scopes suggest Mercury is already on the first. The other three are smaller, and they're what separates a demo from something a founder would trust with real money.</p>
+    <p class="note"><strong>On two-factor.</strong> Agent-readiness checklists count “requires a human with 2FA” against an API. Here it guards approving a money movement, not logging in, and that's the point.</p>
+  </section>
+
+  <section aria-labelledby="limits">
+    <h2 id="limits">Limits, stated plainly</h2>
+    <ul class="limits">
+      <li><strong>Sandbox only.</strong> No production token, by design.</li>
+      <li><strong>No receivables in the demo.</strong> The sandbox has no invoices, and creating them needs an allowlisted token. Invoice follow-ups are covered by tests.</li>
+      <li><strong>Bills live outside Mercury.</strong> There's no Bill Pay API, so Steward reads bills from a file prepared before each demo.</li>
+      <li><strong>Approval in chat is a developer-client feature today.</strong> Claude.ai and ChatGPT get an approve link instead, and hosting the app publicly brings back the allowlist problem.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="next">
+    <h2 id="next">What I'd do next</h2>
+    <ul class="limits">
+      <li>Move Steward onto the sandbox MCP's request scopes once they're documented, and retire its own write path.</li>
+      <li>Add a status tool, so “did it go through?” gets answered in Claude Code instead of the dashboard.</li>
+      <li>Package the close as a Claude Code skill a founder installs once and runs every month.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Steward is an independent prototype built on Mercury's public API sandbox for a product take-home. It is not a Mercury product and uses no customer data.</p>
+    <p>Go deeper: <a href="index.html">decision memo</a> · <a href="findings.md">ranked findings</a> · <a href="api-friction-log.md">friction log</a> · <a href="https://github.com/lucasdickey/mercury-demo">source</a></p>
+  </footer>
+</main>
+</body>
+</html>

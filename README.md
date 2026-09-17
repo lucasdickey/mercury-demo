@@ -4,7 +4,7 @@ Month-end close for a company on Mercury: an agent reads the books, proposes
 payments and a treasury sweep, and **queues** them for human approval. It has
 no path to move money. Built for the Mercury PM take-home ("Command").
 
-- `docs/narrative.md` — **start here**: what we built, why, and what we learned
+- `docs/narrative.md` — **start here**: what we built, why, and what we learned (web version: `docs/narrative.html`, served at `/narrative`)
 - `docs/index.html` — the decision memo (what, why, and what the API/MCP/CLI taught us)
 - `docs/explainer.html` — step-through of one close across both approval gates
 - `docs/api-friction-log.md` — every paper cut, tagged by layer, with a proposed fix
