@@ -120,31 +120,41 @@ function isAlreadyUsedKey(err: MercuryApiError): boolean {
   return err.status === 400 && /already used this idempotency key/i.test(err.body);
 }
 
-function explainRefusal(proposal: PayProposal | SweepProposal, err: MercuryApiError): NotQueuedResult {
-  const base = { proposalId: proposal.id, notQueued: true as const, mercuryStatus: err.status };
-  const body = err.body;
-  if (/invalidApproval/.test(body)) {
+/** Refusals that won't fix themselves by retrying, so a caller may remember them. */
+export type StickyRefusal = "needs_second_approver" | "missing_scope";
+
+/**
+ * The explanation for a sticky refusal, written for this proposal. Callers that
+ * remember a refusal must rebuild it here rather than replay an old result:
+ * the remedy names the proposal's accounts and amount.
+ */
+export function refusalFor(proposal: PayProposal | SweepProposal, reason: StickyRefusal, mercuryStatus: number): NotQueuedResult {
+  const base = { proposalId: proposal.id, notQueued: true as const, mercuryStatus, reason };
+  if (reason === "needs_second_approver") {
     return {
       ...base,
-      reason: "needs_second_approver",
       message: "Mercury didn't queue this: nobody else in your organization can approve it, and Mercury doesn't let the requester approve their own request.",
       remedy: "Add a teammate who can approve payments (Mercury → Settings → Team), then ask again. Nothing was created.",
     };
   }
-  if (/tokenNotInScope/.test(body)) {
-    return {
-      ...base,
-      reason: "missing_scope",
-      message:
-        proposal.kind === "sweep"
-          ? "Mercury didn't queue this transfer: this API token can't request transfers. Mercury's token scopes include \"Send Money with Approval\" but nothing for transfers."
-          : "Mercury didn't queue this: the API token is missing the scope for this request.",
-      remedy:
-        proposal.kind === "sweep"
-          ? `Make the transfer yourself in Mercury → Transfer: ${proposal.fromName} → ${proposal.toName}, $${proposal.amount.toLocaleString("en-US")}. Nothing was created.`
-          : "Create a token with \"Send Money with Approval\" in Mercury → Settings → API Tokens. Nothing was created.",
-    };
-  }
+  return {
+    ...base,
+    message:
+      proposal.kind === "sweep"
+        ? "Mercury didn't queue this transfer: this API token can't request transfers. Mercury's token scopes include \"Send Money with Approval\" but nothing for transfers."
+        : "Mercury didn't queue this: the API token is missing the scope for this request.",
+    remedy:
+      proposal.kind === "sweep"
+        ? `Make the transfer yourself in Mercury → Transfer: ${proposal.fromName} → ${proposal.toName}, $${proposal.amount.toLocaleString("en-US")}. Nothing was created.`
+        : "Create a token with \"Send Money with Approval\" in Mercury → Settings → API Tokens. Nothing was created.",
+  };
+}
+
+function explainRefusal(proposal: PayProposal | SweepProposal, err: MercuryApiError): NotQueuedResult {
+  const base = { proposalId: proposal.id, notQueued: true as const, mercuryStatus: err.status };
+  const body = err.body;
+  if (/invalidApproval/.test(body)) return refusalFor(proposal, "needs_second_approver", err.status);
+  if (/tokenNotInScope/.test(body)) return refusalFor(proposal, "missing_scope", err.status);
   if (isAlreadyUsedKey(err)) {
     return {
       ...base,

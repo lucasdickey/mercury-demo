@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { closeMonth, queueProposal } from "../src/steward";
+import { closeMonth, queueProposal, refusalFor } from "../src/steward";
 import { averageMonthlyOutflow, computeCashPosition } from "../src/analyze/cash";
 import { MercuryApiError } from "../src/mercury/client";
 import { billsDue, matchRecipient } from "../src/analyze/ap";
@@ -142,6 +142,20 @@ describe("queueProposal", () => {
     const noScope = await queueProposal(refusing(403, `{"errors":{"errorCode":"tokenNotInScope","message":"You must have a token with access to this endpoint."}}`), sweep);
     expect(noScope).toMatchObject({ notQueued: true, reason: "missing_scope" });
     expect("remedy" in noScope && noScope.remedy).toMatch(/Transfer/);
+  });
+
+  it("rebuilds a remembered refusal for the proposal at hand, not the one Mercury refused", async () => {
+    const report = await closeMonth(fakeReader, { asOf: AS_OF });
+    const sweep = report.proposals.find((p) => p.kind === "sweep") as SweepProposal;
+    const first = { ...sweep, id: "steward-sweep-small", amount: 10 };
+    const noScope = await queueProposal(refusing(403, `{"errors":{"errorCode":"tokenNotInScope"}}`), first);
+    if (!("notQueued" in noScope) || noScope.reason !== "missing_scope") throw new Error("expected missing_scope");
+
+    const later = { ...sweep, id: "steward-sweep-large", amount: 1_450_700 };
+    const replay = refusalFor(later, noScope.reason, noScope.mercuryStatus);
+    expect(replay).toMatchObject({ proposalId: "steward-sweep-large", reason: "missing_scope", mercuryStatus: 403 });
+    expect(replay.remedy).toContain("$1,450,700");
+    expect(replay.remedy).not.toContain("$10.");
   });
 
   it("treats a replayed idempotency key as the request that already exists", async () => {
