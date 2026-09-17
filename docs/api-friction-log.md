@@ -403,15 +403,3 @@ directly and through Steward's MCP (elicitation accepted → `queueProposal`).
     click worked), so a computer-use agent can think it approved when it
     didn't. No confirmation step, and no notification or Tasks entry for the
     pending approval (#65).
-68. 🟡 `[steward]` **Our workaround for #58 showed the wrong amount.** With no
-    way to check whether Mercury will accept a request before creating it,
-    Steward remembers a refusal for 10 minutes and reuses it without asking
-    Mercury again. It stored the whole refusal, including the remedy text. A
-    $10 test sweep was refused (#41); a $1,450,700 sweep minutes later got the
-    saved refusal, which told the founder to "make the transfer yourself
-    … $10". The refusal was still correct, but the instructions for moving
-    money pointed at a different proposal. Fixed: only the reason is kept, and
-    the remedy is rebuilt for the current proposal (`refusalFor`). The general
-    lesson for #58: without a dry run, every client caches refusals, and a
-    cache that stores amounts can hand them to the wrong proposal.
-    **Ship:** the dry run from #58, so there's nothing to cache.

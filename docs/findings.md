@@ -1,6 +1,6 @@
 # Findings — ranked
 
-Executive summary of `api-friction-log.md` (68 items as of 2026-09-16) and the
+Executive summary of `api-friction-log.md` (67 items as of 2026-09-16) and the
 recommendations that fall out of building Steward. Numbers in brackets point
 at log entries. Ranking weighs: does it *block* an agent or just cost it;
 how many builders hit it; how cheap the fix is; and whether it advances what
