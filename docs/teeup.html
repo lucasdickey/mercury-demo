@@ -1,0 +1,221 @@
+<title>Steward Tee-Up</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    color-scheme: light dark;
+    --paper: #F3F5F8; --surface: #FFFFFF; --ink: #151B24; --muted: #5B6572;
+    --rule: #D3D9E1; --rule-strong: #A9B3BF;
+    --approve: #1E7A5A; --approve-bg: #E3F2EB;
+    --propose: #B5731A; --propose-bg: #FBEFDD;
+    --critical: #B4362F; --critical-bg: #F9E4E2;
+    --code-bg: #E9EDF2;
+    --display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0E1319; --surface: #151C25; --ink: #E6EAF0; --muted: #96A0AD;
+      --rule: #263040; --rule-strong: #3A4658;
+      --approve: #3FBF8F; --approve-bg: #12302A;
+      --propose: #E0A04A; --propose-bg: #33260F;
+      --critical: #E06A63; --critical-bg: #3A1A18;
+      --code-bg: #1B242F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0E1319; --surface: #151C25; --ink: #E6EAF0; --muted: #96A0AD;
+    --rule: #263040; --rule-strong: #3A4658;
+    --approve: #3FBF8F; --approve-bg: #12302A;
+    --propose: #E0A04A; --propose-bg: #33260F;
+    --critical: #E06A63; --critical-bg: #3A1A18;
+    --code-bg: #1B242F;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: 2px solid var(--propose); outline-offset: 3px; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+  .wrap { min-height: 100%; display: grid; grid-template-rows: auto 1fr auto; max-width: 980px; margin: 0 auto; padding: 22px 24px 20px; }
+  header { display: flex; align-items: baseline; gap: 16px; border-bottom: 2px solid var(--ink); padding-bottom: 12px; }
+  header h1 { font-family: var(--display); font-weight: 700; font-size: 18px; margin: 0; letter-spacing: -.01em; }
+  header .sub { color: var(--muted); font-size: 14px; }
+  header .mode { margin-left: auto; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 4px 8px; border: 1px solid var(--rule-strong); border-radius: 4px; }
+  header .mode:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* one beat at a time */
+  .stage { display: grid; align-content: center; padding: 28px 0; }
+  .beat { display: grid; grid-template-columns: 96px 1fr; gap: 8px 28px; }
+  .n { font-family: var(--display); font-weight: 700; font-size: clamp(56px, 9vw, 96px); line-height: .9; letter-spacing: -.04em; color: var(--rule-strong); font-variant-numeric: tabular-nums; }
+  .n.turn { color: var(--propose); }
+  .n.ask { color: var(--approve); }
+  .h { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4.2vw, 44px); line-height: 1.08; letter-spacing: -.02em; margin: 0; text-wrap: balance; max-width: 22ch; }
+  .say { font-size: 20px; margin: 14px 0 0; max-width: 58ch; color: var(--ink); }
+  .cue { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font-family: var(--mono); font-size: 12px; padding: 4px 9px; border-radius: 4px; border: 1px solid var(--rule); background: var(--surface); color: var(--muted); }
+  .chip.show { border-color: color-mix(in srgb, var(--propose) 40%, var(--rule)); color: var(--propose); background: var(--propose-bg); }
+  .chip.ref { border-color: color-mix(in srgb, var(--approve) 40%, var(--rule)); color: var(--approve); background: var(--approve-bg); }
+  .stage[data-all] .beat { display: none; }
+
+  /* rehearsal: all beats as a list */
+  .all { display: none; padding: 24px 0; }
+  .stage[data-all] ~ .all, .all[data-on] { display: block; }
+  .all ol { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+  .all li { display: grid; grid-template-columns: 44px 1fr; gap: 0 14px; padding: 10px 0; border-bottom: 1px solid var(--rule); cursor: pointer; }
+  .all li:hover { background: var(--surface); }
+  .all li .k { font-family: var(--mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 3px; }
+  .all li .k.turn { color: var(--propose); }
+  .all li .k.ask { color: var(--approve); }
+  .all li .t { font-weight: 600; }
+  .all li .s { color: var(--muted); font-size: 15px; }
+
+  footer { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; border-top: 1px solid var(--rule); padding-top: 12px; }
+  .nav { font-weight: 600; font-size: 14px; padding: 8px 14px; border: 1px solid var(--rule-strong); border-radius: 4px; background: var(--surface); }
+  .nav:hover:not(:disabled) { border-color: var(--ink); }
+  .nav:disabled { opacity: .35; cursor: default; }
+  .rail { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+  .rail button { width: 30px; height: 8px; border-radius: 3px; background: var(--rule); padding: 0; }
+  .rail button[aria-current="step"] { background: var(--ink); }
+  .rail button.turn[aria-current="step"] { background: var(--propose); }
+  .rail button.ask[aria-current="step"] { background: var(--approve); }
+  .hint { grid-column: 1 / -1; text-align: center; font-family: var(--mono); font-size: 11.5px; color: var(--muted); letter-spacing: .04em; }
+
+  @media (max-width: 640px) {
+    .beat { grid-template-columns: 1fr; }
+    .n { font-size: 44px; }
+    .say { font-size: 18px; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Steward tee-up</h1>
+    <span class="sub">Fourteen beats, in the order it actually happened</span>
+    <button class="mode" id="mode" type="button" aria-pressed="false">Show all</button>
+  </header>
+
+  <main class="stage" id="stage" aria-live="polite">
+    <div class="beat">
+      <div class="n" id="n">1</div>
+      <div>
+        <h2 class="h" id="h"></h2>
+        <p class="say" id="say"></p>
+        <div class="cue" id="cue"></div>
+      </div>
+    </div>
+  </main>
+
+  <section class="all" id="all" aria-label="All beats">
+    <ol id="list"></ol>
+  </section>
+
+  <footer>
+    <button class="nav" id="prev" type="button">← Back</button>
+    <div class="rail" id="rail" role="tablist" aria-label="Beats"></div>
+    <button class="nav" id="next" type="button">Next →</button>
+    <div class="hint">→ / space next · ← back · click a beat · A toggles the list · position is remembered</div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  // kind: n = setup, turn = something broke or changed direction, ask = the recommendation
+  var BEATS = [
+    { kind: 'n',    h: 'I’m a technical-ish founder. Month-end is my job.',
+      say: 'Nobody else is going to close the books. I bank with Mercury and I live in a terminal.',
+      cues: [['show', 'Claude Code open, nothing running yet']] },
+    { kind: 'n',    h: 'I want to automate end-of-month cleanup.',
+      say: 'Review the bills, pay the ones that are due, then sweep whatever’s left above my floor into treasury. Same thing every month.',
+      cues: [['ref', 'the workflow: review → pay → sweep']] },
+    { kind: 'n',    h: 'I heard Mercury has an MCP that talks to my account.',
+      say: 'Hosted, OAuth, one line to connect. Great — that should be the whole project.',
+      cues: [['show', 'mcp.mercury.com/mcp'], ['ref', 'landscape.md']] },
+    { kind: 'n',    h: 'So I tried the flow I had in mind with it.',
+      say: '“What’s due this week? Pay it. Sweep the surplus.”',
+      cues: [['show', 'Mercury MCP tool list']] },
+    { kind: 'turn', h: 'It reads. It can’t write.',
+      say: 'Thirty tools, every one a GET. It can tell me what’s due. It can’t propose a payment, let alone queue one.',
+      cues: [['ref', 'friction #14, #18'], ['show', 'supported-tools page: all fetch']] },
+    { kind: 'n',    h: 'I looked at the API. The writes are there.',
+      say: 'Send money, request a payment for approval, request a transfer for approval, update a transaction. The MCP just doesn’t expose them.',
+      cues: [['show', 'docs.mercury.com/reference: request-send-money'], ['ref', 'llms.txt']] },
+    { kind: 'n',    h: 'So I wrote my own MCP wrapper around the API.',
+      say: 'Steward. Four tools. Same engine behind a chat UI and a CLI pipe. Sandbox only.',
+      cues: [['show', 'claude mcp add … steward …'], ['ref', 'packages/core, apps/web']] },
+    { kind: 'n',    h: 'Then I tried the same flow again.',
+      say: '“Run month-end close.”',
+      cues: [['show', 'close_month in Claude Code']] },
+    { kind: 'turn', h: 'It could analyze and propose a payment — but not pay.',
+      say: 'And that’s right. I don’t want a model with a send button. I want it to ask me, and then I want Mercury to ask me again.',
+      cues: [['ref', 'two gates: client, then dashboard']] },
+    { kind: 'n',    h: 'I built that in code.',
+      say: 'Gate one: the tool returns “input required,” Claude Code renders Approve / Decline, and retries with my answer signed. Gate two: request-send-money lands in Mercury’s approval queue. No direct-send path exists in the codebase.',
+      cues: [['show', 'propose_payment → Approve → pendingApproval → approver’s window'], ['ref', 'PLAN §5 beats 3–4']] },
+    { kind: 'turn', h: 'Then I hit the IP allowlist.',
+      say: 'Write tokens need a fixed IP. Even the approval-only scope did, despite what the docs say. Vercel has no fixed IP. Neither does any serverless host — or my laptop on a plane.',
+      cues: [['ref', 'friction #8, #39'], ['show', 'token dialog screenshot']] },
+    { kind: 'n',    h: 'So I hosted it locally.',
+      say: 'Whitelisted my own IP. The deployed version can read everything and queue nothing — that’s an exhibit, not a bug.',
+      cues: [['show', 'localhost:3200'], ['ref', 'friction #2 (serverless), findings #6']] },
+    { kind: 'turn', h: 'And I still couldn’t do the treasury sweep.',
+      say: 'There is a “Send Money with Approval” scope. There is no “Transfer with Approval” scope. The safest move in the whole API has no token that can request it.',
+      cues: [['show', 'propose_sweep → Mercury refuses → Steward explains'], ['ref', 'friction #41, scope-catalog.md']] },
+    { kind: 'ask',  h: 'The ask: let agents propose before you let them execute.',
+      say: 'A “propose” tier — approval-queue endpoints and non-monetary writes, exposed to MCP and tokens, no allowlist. If you’re not ready for agents to act, let them ask. That’s the first rung of the trust ladder, and it’s the rung Command already stands on.',
+      cues: [['ref', 'findings.md BLUF + #1'], ['show', 'docs/explainer.html, last step']] }
+  ];
+
+  var stage = document.getElementById('stage'), all = document.getElementById('all'), list = document.getElementById('list'), rail = document.getElementById('rail');
+  var nEl = document.getElementById('n'), hEl = document.getElementById('h'), sayEl = document.getElementById('say'), cueEl = document.getElementById('cue');
+  var prev = document.getElementById('prev'), next = document.getElementById('next'), mode = document.getElementById('mode');
+  var idx = 0, showAll = false;
+
+  BEATS.forEach(function (b, i) {
+    var d = document.createElement('button'); d.type = 'button'; d.setAttribute('role', 'tab'); d.className = b.kind;
+    d.setAttribute('aria-label', 'Beat ' + (i + 1) + ': ' + b.h); d.addEventListener('click', function () { go(i); });
+    rail.appendChild(d);
+    var li = document.createElement('li'); li.innerHTML = '<span class="k ' + b.kind + '">' + pad(i + 1) + '</span><div><div class="t"></div><div class="s"></div></div>';
+    li.querySelector('.t').textContent = b.h; li.querySelector('.s').textContent = b.say;
+    li.addEventListener('click', function () { setAll(false); go(i); });
+    list.appendChild(li);
+  });
+
+  function go(i) {
+    idx = Math.max(0, Math.min(BEATS.length - 1, i));
+    var b = BEATS[idx];
+    nEl.textContent = pad(idx + 1); nEl.className = 'n ' + b.kind;
+    hEl.textContent = b.h; sayEl.textContent = b.say;
+    cueEl.innerHTML = '';
+    b.cues.forEach(function (c) { var s = document.createElement('span'); s.className = 'chip ' + c[0]; s.textContent = (c[0] === 'show' ? 'show · ' : 'ref · ') + c[1]; cueEl.appendChild(s); });
+    prev.disabled = idx === 0; next.disabled = idx === BEATS.length - 1;
+    Array.prototype.forEach.call(rail.children, function (d, j) { if (j === idx) d.setAttribute('aria-current', 'step'); else d.removeAttribute('aria-current'); });
+    try { localStorage.setItem('steward-teeup-idx', String(idx)); } catch (e) {}
+  }
+  function setAll(on) {
+    showAll = on;
+    if (on) { stage.setAttribute('data-all', ''); all.setAttribute('data-on', ''); } else { stage.removeAttribute('data-all'); all.removeAttribute('data-on'); }
+    mode.textContent = on ? 'One at a time' : 'Show all'; mode.setAttribute('aria-pressed', String(on));
+  }
+  function pad(n) { return n < 10 ? '0' + n : String(n); }
+
+  prev.addEventListener('click', function () { go(idx - 1); });
+  next.addEventListener('click', function () { go(idx + 1); });
+  mode.addEventListener('click', function () { setAll(!showAll); });
+  stage.addEventListener('click', function () { if (!showAll) go(idx + 1); });
+  document.addEventListener('keydown', function (e) {
+    if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (showAll) setAll(false); go(idx + 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); if (showAll) setAll(false); go(idx - 1); }
+    else if (e.key === 'a' || e.key === 'A') { setAll(!showAll); }
+    else if (e.key === 'Home') { go(0); } else if (e.key === 'End') { go(BEATS.length - 1); }
+  });
+
+  var start = 0;
+  try { start = parseInt(localStorage.getItem('steward-teeup-idx') || '0', 10) || 0; } catch (e) {}
+  go(start);
+})();
+</script>
