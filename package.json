@@ -12,6 +12,7 @@
     "typecheck": "npm run typecheck -ws --if-present",
     "smoke": "scripts/smoke/run.sh",
     "demo:prep": "node scripts/demo/prep.mjs",
+    "demo:replay": "node scripts/demo/replay/render.mjs",
     "docs": "node apps/web/scripts/render-docs.mjs"
   },
   "engines": {
