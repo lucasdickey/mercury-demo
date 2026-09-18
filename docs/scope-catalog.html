@@ -1,0 +1,306 @@
+<!doctype html>
+<!-- Generated from docs/scope-catalog.md by apps/web/scripts/render-docs.mjs. Edit the Markdown, then run `npm run docs`. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Token Scope Catalog</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --paper: #f5f7f9; --panel: #ffffff; --ink: #16202c; --muted: #5b6877; --rule: #dce1e7;
+    --accent: #1f6f5c; --accent-soft: #e3f0ec; --amber: #9a6414; --amber-soft: #f8eedc;
+    --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+      --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+    --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; scroll-padding-top: 64px; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.6; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  code { font-family: var(--mono); font-size: 0.82em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  a code { text-decoration: underline; text-decoration-color: currentColor; }
+
+  .bar { position: sticky; top: 0; z-index: 2; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
+  .site { max-width: 1040px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 4px 16px; overflow-x: auto; scrollbar-width: none; font-family: var(--mono); font-size: 0.76rem; white-space: nowrap; }
+  .site a { color: var(--muted); text-decoration: none; padding: 4px 0; }
+  .site a:hover { color: var(--ink); }
+  .site a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+
+  .wrap { max-width: 800px; margin: 0 auto; padding: 48px 16px 96px; }
+  h1, h2, h3, h4 { font-family: var(--display); line-height: 1.15; text-wrap: balance; }
+  h1 { font-size: clamp(2rem, 6vw, 3rem); font-weight: 700; letter-spacing: -0.02em; margin: 8px 0 0; }
+  h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 12px; }
+  h3 { font-size: 1.1rem; font-weight: 700; margin: 32px 0 8px; }
+  h4 { font-size: 1rem; margin: 24px 0 8px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .dek { font-size: 1.2rem; color: var(--muted); margin: 16px 0 0; max-width: 36em; }
+  .meta { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin: 20px 0 0; }
+  .meta code { background: none; padding: 0; }
+
+  .toc { margin-top: 32px; padding: 16px 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; }
+  .toc ul { list-style: none; margin: 8px 0 0; padding: 0; columns: 2 16em; column-gap: 32px; font-size: 0.92rem; }
+  .toc li { break-inside: avoid; margin: 2px 0; }
+  .toc code { background: none; padding: 0; }
+
+  .doc section { margin-top: 56px; }
+  .doc section.lead { margin-top: 32px; }
+  .doc p, .doc ul, .doc ol, .doc blockquote, .doc pre, .doc .table { margin: 0 0 16px; }
+  .doc li { margin: 6px 0; }
+  .doc li > p { margin: 0 0 8px; }
+  .doc hr { border: 0; border-top: 1px solid var(--rule); margin: 40px 0; }
+  .doc blockquote { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; color: var(--muted); }
+  .doc pre { background: #111820; color: #d9e2ea; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+  .doc pre code { background: none; padding: 0; font-size: inherit; color: inherit; overflow-wrap: normal; }
+  .doc input[type="checkbox"] { margin-right: 6px; }
+  .doc li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.2em; }
+  .doc ol > li[id] { scroll-margin-top: 64px; }
+  .doc ol > li[id]:target { background: var(--amber-soft); outline: 6px solid var(--amber-soft); border-radius: 2px; }
+  a.ref { font-variant-numeric: tabular-nums; }
+
+  .table { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; line-height: 1.45; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--rule); }
+  th { font-family: var(--display); font-weight: 700; font-size: 0.85rem; background: var(--accent-soft); }
+  tr:last-child td { border-bottom: 0; }
+
+  .doc section.feature { margin: 40px -16px 0; padding: 28px 16px; background: var(--amber-soft); border-top: 3px solid var(--amber); }
+  .doc section.feature h2 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); }
+  .doc section.feature > p:first-of-type { font-size: 1.12rem; }
+  .doc section.feature .table { border-color: color-mix(in srgb, var(--amber) 35%, transparent); }
+  .doc section.feature th { background: color-mix(in srgb, var(--amber) 18%, var(--panel)); }
+  .doc section.feature td:first-child { color: var(--muted); }
+  .doc section.feature td:last-child strong { color: var(--accent); }
+  @media (min-width: 832px) { .doc section.feature { margin-inline: -32px; padding-inline: 32px; border-radius: 0 0 10px 10px; } }
+</style>
+</head>
+<body>
+<header class="bar"><nav class="site" aria-label="Documents"><a href="index.html">Memo</a><a href="narrative.html">Narrative</a><a href="plan.html">Plan</a><a href="findings.html">Findings</a><a href="api-friction-log.html">Friction log</a><a href="direction.html">Direction</a><a href="landscape.html">Landscape</a><a href="sandbox-surface.html">Sandbox</a><a href="scope-catalog.html" aria-current="page">Scopes</a><a href="take-home-brief.html">Brief</a><a href="explainer.html">Explainer</a></nav></header>
+<main class="wrap">
+  <header class="top">
+    <p class="eyebrow">Recon · token scopes</p>
+    <h1>Token Scope Catalog</h1>
+    
+    <p class="meta">Rendered from <a href="https://github.com/lucasdickey/mercury-demo/blob/main/docs/scope-catalog.md"><code>docs/scope-catalog.md</code></a></p>
+  </header>
+  <article class="doc">
+
+  </article>
+  
+  <article class="doc">
+<section class="lead"><p>Transcribed from the Mercury sandbox &quot;Create an API token → Custom Scopes&quot;
+picker. This list is not published anywhere in the docs (friction #<a class="ref" href="api-friction-log.html#n6">6</a>, #<a class="ref" href="api-friction-log.html#n40">40</a>).
+<code>*</code> = requires an IP allowlist. Identifiers used in the docs (e.g.
+<code>RequestSendMoney</code>) do not appear in the picker.</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Scope</th>
+<th>Allowlist</th>
+<th>Backs (our best mapping)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Accounts</td>
+<td>Fetch Account Statements (Experimental)</td>
+<td>—</td>
+<td><code>GET /account/{id}/statements</code>, statement PDF</td>
+</tr>
+<tr>
+<td>Accounts</td>
+<td>Fetch Credit Accounts</td>
+<td>—</td>
+<td><code>GET /credit</code></td>
+</tr>
+<tr>
+<td>Accounts</td>
+<td>Fetch Depository Accounts</td>
+<td>—</td>
+<td><code>GET /accounts</code>, <code>GET /account/{id}</code></td>
+</tr>
+<tr>
+<td>Accounts</td>
+<td>Fetch Treasury Accounts</td>
+<td>—</td>
+<td><code>GET /treasury</code>, treasury statements</td>
+</tr>
+<tr>
+<td>Cards</td>
+<td>Create Cards</td>
+<td><code>*</code></td>
+<td><code>POST /cards</code></td>
+</tr>
+<tr>
+<td>Cards</td>
+<td>Fetch Cards</td>
+<td>—</td>
+<td><code>GET /cards</code>, <code>GET /card/{id}</code>, <code>GET /account/{id}/cards</code></td>
+</tr>
+<tr>
+<td>Cards</td>
+<td>Manage Cards</td>
+<td><code>*</code></td>
+<td>update / freeze / unfreeze / cancel</td>
+</tr>
+<tr>
+<td>Cards</td>
+<td>Reveal Card PAN</td>
+<td><code>*</code></td>
+<td>Vault <code>reveal</code> (agent cards)</td>
+</tr>
+<tr>
+<td>Categories</td>
+<td>Fetch Categories</td>
+<td>—</td>
+<td><code>GET /categories</code> (create/edit/delete: not seen in picker)</td>
+</tr>
+<tr>
+<td>Invoices</td>
+<td>Fetch Invoices</td>
+<td>—</td>
+<td><code>GET /ar/invoices</code>, <code>GET /ar/customers</code> (verified: customers 200 with this scope)</td>
+</tr>
+<tr>
+<td>Invoices</td>
+<td>Modify Invoices</td>
+<td><code>*</code></td>
+<td>create / update / cancel invoice</td>
+</tr>
+<tr>
+<td>Recipients</td>
+<td>Create Recipients</td>
+<td><code>*</code></td>
+<td><code>POST /recipients</code></td>
+</tr>
+<tr>
+<td>Recipients</td>
+<td>Edit Recipients</td>
+<td><code>*</code></td>
+<td><code>POST /recipient/{id}</code></td>
+</tr>
+<tr>
+<td>Recipients</td>
+<td>Fetch Recipients</td>
+<td>—</td>
+<td><code>GET /recipients</code>, <code>GET /recipient/{id}</code></td>
+</tr>
+<tr>
+<td>Recipients</td>
+<td>Create Recipient Invites</td>
+<td><code>*</code></td>
+<td><code>POST /recipients/invites</code></td>
+</tr>
+<tr>
+<td>Recipients</td>
+<td>Edit Recipient Invites</td>
+<td><code>*</code></td>
+<td>delete invite</td>
+</tr>
+<tr>
+<td>Recipients</td>
+<td>Fetch Recipient Invites</td>
+<td>—</td>
+<td>list / get invites</td>
+</tr>
+<tr>
+<td>Organization</td>
+<td>Fetch Organization</td>
+<td>—</td>
+<td><code>GET /organization</code></td>
+</tr>
+<tr>
+<td>Transactions</td>
+<td>Fetch Send Money Requests</td>
+<td>—</td>
+<td><code>GET /request-send-money[/{id}]</code></td>
+</tr>
+<tr>
+<td>Transactions</td>
+<td>Fetch Transactions</td>
+<td>—</td>
+<td><code>GET /transactions</code>, <code>GET /transaction/{id}</code>, account-scoped variants</td>
+</tr>
+<tr>
+<td>Transactions</td>
+<td>Fetch Treasury Transactions</td>
+<td>—</td>
+<td><code>GET /treasury/{id}/transactions</code></td>
+</tr>
+<tr>
+<td>Transactions</td>
+<td>Fetch Treasury Statements</td>
+<td>—</td>
+<td>treasury statements</td>
+</tr>
+<tr>
+<td>Transactions</td>
+<td><strong>Send Money with Approval</strong></td>
+<td>— (dialog still required an IP; see #<a class="ref" href="api-friction-log.html#n39">39</a>)</td>
+<td><code>POST /account/{id}/request-send-money</code></td>
+</tr>
+<tr>
+<td>Transactions</td>
+<td>Send Money</td>
+<td><code>*</code></td>
+<td><code>POST /account/{id}/transactions</code></td>
+</tr>
+<tr>
+<td>Transactions</td>
+<td>Update Transactions</td>
+<td><code>*</code></td>
+<td><code>POST /transaction/{id}</code> (note / category)</td>
+</tr>
+<tr>
+<td>Webhooks</td>
+<td>Fetch Webhooks</td>
+<td>—</td>
+<td>list / get</td>
+</tr>
+<tr>
+<td>Webhooks</td>
+<td>Create Webhooks</td>
+<td>(cut off)</td>
+<td><code>POST /webhooks</code></td>
+</tr>
+</tbody></table></div>
+<p><strong>Not in the picker (as far as visible):</strong> any scope for <code>POST /request-transfer</code>
+(transfer with approval), <code>POST /transfer</code>, customers (AR), users, SAFEs,
+events, attachments, categories create/edit/delete. Some may be further down
+the list; the two transfer endpoints appear to have no Custom scope at all.</p>
+<p>Selected for Steward: the eleven non-asterisk reads above plus Send Money with
+Approval. No asterisked scope.</p>
+</section>
+<section><h2 id="verified-against-the-api-2026-09-16-sandbox-surface-md">Verified against the API (2026-09-16, <a href="sandbox-surface.html"><code>sandbox-surface.md</code></a>)</h2>
+<p>With exactly the scopes above:</p>
+<ul>
+<li>200: accounts, <code>/account/{id}</code> (undocumented), transactions (org + account
+scoped, incl. the credit account&#39;s), recipients, recipient attachments,
+<code>/ar/invoices</code>, <code>/ar/customers</code>, treasury, credit, categories, organization,
+<code>request-send-money</code>, account statements, <strong><code>/events</code></strong> (no events scope in
+the picker, yet readable).</li>
+<li>403 <code>tokenNotInScope</code> (unselected, as expected): cards, account cards,
+users, merchants, webhooks, SAFEs, recipient invites.</li>
+<li>403 <code>tokenNotInScope</code> on <code>GET /request-transfer</code> and
+<code>GET /request-transfer/{id}</code>: neither is documented, and no scope in the
+picker grants transfer requests (friction #<a class="ref" href="api-friction-log.html#n41">41</a>, #<a class="ref" href="api-friction-log.html#n50">50</a>).</li>
+</ul>
+</section>
+  </article>
+</main>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!doctype html>
+<!-- Generated from docs/findings.md by apps/web/scripts/render-docs.mjs. Edit the Markdown, then run `npm run docs`. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Findings, Ranked</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --paper: #f5f7f9; --panel: #ffffff; --ink: #16202c; --muted: #5b6877; --rule: #dce1e7;
+    --accent: #1f6f5c; --accent-soft: #e3f0ec; --amber: #9a6414; --amber-soft: #f8eedc;
+    --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+      --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+    --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; scroll-padding-top: 64px; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.6; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  code { font-family: var(--mono); font-size: 0.82em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  a code { text-decoration: underline; text-decoration-color: currentColor; }
+
+  .bar { position: sticky; top: 0; z-index: 2; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
+  .site { max-width: 1040px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 4px 16px; overflow-x: auto; scrollbar-width: none; font-family: var(--mono); font-size: 0.76rem; white-space: nowrap; }
+  .site a { color: var(--muted); text-decoration: none; padding: 4px 0; }
+  .site a:hover { color: var(--ink); }
+  .site a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+
+  .wrap { max-width: 800px; margin: 0 auto; padding: 48px 16px 96px; }
+  h1, h2, h3, h4 { font-family: var(--display); line-height: 1.15; text-wrap: balance; }
+  h1 { font-size: clamp(2rem, 6vw, 3rem); font-weight: 700; letter-spacing: -0.02em; margin: 8px 0 0; }
+  h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 12px; }
+  h3 { font-size: 1.1rem; font-weight: 700; margin: 32px 0 8px; }
+  h4 { font-size: 1rem; margin: 24px 0 8px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .dek { font-size: 1.2rem; color: var(--muted); margin: 16px 0 0; max-width: 36em; }
+  .meta { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin: 20px 0 0; }
+  .meta code { background: none; padding: 0; }
+
+  .toc { margin-top: 32px; padding: 16px 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; }
+  .toc ul { list-style: none; margin: 8px 0 0; padding: 0; columns: 2 16em; column-gap: 32px; font-size: 0.92rem; }
+  .toc li { break-inside: avoid; margin: 2px 0; }
+  .toc code { background: none; padding: 0; }
+
+  .doc section { margin-top: 56px; }
+  .doc section.lead { margin-top: 32px; }
+  .doc p, .doc ul, .doc ol, .doc blockquote, .doc pre, .doc .table { margin: 0 0 16px; }
+  .doc li { margin: 6px 0; }
+  .doc li > p { margin: 0 0 8px; }
+  .doc hr { border: 0; border-top: 1px solid var(--rule); margin: 40px 0; }
+  .doc blockquote { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; color: var(--muted); }
+  .doc pre { background: #111820; color: #d9e2ea; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+  .doc pre code { background: none; padding: 0; font-size: inherit; color: inherit; overflow-wrap: normal; }
+  .doc input[type="checkbox"] { margin-right: 6px; }
+  .doc li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.2em; }
+  .doc ol > li[id] { scroll-margin-top: 64px; }
+  .doc ol > li[id]:target { background: var(--amber-soft); outline: 6px solid var(--amber-soft); border-radius: 2px; }
+  a.ref { font-variant-numeric: tabular-nums; }
+
+  .table { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; line-height: 1.45; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--rule); }
+  th { font-family: var(--display); font-weight: 700; font-size: 0.85rem; background: var(--accent-soft); }
+  tr:last-child td { border-bottom: 0; }
+
+  .doc section.feature { margin: 40px -16px 0; padding: 28px 16px; background: var(--amber-soft); border-top: 3px solid var(--amber); }
+  .doc section.feature h2 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); }
+  .doc section.feature > p:first-of-type { font-size: 1.12rem; }
+  .doc section.feature .table { border-color: color-mix(in srgb, var(--amber) 35%, transparent); }
+  .doc section.feature th { background: color-mix(in srgb, var(--amber) 18%, var(--panel)); }
+  .doc section.feature td:first-child { color: var(--muted); }
+  .doc section.feature td:last-child strong { color: var(--accent); }
+  @media (min-width: 832px) { .doc section.feature { margin-inline: -32px; padding-inline: 32px; border-radius: 0 0 10px 10px; } }
+</style>
+</head>
+<body>
+<header class="bar"><nav class="site" aria-label="Documents"><a href="index.html">Memo</a><a href="narrative.html">Narrative</a><a href="plan.html">Plan</a><a href="findings.html" aria-current="page">Findings</a><a href="api-friction-log.html">Friction log</a><a href="direction.html">Direction</a><a href="landscape.html">Landscape</a><a href="sandbox-surface.html">Sandbox</a><a href="scope-catalog.html">Scopes</a><a href="take-home-brief.html">Brief</a><a href="explainer.html">Explainer</a></nav></header>
+<main class="wrap">
+  <header class="top">
+    <p class="eyebrow">Findings · ranked BLUF</p>
+    <h1>Findings, Ranked</h1>
+    
+    <p class="meta">Rendered from <a href="https://github.com/lucasdickey/mercury-demo/blob/main/docs/findings.md"><code>docs/findings.md</code></a></p>
+  </header>
+  <article class="doc">
+
+  </article>
+  <nav class="toc" aria-label="On this page"><p class="eyebrow">On this page</p><ul><li><a href="#bluf">BLUF</a></li><li><a href="#top-ten-in-order">Top ten, in order</a></li><li><a href="#everything-else-by-tier">Everything else, by tier</a></li><li><a href="#corroboration">Corroboration</a></li><li><a href="#what-steward-proves">What Steward proves</a></li></ul></nav>
+  <article class="doc">
+<section class="lead"><p>Executive summary of <a href="api-friction-log.html"><code>api-friction-log.md</code></a> (75 items as of 2026-09-16) and the
+recommendations that fall out of building Steward. Numbers in brackets point
+at log entries. Ranking weighs: does it <em>block</em> an agent or just cost it;
+how many builders hit it; how cheap the fix is; and whether it advances what
+Mercury is already doing (Command, MCP, CLI, agent cards). &quot;Live&quot; means we
+reproduced it against the sandbox API, dashboard, CLI, or MCP.</p>
+</section>
+<section><h2 id="bluf">BLUF</h2>
+<p><strong>Mercury&#39;s API is agent-readable but not agent-actionable.</strong> The right
+primitive already exists — queue an action for human approval — but it is
+(a) not exposed to agents in production (the MCP is read-only), (b) blocked by
+an IP allowlist that hosted agents can&#39;t satisfy, (c) <strong>unavailable to any org
+with one member</strong>, because the requester can&#39;t be the approver [<a class="ref" href="api-friction-log.html#n58">58</a>], and (d)
+unsafe to retry: an idempotency key replayed with the same body returns a
+400, not the original request [<a class="ref" href="api-friction-log.html#n59">59</a>].</p>
+<p>Mercury appears to be building the fix: an undocumented sandbox MCP host
+advertises <code>transactions:request</code> and <code>transfers:request</code> scopes [<a class="ref" href="api-friction-log.html#n18">18</a>]. The
+list below is what a builder hits on the way there, in the order Steward hit
+it. The API also fails <em>silently</em> on exactly the mistakes models make:
+misspelled filters return unfiltered data, and <code>start</code>/<code>end</code> quietly mean
+<code>createdAt</code> [<a class="ref" href="api-friction-log.html#n46">46</a>, <a class="ref" href="api-friction-log.html#n47">47</a>]. Sandbox and docs issues are real but secondary; they&#39;re
+below the line.</p>
+</section>
+<section><h2 id="top-ten-in-order">Top ten, in order</h2>
+<h3 id="1-let-agents-propose-writes-a-scope-tier-for-mcp-and-api-tokens-no-ip-allowlist-8-14-18-39-41-42-68-live">1. Let agents propose writes: a scope tier for MCP and API tokens, no IP allowlist  [<a class="ref" href="api-friction-log.html#n8">8</a>, <a class="ref" href="api-friction-log.html#n14">14</a>, <a class="ref" href="api-friction-log.html#n18">18</a>, <a class="ref" href="api-friction-log.html#n39">39</a>, <a class="ref" href="api-friction-log.html#n41">41</a>, <a class="ref" href="api-friction-log.html#n42">42</a>, <a class="ref" href="api-friction-log.html#n68">68</a>] · live</h3>
+<p><code>request-send-money</code> and <code>request-transfer</code> are the agent-safe writes: a human
+in the dashboard is the control, so the allowlist is redundant. Today they&#39;re
+absent from the production MCP; in the sandbox the approval scope still demands
+an allowlist despite the docs; there&#39;s no token scope for transfer requests at
+all (#<a class="ref" href="api-friction-log.html#n41">41</a>); and note/category updates are allowlisted (#<a class="ref" href="api-friction-log.html#n42">42</a>). The CLI mirrors the
+gap: it has no transfer-request command, and <code>payments transfer</code> (a direct
+transfer) sits next to <code>payments request</code> (#<a class="ref" href="api-friction-log.html#n68">68</a>). The sandbox MCP&#39;s scopes show
+the shape; ship it to production and to API tokens, allowlist-free, and name
+direct movers so no agent picks one by mistake. <strong>This is the change that turns
+Command&#39;s &quot;propose, then approve&quot; into something third-party agents can use.</strong>
+Effort: M.</p>
+<h3 id="2-make-approvals-usable-by-a-one-person-company-58-live">2. Make approvals usable by a one-person company  [<a class="ref" href="api-friction-log.html#n58">58</a>] · live</h3>
+<p>With one org member, <code>request-send-money</code> returns <code>400 invalidApproval</code>
+(&quot;Nobody else in this organization can approve this payment&quot;). The smallest
+customers, the ones who most want an agent doing the close, can&#39;t queue
+anything. Let the requester approve their own agent-originated request in the
+dashboard (the 2FA&#39;d approval step is the control; a second person is a policy
+choice), and expose the policy (<code>GET /organization/approval-policy</code> or a dry
+run) so an agent can check before asking the human. Effort: S–M.</p>
+<h3 id="3-make-retries-safe-59-74-13-live">3. Make retries safe  [<a class="ref" href="api-friction-log.html#n59">59</a>, <a class="ref" href="api-friction-log.html#n74">74</a>, <a class="ref" href="api-friction-log.html#n13">13</a>] · live</h3>
+<p>Same idempotency key + same body → 400 &quot;already used&quot;, not the original
+request; a different body gets the same error, so replay and conflict look
+identical. An agent that times out either abandons a real request or mints a
+new key and queues a duplicate. Only 4 of 12 write endpoints accept a key at
+all (#<a class="ref" href="api-friction-log.html#n74">74</a>). Ship Stripe semantics (replay → original 200; conflict → 409) on
+every POST. Effort: M.</p>
+<h3 id="4-fail-loudly-46-47-live">4. Fail loudly  [<a class="ref" href="api-friction-log.html#n46">46</a>, <a class="ref" href="api-friction-log.html#n47">47</a>] · live</h3>
+<p>400 on unknown query params and invalid enums instead of returning unfiltered
+data (<code>postedstart=</code> and <code>order=newest</code> both 200 today), with a
+<code>did_you_mean</code> hint; the CLI already does this for flags (#<a class="ref" href="api-friction-log.html#n72">72</a>). Rename
+<code>start</code>/<code>end</code>, which filter <code>createdAt</code> while the dashboard shows <code>postedAt</code>.
+Those two turn plausible-but-wrong answers into self-correcting errors.
+Effort: S.</p>
+<h3 id="5-close-the-approval-loop-64-63-66-22-50-25-live">5. Close the approval loop  [<a class="ref" href="api-friction-log.html#n64">64</a>, <a class="ref" href="api-friction-log.html#n63">63</a>, <a class="ref" href="api-friction-log.html#n66">66</a>, <a class="ref" href="api-friction-log.html#n22">22</a>, <a class="ref" href="api-friction-log.html#n50">50</a>, <a class="ref" href="api-friction-log.html#n25">25</a>] · live</h3>
+<p>Add <code>dashboardLink</code> to approval requests (the page exists,
+<code>/payments/approvals?requestId=…</code>, and isn&#39;t under Tasks, #<a class="ref" href="api-friction-log.html#n64">64</a>); make the API&#39;s
+view of the queue match the dashboard&#39;s (a $100 request there is invisible to
+<code>GET /request-send-money</code>, #<a class="ref" href="api-friction-log.html#n63">63</a>); emit approval events (today the only signal is
+a new transaction whose <code>requestId</code> points back, #<a class="ref" href="api-friction-log.html#n66">66</a>); and give transfer
+requests a <code>GET</code> (#<a class="ref" href="api-friction-log.html#n50">50</a>). Consumer chat clients can&#39;t render an MCP approval
+prompt (#<a class="ref" href="api-friction-log.html#n25">25</a>), so the link is how any client completes the loop. Effort: S–M.</p>
+<h3 id="6-decide-what-hosted-agents-may-do-28-39-44-70-live">6. Decide what hosted agents may do  [<a class="ref" href="api-friction-log.html#n28">28</a>, <a class="ref" href="api-friction-log.html#n39">39</a>, <a class="ref" href="api-friction-log.html#n44">44</a>, <a class="ref" href="api-friction-log.html#n70">70</a>] · live</h3>
+<p>Vercel, Workers, Lambda, and every hosted agent runtime have no fixed egress IP,
+so today they get reads only. Drop the allowlist for approval-gated and
+non-money writes, or publish a static-egress guide. Either way, accept IPv6: an
+IPv4-allowlisted token fails from a dual-stack laptop, and the official CLI has
+no way to force IPv4 (#<a class="ref" href="api-friction-log.html#n44">44</a>, #<a class="ref" href="api-friction-log.html#n70">70</a>). Effort: S (docs) / M (policy).</p>
+<h3 id="7-make-the-spec-legible-to-a-model-2-6-10-51-34-11-docs-live">7. Make the spec legible to a model  [<a class="ref" href="api-friction-log.html#n2">2</a>, <a class="ref" href="api-friction-log.html#n6">6</a>, <a class="ref" href="api-friction-log.html#n10">10</a>, <a class="ref" href="api-friction-log.html#n51">51</a>, <a class="ref" href="api-friction-log.html#n34">34</a>, <a class="ref" href="api-friction-log.html#n11">11</a>] · docs + live</h3>
+<p>One <code>openapi.json</code> (today: per-page fragments, 200 KB of duplicated schema for
+five pages) with each operation&#39;s scope and whether it needs an allowlist; one
+error shape (five envelopes observed) with <code>requiredScope</code> on 403; published
+rate limits. Effort: S–M. Highest leverage per hour.</p>
+<h3 id="8-fix-the-account-model-49-35-live">8. Fix the account model  [<a class="ref" href="api-friction-log.html#n49">49</a>, <a class="ref" href="api-friction-log.html#n35">35</a>] · live</h3>
+<p>The credit account is missing from <code>/accounts</code> and <code>GET /account/{id}</code> 404s on
+it, yet a third of sandbox transactions belong to it. <code>Account.kind</code> is a free
+string. Effort: S.</p>
+<h3 id="9-serve-aggregates-and-trim-payloads-15-52-19-live-size">9. Serve aggregates and trim payloads  [<a class="ref" href="api-friction-log.html#n15">15</a>, <a class="ref" href="api-friction-log.html#n52">52</a>, <a class="ref" href="api-friction-log.html#n19">19</a>] · live (size)</h3>
+<p>150 transactions ≈ 182 KB ≈ 45k tokens, with 10 of 35 fields always null. Serve
+&quot;spend by category&quot; and recurring streams server-side (the dashboard already
+computes them) and add sparse fieldsets. Effort: M–L.</p>
+<h3 id="10-add-the-missing-nouns-29-20-docs">10. Add the missing nouns  [<a class="ref" href="api-friction-log.html#n29">29</a>, <a class="ref" href="api-friction-log.html#n20">20</a>] · docs</h3>
+<p>Payables (<code>GET /bills</code>; Bill Pay exists in the product) and merchant lookup
+(<code>GET /merchant/{id}</code>). Steward had to keep its bills list outside Mercury.
+Effort: M.</p>
+</section>
+<section><h2 id="everything-else-by-tier">Everything else, by tier</h2>
+<p><strong>Tier A — cheap, do this quarter</strong></p>
+<ul>
+<li>Discovery points at the right server: the docs&#39; MCP server card lists only <code>docs.mercury.com/mcp</code>; <code>api-catalog</code> and <code>llms-full.txt</code> 404 [<a class="ref" href="api-friction-log.html#n73">73</a>, <a class="ref" href="api-friction-log.html#n1">1</a>]</li>
+<li>Task-level agent skills (start with &quot;request a payment for approval&quot;) in place of the placeholder skills index [<a class="ref" href="api-friction-log.html#n75">75</a>]</li>
+<li>CLI: errors on stderr, not stdout after &quot;No results.&quot; [<a class="ref" href="api-friction-log.html#n69">69</a>]; redaction option for account numbers [<a class="ref" href="api-friction-log.html#n71">71</a>]</li>
+<li>Protocol version + capabilities stated on the MCP docs page; document the sandbox MCP host [<a class="ref" href="api-friction-log.html#n26">26</a>, <a class="ref" href="api-friction-log.html#n18">18</a>]</li>
+<li>Fix the OpenAPI <code>info.description</code> boilerplate; put the official MCP URL on <code>docs/welcome</code> [<a class="ref" href="api-friction-log.html#n4">4</a>, <a class="ref" href="api-friction-log.html#n5">5</a>]</li>
+<li>Normalize the two &quot;Get transaction by ID&quot; titles in <code>llms.txt</code> [<a class="ref" href="api-friction-log.html#n3">3</a>]</li>
+<li>Token-downgrade error code + <code>GET /token/self</code> [<a class="ref" href="api-friction-log.html#n9">9</a>]</li>
+<li><code>null</code> instead of the <code>0001-01-01T00:00:00Z</code> sentinel [<a class="ref" href="api-friction-log.html#n53">53</a>]</li>
+<li>Rate-limit headers; strip <code>git-commit</code> / ECS / Honeycomb headers and session cookies from the API host [<a class="ref" href="api-friction-log.html#n54">54</a>]</li>
+</ul>
+<p><strong>Tier B — product</strong></p>
+<ul>
+<li>Agent cards creatable via API; funding guide for x402 / ACP / AP2 / MPP [<a class="ref" href="api-friction-log.html#n21">21</a>]</li>
+<li>Invoice reminder endpoint [<a class="ref" href="api-friction-log.html#n30">30</a>]</li>
+<li>Personal-account endpoint matrix [<a class="ref" href="api-friction-log.html#n23">23</a>]</li>
+<li>MCP prompts/resources and tool-selection guidance [<a class="ref" href="api-friction-log.html#n16">16</a>]</li>
+</ul>
+<p><strong>Tier C — ecosystem, not Mercury&#39;s to fix, but shapes the roadmap</strong></p>
+<ul>
+<li>Consumer clients don&#39;t render elicitation [<a class="ref" href="api-friction-log.html#n25">25</a>]; Grok times out on it [<a class="ref" href="api-friction-log.html#n32">32</a>]</li>
+<li>MCP 2026-07-28 moved elicitation to stateless MRTR; sampling/roots deprecated [<a class="ref" href="api-friction-log.html#n26">26</a>, <a class="ref" href="api-friction-log.html#n36">36</a>, <a class="ref" href="api-friction-log.html#n37">37</a>]</li>
+<li>OAuth metadata gaps in Mercury&#39;s own MCP (401 without <code>resource_metadata</code>, PRM only at root) [<a class="ref" href="api-friction-log.html#n17">17</a>]</li>
+</ul>
+<p><strong>⬇ Below the line — sandbox and docs (flag, don&#39;t lead)</strong></p>
+<ul>
+<li>Richer sandbox seed data for close/AP/AR/treasury, plus categories and MCCs [<a class="ref" href="api-friction-log.html#n45">45</a>, <a class="ref" href="api-friction-log.html#n48">48</a>, <a class="ref" href="api-friction-log.html#n27">27</a>]</li>
+<li>Sandbox test helper to approve/reject a queued request by API, so gate 2 is testable without a second real user and 2FA [<a class="ref" href="api-friction-log.html#n62">62</a>, <a class="ref" href="api-friction-log.html#n61">61</a>]</li>
+<li>Sandbox allowlist relaxed for test tokens [<a class="ref" href="api-friction-log.html#n38">38</a>]</li>
+<li>Scope catalog published; token dialog and docs agree on names and the asterisk rule [<a class="ref" href="api-friction-log.html#n43">43</a>, <a class="ref" href="api-friction-log.html#n40">40</a>]</li>
+<li>Minor: seeded nicknames with wrong last four, signup email in seed data, <code>GET /account/{id}</code> undocumented, approvals missing from Tasks; dashboard Approve button ignores accessibility clicks [<a class="ref" href="api-friction-log.html#n55">55</a>, <a class="ref" href="api-friction-log.html#n56">56</a>, <a class="ref" href="api-friction-log.html#n57">57</a>, <a class="ref" href="api-friction-log.html#n65">65</a>, <a class="ref" href="api-friction-log.html#n67">67</a>]</li>
+</ul>
+<p><strong>Things that are good and should stay</strong>
+<code>llms.txt</code> + <code>.md</code> suffix; the Send Money guide&#39;s Supported / Client-Side /
+Not-Available tables; DCR + PKCE on the MCP; deterministic cursor pagination on
+org-scoped lists; <code>dashboardLink</code> on accounts and transactions;
+<code>x-mercury-request-id</code> + <code>traceparent</code> on every response; strict validation of
+dates and transaction status (the model to extend to every param); on approval
+requests, <code>requesterMayApprove</code>, <code>numberOfApproversRequired</code>, and <code>reviews[]</code>
+with reviewer and timestamp; <code>requestId</code> on the resulting transaction, which
+closes the audit trail. In the CLI: <code>--environment sandbox</code>, required
+idempotency keys, <code>--yes</code> required when non-interactive, and &quot;did you mean&quot;
+on mistyped flags [<a class="ref" href="api-friction-log.html#n72">72</a>].</p>
+</section>
+<section><h2 id="corroboration">Corroboration</h2>
+<p>Michelle Bu, who owns APIs and developer tools at Stripe, ran the same
+experiment against her own surface a week before we did — 21 agent runs
+building Stripe + Prodigi shops, 7 working, 2 shippable — and reached the same
+top-tier list: sandbox before a human signs up, versioning that agents can
+reason about, and keys that shouldn&#39;t have to exist. <em>&quot;Any friction we reduce
+for agents is friction we&#39;ll reduce for humans as well.&quot;</em>
+<a href="https://www.breakingchange.blog/p/building-a-t-shirt-factory-factory">Building a t-shirt factory factory</a>
+— summary in <a href="landscape.html"><code>landscape.md</code></a>.</p>
+</section>
+<section><h2 id="what-steward-proves">What Steward proves</h2>
+<p>Built on the API as it exists: read → analyze → propose → approve in the
+client → approve in Mercury. Two gates, no direct sends, no production token.
+Every item in the top ten was hit while building it, which is the argument
+for the ranking: these aren&#39;t hypothetical, they&#39;re the order a real
+integrator trips over them.</p>
+</section>
+  </article>
+</main>
+</body>
+</html>

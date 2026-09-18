@@ -154,6 +154,9 @@
   .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
   .links a { font-family: var(--mono); font-size: 13px; padding: 6px 10px; border: 1px solid var(--rule-strong); border-radius: 4px; text-decoration: none; background: var(--surface); }
   .links a:hover { border-color: var(--ink); }
+  .walkthrough { margin: 0 0 8px; }
+  .walkthrough video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #000; border: 1px solid var(--rule-strong); border-radius: 4px; }
+  .walkthrough figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; }
 
   footer { padding-top: 28px; font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
 
@@ -187,20 +190,33 @@
     <h1>Steward: an agent that proposes, never executes</h1>
     <p class="dek">A month-end close agent for a technical founder, run from Claude Code: it reads the company's Mercury account, proposes payments and a treasury sweep, and queues every dollar for human approval. Built on endpoints Mercury already ships — and shaped by where agents actually run.</p>
     <div class="links">
+      <a href="#walkthrough">Watch the walkthrough</a>
+      <a href="narrative.html">Narrative</a>
+      <a href="plan.html">Execution plan</a>
+      <a href="findings.html">Findings, ranked</a>
+      <a href="api-friction-log.html">Friction log</a>
+      <a href="landscape.html">Landscape</a>
       <a href="explainer.html">Interactive explainer ↗</a>
-      <a href="findings.md">Findings, ranked</a>
-      <a href="api-friction-log.md">Friction log</a>
-      <a href="landscape.md">Landscape</a>
-      <a href="../PLAN.md">Execution plan</a>
     </div>
   </div>
 </header>
+
+<section id="walkthrough">
+  <div class="label"><span class="eyebrow">Section</span><div class="n">Watch</div></div>
+  <div class="content">
+    <h2>Walkthrough</h2>
+    <figure class="walkthrough">
+      <video controls preload="metadata" playsinline src="https://cfsno74zv8ik3jwj.public.blob.vercel-storage.com/video/mercury-end-of-month-close-CJ1MU32w7n4kxWnY1cR0I5BRgpMIgM.mp4"></video>
+      <figcaption>Steward running month-end close from Claude Code against the Mercury sandbox.</figcaption>
+    </figure>
+  </div>
+</section>
 
 <section id="what">
   <div class="label"><span class="eyebrow">Section</span><div class="n">What</div></div>
   <div class="content">
     <h2>What we decided to build</h2>
-    <p>An MCP server plus a thin chat UI that runs <strong>month-end close</strong> for a small company on Mercury: cash position, overdue receivables, bills due, and the surplus that should be earning yield. Each finding becomes a <em>typed proposal</em>. Anything that moves money is queued for human approval inside Mercury — the agent has no path to move it on its own.</p>
+    <p>An MCP server that runs <strong>month-end close</strong> for a small company on Mercury: cash position, overdue receivables, bills due, and the surplus that should be earning yield. Each finding becomes a <em>typed proposal</em>. Anything that moves money is queued for human approval inside Mercury — the agent has no path to move it on its own.</p>
 
     <div class="pipe" role="list">
       <div role="listitem"><div class="k">1 · read</div><div class="v">Accounts, invoices, recipients</div><div class="d">Balances by kind, unpaid AR, the vendor list, recent outflows.</div></div>
@@ -221,7 +237,7 @@
     </table>
     </div>
 
-    <p>Three ways in, one engine: a hosted MCP endpoint attached to <strong>Claude Code</strong> (the hero — a surface we don't own, and the founder's actual tool); the same endpoint in Claude.ai, ChatGPT, or Grok for reads, with approvals handed to a page we host; a <strong>web chat</strong> on the Vercel AI SDK (a surface we do own); and a <strong>CLI pipe</strong> — <code>mercury transactions list --format jsonl | steward close</code>. Everything runs against one Mercury <strong>sandbox</strong> org, which plays the company.</p>
+    <p>Two ways in, one engine: a hosted MCP endpoint attached to <strong>Claude Code</strong> (the hero — a surface we don't own, and the founder's actual tool), with the same endpoint in Claude.ai, ChatGPT, or Grok for reads and approvals handed to a page we host; and a <strong>CLI pipe</strong> — <code>mercury transactions list --format jsonl | steward close</code>. Everything runs against one Mercury <strong>sandbox</strong> org, which plays the company.</p>
   </div>
 </section>
 
@@ -257,7 +273,7 @@
       <p style="margin:0">Recommendation: make the approval-queue tier a first-class OAuth scope (<code>propose:payments</code>, <code>propose:transfers</code>, <code>write:categories</code>) for MCP and API tokens, no allowlist required, and say so on the token-creation modal.</p>
     </div>
 
-    <p>Selected findings. The ranked summary with a BLUF is in <a href="findings.md">findings.md</a>; the full log — 75 entries so far, tagged by layer (API · MCP · CLI · docs · sandbox · ecosystem), each with a proposed fix — is in <a href="api-friction-log.md">the friction log</a>. It keeps growing through the build.</p>
+    <p>Selected findings. The ranked summary with a BLUF is in <a href="findings.html">findings</a>; the full log — 75 entries so far, tagged by layer (API · MCP · CLI · docs · sandbox · ecosystem), each with a proposed fix — is in <a href="api-friction-log.html">the friction log</a>. It keeps growing through the build.</p>
 
     <div class="ledger">
       <div class="row">
@@ -309,7 +325,7 @@
   <div class="content">
     <h2>Architecture</h2>
     <figure>
-      <svg class="arch" viewBox="0 0 880 330" role="img" aria-label="Architecture: chat clients and a web UI call the Steward MCP server on Vercel, which reads Mercury's API and queues money movement for approval in the Mercury dashboard.">
+      <svg class="arch" viewBox="0 0 880 330" role="img" aria-label="Architecture: chat clients and a CLI pipe call the Steward MCP server on Vercel, which reads Mercury's API and queues money movement for approval in the Mercury dashboard.">
         <defs>
           <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrow"/></marker>
           <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrow money"/></marker>
@@ -318,12 +334,9 @@
         <rect class="box" x="24" y="40" width="170" height="64" rx="4"/>
         <text x="40" y="66">Claude Code · Claude.ai · ChatGPT</text>
         <text class="mono" x="40" y="86">surfaces we don't own</text>
-        <rect class="box ours" x="24" y="130" width="170" height="64" rx="4"/>
-        <text x="40" y="156">Web chat (AI SDK)</text>
-        <text class="mono" x="40" y="176">surface we own</text>
-        <rect class="box ours" x="24" y="220" width="170" height="64" rx="4"/>
-        <text x="40" y="246">CLI pipe</text>
-        <text class="mono" x="40" y="266">mercury … | steward audit</text>
+        <rect class="box ours" x="24" y="164" width="170" height="64" rx="4"/>
+        <text x="40" y="190">CLI pipe</text>
+        <text class="mono" x="40" y="210">mercury … | steward audit</text>
         <!-- steward -->
         <rect class="box ours" x="290" y="96" width="220" height="132" rx="4"/>
         <text x="306" y="122" style="font-weight:600">Steward on Vercel</text>
@@ -349,8 +362,7 @@
         <text class="mono" x="306" y="288">gate 1 · Claude Code renders it; others get a URL</text>
         <!-- edges -->
         <path class="edge" d="M194 72 C 250 72, 250 130, 290 130" marker-end="url(#a)"/>
-        <path class="edge" d="M194 162 L 290 162" marker-end="url(#a)"/>
-        <path class="edge" d="M194 252 C 250 252, 250 196, 290 196" marker-end="url(#a)"/>
+        <path class="edge" d="M194 196 L 290 196" marker-end="url(#a)"/>
         <path class="edge" d="M510 130 C 560 130, 560 85, 600 85" marker-end="url(#a)"/>
         <text class="mono" x="522" y="98">read</text>
         <path class="edge money" d="M510 196 C 560 196, 560 112, 600 112" marker-end="url(#am)"/>
@@ -358,7 +370,7 @@
         <path class="edge money" d="M725 130 L 725 180" marker-end="url(#am)"/>
         <path class="edge" d="M400 228 L 400 250" marker-end="url(#a)"/>
       </svg>
-      <figcaption>Two gates. Gate 1 is MCP elicitation: the tool returns "input required," Claude Code (or our web UI) renders Approve / Decline, and the client retries the call with the answer. Clients that can't render it get a link to our approve page instead. Gate 2 is Mercury's own approval queue and works from every client. A proposal must pass both before money moves.</figcaption>
+      <figcaption>Two gates. Gate 1 is MCP elicitation: the tool returns "input required," Claude Code renders Approve / Decline, and the client retries the call with the answer. Clients that can't render it get a link to our approve page instead. Gate 2 is Mercury's own approval queue and works from every client. A proposal must pass both before money moves.</figcaption>
     </figure>
 
     <h3>Environment and tokens</h3>
@@ -384,7 +396,7 @@
       <li><strong>A payables surface</strong> (<code>GET /bills</code>) and an invoice-reminder endpoint, so month-end close can be fully agent-assembled.</li>
       <li><strong>CLI:</strong> a <code>--sandbox</code> flag and auto-detection of the <code>mercury_sandbox_</code> token prefix; <strong>sandbox docs:</strong> say what's seeded and what's missing.</li>
     </ol>
-    <p>What we'd do next with the prototype: replace the shared secret with real OAuth, wire webhooks so the chat learns when a queued payment is approved (production only — the sandbox has none), and point the same tools at a personal account read-only as an epilogue.</p>
+    <p>What we'd do next with the prototype: replace the shared secret with real OAuth, wire webhooks so the agent learns when a queued payment is approved (production only — the sandbox has none), and point the same tools at a personal account read-only as an epilogue.</p>
   </div>
 </section>
 

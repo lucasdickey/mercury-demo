@@ -1,0 +1,366 @@
+<!doctype html>
+<!-- Generated from docs/sandbox-surface.md by apps/web/scripts/render-docs.mjs. Edit the Markdown, then run `npm run docs`. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sandbox Surface</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --paper: #f5f7f9; --panel: #ffffff; --ink: #16202c; --muted: #5b6877; --rule: #dce1e7;
+    --accent: #1f6f5c; --accent-soft: #e3f0ec; --amber: #9a6414; --amber-soft: #f8eedc;
+    --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+      --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+    --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; scroll-padding-top: 64px; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.6; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  code { font-family: var(--mono); font-size: 0.82em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  a code { text-decoration: underline; text-decoration-color: currentColor; }
+
+  .bar { position: sticky; top: 0; z-index: 2; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
+  .site { max-width: 1040px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 4px 16px; overflow-x: auto; scrollbar-width: none; font-family: var(--mono); font-size: 0.76rem; white-space: nowrap; }
+  .site a { color: var(--muted); text-decoration: none; padding: 4px 0; }
+  .site a:hover { color: var(--ink); }
+  .site a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+
+  .wrap { max-width: 800px; margin: 0 auto; padding: 48px 16px 96px; }
+  h1, h2, h3, h4 { font-family: var(--display); line-height: 1.15; text-wrap: balance; }
+  h1 { font-size: clamp(2rem, 6vw, 3rem); font-weight: 700; letter-spacing: -0.02em; margin: 8px 0 0; }
+  h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 12px; }
+  h3 { font-size: 1.1rem; font-weight: 700; margin: 32px 0 8px; }
+  h4 { font-size: 1rem; margin: 24px 0 8px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .dek { font-size: 1.2rem; color: var(--muted); margin: 16px 0 0; max-width: 36em; }
+  .meta { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin: 20px 0 0; }
+  .meta code { background: none; padding: 0; }
+
+  .toc { margin-top: 32px; padding: 16px 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; }
+  .toc ul { list-style: none; margin: 8px 0 0; padding: 0; columns: 2 16em; column-gap: 32px; font-size: 0.92rem; }
+  .toc li { break-inside: avoid; margin: 2px 0; }
+  .toc code { background: none; padding: 0; }
+
+  .doc section { margin-top: 56px; }
+  .doc section.lead { margin-top: 32px; }
+  .doc p, .doc ul, .doc ol, .doc blockquote, .doc pre, .doc .table { margin: 0 0 16px; }
+  .doc li { margin: 6px 0; }
+  .doc li > p { margin: 0 0 8px; }
+  .doc hr { border: 0; border-top: 1px solid var(--rule); margin: 40px 0; }
+  .doc blockquote { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; color: var(--muted); }
+  .doc pre { background: #111820; color: #d9e2ea; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+  .doc pre code { background: none; padding: 0; font-size: inherit; color: inherit; overflow-wrap: normal; }
+  .doc input[type="checkbox"] { margin-right: 6px; }
+  .doc li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.2em; }
+  .doc ol > li[id] { scroll-margin-top: 64px; }
+  .doc ol > li[id]:target { background: var(--amber-soft); outline: 6px solid var(--amber-soft); border-radius: 2px; }
+  a.ref { font-variant-numeric: tabular-nums; }
+
+  .table { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; line-height: 1.45; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--rule); }
+  th { font-family: var(--display); font-weight: 700; font-size: 0.85rem; background: var(--accent-soft); }
+  tr:last-child td { border-bottom: 0; }
+
+  .doc section.feature { margin: 40px -16px 0; padding: 28px 16px; background: var(--amber-soft); border-top: 3px solid var(--amber); }
+  .doc section.feature h2 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); }
+  .doc section.feature > p:first-of-type { font-size: 1.12rem; }
+  .doc section.feature .table { border-color: color-mix(in srgb, var(--amber) 35%, transparent); }
+  .doc section.feature th { background: color-mix(in srgb, var(--amber) 18%, var(--panel)); }
+  .doc section.feature td:first-child { color: var(--muted); }
+  .doc section.feature td:last-child strong { color: var(--accent); }
+  @media (min-width: 832px) { .doc section.feature { margin-inline: -32px; padding-inline: 32px; border-radius: 0 0 10px 10px; } }
+</style>
+</head>
+<body>
+<header class="bar"><nav class="site" aria-label="Documents"><a href="index.html">Memo</a><a href="narrative.html">Narrative</a><a href="plan.html">Plan</a><a href="findings.html">Findings</a><a href="api-friction-log.html">Friction log</a><a href="direction.html">Direction</a><a href="landscape.html">Landscape</a><a href="sandbox-surface.html" aria-current="page">Sandbox</a><a href="scope-catalog.html">Scopes</a><a href="take-home-brief.html">Brief</a><a href="explainer.html">Explainer</a></nav></header>
+<main class="wrap">
+  <header class="top">
+    <p class="eyebrow">Recon · what the sandbox seeds</p>
+    <h1>Sandbox Surface</h1>
+    
+    <p class="meta">Rendered from <a href="https://github.com/lucasdickey/mercury-demo/blob/main/docs/sandbox-surface.md"><code>docs/sandbox-surface.md</code></a></p>
+  </header>
+  <article class="doc">
+
+  </article>
+  <nav class="toc" aria-label="On this page"><p class="eyebrow">On this page</p><ul><li><a href="#verdict-for-steward">Verdict for Steward</a></li><li><a href="#endpoint-results">Endpoint results</a></li><li><a href="#transactions-150">Transactions (150)</a></li><li><a href="#query-behavior">Query behavior</a></li><li><a href="#errors-four-envelopes-51">Errors — four envelopes [#51]</a></li><li><a href="#response-headers-54">Response headers [#54]</a></li></ul></nav>
+  <article class="doc">
+<section class="lead"><p>What the Mercury sandbox actually contains and returns, probed read-only with a
+Custom token (the eleven non-asterisk reads + Send Money with Approval; see
+<a href="scope-catalog.html"><code>scope-catalog.md</code></a>). Reproduce with <code>node scripts/recon/sweep.mjs &lt;out.json&gt;</code>.
+Sample values are from the seeded org &quot;Not A Real Company Inc.&quot;; account and
+routing numbers redacted. Friction entries referenced as [#n].</p>
+</section>
+<section><h2 id="verdict-for-steward">Verdict for Steward</h2>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Workflow</th>
+<th>Data in sandbox</th>
+<th>Live <code>closeMonth</code> result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cash position</td>
+<td>✅ 9 depository accounts, balances ~$1M each</td>
+<td>Works. Operating = largest checking ($1.5M), shown by a nickname with the wrong last four [#<a class="ref" href="api-friction-log.html#n55">55</a>]</td>
+</tr>
+<tr>
+<td>Operating floor</td>
+<td>⚠️ 150 txns, but every <code>createdAt</code> is the seed run (Aug 16–Sep 15) while <code>postedAt</code> spans Apr–Sep [#<a class="ref" href="api-friction-log.html#n47">47</a>]</td>
+<td>Floor $56,404 (2× $28,202/mo), computed off <code>createdAt</code> — wrong basis</td>
+</tr>
+<tr>
+<td>Overdue AR follow-ups</td>
+<td>❌ 0 invoices, 0 customers</td>
+<td>0 proposals</td>
+</tr>
+<tr>
+<td>Bills due → pay</td>
+<td>❌ 79 recipients, none vendor-like (71 &quot;Currency Cloud Recipient N&quot; intl-wire; 4 ACH)</td>
+<td>0 pay, 3 <code>unmatched_bill</code></td>
+</tr>
+<tr>
+<td>Sweep to yield</td>
+<td>⚠️ 0 treasury; 2 savings. <code>request-transfer</code> has no Custom scope [#<a class="ref" href="api-friction-log.html#n41">41</a>]</td>
+<td>1 sweep of $1,443,600 → savings; <strong>cannot be queued</strong> with this token</td>
+</tr>
+<tr>
+<td>Approval queue</td>
+<td>⚠️ One-member org: <code>POST request-send-money</code> → 400 <code>invalidApproval</code> [#<a class="ref" href="api-friction-log.html#n58">58</a>]. After adding a second member → 200 <code>pendingApproval</code>; same idempotency key retried → 400, not a replay [#<a class="ref" href="api-friction-log.html#n59">59</a>]. Approved by the second member in Payments → Needs Approval → request <code>approved</code>, ACH <code>outgoingPayment</code> −$12.34 <code>sent</code> in 15 s with <code>requestId</code> back-link [#<a class="ref" href="api-friction-log.html#n66">66</a>]</td>
+<td>Gate 1 accepted in chat → raw 400 (one member)</td>
+</tr>
+</tbody></table></div>
+<p><strong>Bottom line:</strong> reads work; the seed data can&#39;t exercise AR, AP, or treasury, payments queue only once the org has a second approver [#<a class="ref" href="api-friction-log.html#n58">58</a>], and transfers need a scope that doesn&#39;t exist [#<a class="ref" href="api-friction-log.html#n41">41</a>].
+The demo needs seeding, and seeding recipients/customers/invoices needs
+asterisked (allowlisted) scopes this token deliberately doesn&#39;t have [#<a class="ref" href="api-friction-log.html#n45">45</a>].</p>
+</section>
+<section><h2 id="endpoint-results">Endpoint results</h2>
+<p><code>403 scope</code> = <code>tokenNotInScope</code> because the scope wasn&#39;t selected (expected).</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Endpoint</th>
+<th>Status</th>
+<th>Rows</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GET /accounts</code></td>
+<td>200</td>
+<td>9</td>
+<td>2 savings, 7 checking, all <code>type: mercury</code>. <strong>Credit account absent</strong> [#<a class="ref" href="api-friction-log.html#n49">49</a>]</td>
+</tr>
+<tr>
+<td><code>GET /account/{id}</code></td>
+<td>200</td>
+<td>—</td>
+<td>Works; <strong>not in the API reference</strong> [#<a class="ref" href="api-friction-log.html#n57">57</a>]</td>
+</tr>
+<tr>
+<td><code>GET /account/{creditId}</code></td>
+<td>404</td>
+<td>—</td>
+<td><code>resourceNotFound</code> — yet its transactions list fine</td>
+</tr>
+<tr>
+<td><code>GET /transactions?limit=1000</code></td>
+<td>200</td>
+<td>150</td>
+<td>182 KB (1.2 KB/row). Response has <code>page</code>, no <code>total</code></td>
+</tr>
+<tr>
+<td><code>GET /account/{id}/transactions</code></td>
+<td>200</td>
+<td>0–73</td>
+<td>Response has <code>total</code>, <strong>no <code>page</code></strong> — different envelope [#<a class="ref" href="api-friction-log.html#n51">51</a>]</td>
+</tr>
+<tr>
+<td><code>GET /transaction/{id}</code></td>
+<td>200</td>
+<td>—</td>
+<td>4.4 KB for one txn</td>
+</tr>
+<tr>
+<td><code>GET /recipients</code></td>
+<td>200</td>
+<td>79</td>
+<td>60 KB. 71 intl wire, 4 ACH, 3 check, 1 RTP. 3× &quot;Banned Recipient&quot;, all <code>active</code></td>
+</tr>
+<tr>
+<td><code>GET /recipients/attachments</code></td>
+<td>200</td>
+<td>1</td>
+<td>Returns a presigned S3 URL (12 h expiry)</td>
+</tr>
+<tr>
+<td><code>GET /recipients/invites</code></td>
+<td>403 scope</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><code>GET /ar/invoices</code></td>
+<td>200</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>GET /ar/customers</code></td>
+<td>200</td>
+<td>0</td>
+<td>Granted by &quot;Fetch Invoices&quot; (no customer scope in picker)</td>
+</tr>
+<tr>
+<td><code>GET /treasury</code></td>
+<td>200</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td><code>GET /credit</code></td>
+<td>200</td>
+<td>1</td>
+<td>balance −$1,871; 49 txns on it</td>
+</tr>
+<tr>
+<td><code>GET /categories</code></td>
+<td>200</td>
+<td>23</td>
+<td>Standard set (Software &amp; Subscriptions, Payroll, …) — applied to 0 txns [#<a class="ref" href="api-friction-log.html#n48">48</a>]</td>
+</tr>
+<tr>
+<td><code>GET /organization</code></td>
+<td>200</td>
+<td>—</td>
+<td><code>kind: business</code>, <code>subscriptionTier: free</code>, one DBA</td>
+</tr>
+<tr>
+<td><code>GET /request-send-money</code></td>
+<td>200</td>
+<td>0</td>
+<td><code>?status=pendingApproval</code> accepted</td>
+</tr>
+<tr>
+<td><code>GET /request-transfer[/{id}]</code></td>
+<td>403 scope</td>
+<td></td>
+<td>No GET is documented for transfer requests at all [#<a class="ref" href="api-friction-log.html#n50">50</a>]</td>
+</tr>
+<tr>
+<td><code>GET /events?limit=1000</code></td>
+<td>200</td>
+<td>319</td>
+<td>154 txn create, 2 txn update, 107 checking / 50 credit / 6 savings updates. Readable with no events scope in the picker</td>
+</tr>
+<tr>
+<td><code>GET /account/{id}/statements</code></td>
+<td>200</td>
+<td>0</td>
+<td>No statements for any account despite 6 months of postings</td>
+</tr>
+<tr>
+<td><code>GET /cards</code>, <code>/account/{id}/cards</code>, <code>/users</code>, <code>/merchants</code>, <code>/webhooks</code>, <code>/safes</code></td>
+<td>403 scope</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table></div>
+</section>
+<section><h2 id="transactions-150">Transactions (150)</h2>
+<ul>
+<li><strong>Accounts:</strong> checking ••3996 73 · credit 49 · checking ••5187 14 · ••8050 6 · ••9379 3 · savings ••5736 2 · ••6579 2 · savings ••2280 1.</li>
+<li><strong>Kinds:</strong> outgoingPayment 57 · creditCardTransaction 32 · other 31 · externalTransfer 7 · debitCardTransaction 7 · checkDeposit 4 · card intl-fee family 8 · wireFee 2 · internalTransfer 2.</li>
+<li><strong>Status:</strong> sent 146 · pending 2 · failed 2.</li>
+<li><strong>Counterparties:</strong> &quot;Alex Rivera&quot; 50 outgoing payments ($47.5k); Gsuite / Amazon / Facebook 10 card txns each; &quot;Fake P. Erson&quot; 7 external transfers (+$7.5M, the balance seed).</li>
+<li><strong>Enrichment (fill rate):</strong> <code>mercuryCategory</code> 0 · <code>categoryData</code> 0 · <code>generalLedgerCodeName</code> 0 · <code>merchant</code> 3 (all <code>id: &quot;1234567890&quot;</code>) · <code>merchant.categoryCode</code> 2 (both 6011, ATM) · <code>note</code> 0 · <code>bankDescription</code> 10.</li>
+<li><strong>Always null</strong> (10 of 35 top-level keys): <code>feeId, note, reasonForFailure, currencyExchangeInfo, mercuryCategory, generalLedgerCodeName, categoryData, checkNumber, trackingNumber, requestId</code> [#<a class="ref" href="api-friction-log.html#n52">52</a>].</li>
+<li><strong>Dates:</strong> <code>postedAt</code> &lt; <code>createdAt</code> on 82 rows; <code>postedAt = 0001-01-01T00:00:00Z</code> on 3 <code>sent</code> rows; same sentinel in <code>failedAt</code> and <code>recipient.dateLastPaid</code> [#<a class="ref" href="api-friction-log.html#n53">53</a>].</li>
+<li><strong>PII:</strong> <code>details.creditCardInfo.email</code> on all 32 credit-card rows is the developer&#39;s signup email [#<a class="ref" href="api-friction-log.html#n56">56</a>].</li>
+</ul>
+</section>
+<section><h2 id="query-behavior">Query behavior</h2>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Probe</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>start=2026-09-10</code></td>
+<td>145 rows — filters <strong><code>createdAt</code></strong></td>
+</tr>
+<tr>
+<td><code>end=2026-06-30</code></td>
+<td><strong>0 rows</strong>, though 16 txns posted before then</td>
+</tr>
+<tr>
+<td><code>postedStart=2026-09-10</code></td>
+<td>69 rows (correct for a close)</td>
+</tr>
+<tr>
+<td><code>postedstart=…</code> (case typo)</td>
+<td>150 rows — <strong>silently ignored</strong> [#<a class="ref" href="api-friction-log.html#n46">46</a>]</td>
+</tr>
+<tr>
+<td><code>order=newest</code> (invalid enum)</td>
+<td>200, treated as <code>asc</code> — silently ignored</td>
+</tr>
+<tr>
+<td><code>status=bogus</code></td>
+<td>400 <code>malformedTransactionStatusParam</code> — validated</td>
+</tr>
+<tr>
+<td><code>start=yesterday</code></td>
+<td>400 <code>malformedDateParam</code></td>
+</tr>
+<tr>
+<td><code>limit=100000</code></td>
+<td>400, <code>{errors:{message}}</code>, no code</td>
+</tr>
+<tr>
+<td>default order</td>
+<td><code>asc</code> (oldest first)</td>
+</tr>
+<tr>
+<td>cursor paging</td>
+<td><code>start_after=&lt;nextPage&gt;</code> works; last page returns <code>page: {}</code></td>
+</tr>
+</tbody></table></div>
+</section>
+<section><h2 id="errors-four-envelopes-51">Errors — four envelopes [#<a class="ref" href="api-friction-log.html#n51">51</a>]</h2>
+<pre><code>403 {&quot;errors&quot;:{&quot;errorCode&quot;:&quot;tokenNotInScope&quot;,&quot;message&quot;:&quot;You must have a token with access to this endpoint.&quot;}}
+404 {&quot;errors&quot;:{&quot;errorCode&quot;:&quot;resourceNotFound&quot;,&quot;message&quot;:&quot;Couldn’t find the resource for this ID&quot;}}        # /account/{id}
+404 {&quot;errors&quot;:{&quot;notFound&quot;:[&quot;We couldn’t find the data associated with your request. Please contact help@mercury.com&quot;]}}  # /transaction/{id}, unknown path, malformed UUID
+400 {&quot;errors&quot;:{&quot;message&quot;:&quot;Page limit size must not exceed 1000.&quot;}}
+</code></pre>
+</section>
+<section><h2 id="response-headers-54">Response headers [#<a class="ref" href="api-friction-log.html#n54">54</a>]</h2>
+<p>Present: <code>x-mercury-request-id</code>, <code>traceparent</code>, <code>cache-control: private, no-store</code>.
+Absent: any rate-limit header (<code>RateLimit-*</code>, <code>X-RateLimit-*</code>, <code>Retry-After</code>).
+Also present on every API response: <code>git-commit</code>, <code>ecs-task-name</code>, <code>ecs-task-id</code>,
+<code>mercury-honeycomb-link</code>, and four <code>Set-Cookie</code>s (incl. <code>_SESSION</code>) on bearer-token calls.</p>
+</section>
+  </article>
+</main>
+</body>
+</html>

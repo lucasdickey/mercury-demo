@@ -10,3 +10,4 @@ dist/
 apps/web/public/docs/
 *.tsbuildinfo
 next-env.d.ts
+.env*

@@ -2,11 +2,11 @@
 
 import { useState, useTransition } from "react";
 import type { Proposal, QueueOutcome } from "@steward/core";
-import { approveFromToken, approveProposal } from "@/app/actions";
+import { approveFromToken } from "@/app/actions";
 
 const usd = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-export function ProposalCard({ proposal, token }: { proposal: Proposal; token?: string }) {
+export function ProposalCard({ proposal, token }: { proposal: Proposal; token: string }) {
   const [pending, start] = useTransition();
   const [result, setResult] = useState<QueueOutcome | { error: string } | { declined: true } | null>(null);
   const needsApproval = proposal.requires_approval && (proposal.kind === "pay" || proposal.kind === "sweep");
@@ -36,7 +36,7 @@ export function ProposalCard({ proposal, token }: { proposal: Proposal; token?: 
             disabled={pending}
             onClick={() =>
               start(async () => {
-                const r = token ? await approveFromToken(token) : await approveProposal(proposal);
+                const r = await approveFromToken(token);
                 setResult(r);
               })
             }

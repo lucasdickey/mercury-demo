@@ -16,7 +16,7 @@ no path to move money. Built for the Mercury PM take-home ("Command").
 npm install
 cp .env.example .env.local        # fill in: sandbox token, ANTHROPIC_API_KEY, MCP_PATH_SECRET, STATE_SECRET
 npm test                          # core analyzers against fixtures
-npm run dev                       # http://localhost:3000  (chat UI)  ·  /docs  (memo)
+npm run dev                       # http://localhost:3000 → /docs (memo, narrative, plan)
 npm run demo:prep                 # before a demo: bills due from today, queue check, close_month preview
 ```
 

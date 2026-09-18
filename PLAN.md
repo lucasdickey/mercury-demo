@@ -5,6 +5,32 @@ Hand-off document for whichever model/agents execute the build. Read
 `docs/api-friction-log.md` first; this file is the *what to do*, those are the
 *why*. Rev 1 (personal account, production reads) is superseded — see §9.
 
+## Brute force: what I expected vs. how far I pushed
+
+**I didn't scope this down to what would demo cleanly. I brute-forced it.** The
+brief asks for about two hours. What I expected to build was modest: an agent
+that reads the books and queues a payment and a sweep for approval. Instead of
+stopping at the first wall and mocking around it, I pushed every step of the
+workflow until Mercury itself said no — new tokens, new scopes, a second human
+in the org, the official CLI, the undocumented sandbox MCP — and logged each
+wall. Where the plan and reality diverge, reality won, and the gap is the
+finding.
+
+| What I expected to do | How hard I pushed | Where it actually stopped |
+|---|---|---|
+| Get a sandbox token and start calling the API. | Read-write token, then a Custom token with the approval scope; the first call still failed because the laptop connected over IPv6. | Every write-capable token demands an IP allowlist, sandbox included, docs notwithstanding, and in practice it's IPv4-only [38, 39, 44]. |
+| Read cash position across accounts. | Pulled every account and transaction; checked the numbers against the dashboard. | Works, but quietly wrong: misspelled filters return everything with a 200, and `start`/`end` mean `createdAt`, not posted date. Steward's own close used the wrong one until the sandbox exposed it [46, 47]. |
+| AR: chase overdue invoices. | Looked for invoices, then tried to create them. | The sandbox seeds none, and creating one needs an allowlisted read-write token [28, 45]. Covered by tests and the offline smoke test, not live. |
+| AP: pay a vendor through the approval queue. | Hit `400 invalidApproval`, then added a second real person to the org (phone, SMS opt-in, mandatory 2FA — for fake money) and approved as them. | **Works end to end**: request → approve in Mercury → ACH sent with the request id linked back. But a one-person company can't use it at all [58], retries with the same idempotency key fail instead of replaying [59], and the API returns no link to the approval [64]. |
+| Sweep surplus to treasury. | Called `request-transfer` live, then went looking for a scope that would allow it. | No token scope exists for transfer requests [41], and the sandbox has no treasury account. Steward says so plainly and doesn't re-ask. It's in the demo *because* it fails. |
+| Use Mercury's own tools instead of mine. | Drove the official CLI and probed Mercury's MCP, including hosts the docs don't mention. | The CLI's `payments transfer` moves money directly, next to `payments request` [68]; the production MCP is read-only; an undocumented sandbox MCP advertises exactly the request scopes this project argues for [18]. |
+| Host it and approve from Claude.ai or ChatGPT. | Deployed to Vercel; checked each client's support for approvals. | A hosted app can read but not queue (the allowlist again), and consumer chat clients can't render the approval, so they get an approve link instead (§7). |
+
+The expectation was a working demo. The result is a working demo **plus a
+map of exactly where an agent on Mercury runs out of road**: 75 entries in
+`docs/api-friction-log.md`, ranked in `docs/findings.md`. That map is the
+main deliverable.
+
 ## 0. Decisions already made (do not relitigate)
 
 | Decision | Choice |
@@ -167,12 +193,11 @@ Everything below has been run against the live sandbox, API and dashboard.
 - **A successful sweep:** no transfer-with-approval scope (#41). The smoke test runs it against the mock.
 - **Claude.ai / ChatGPT approve link:** needs a public URL; hosted on Vercel the app could read but not queue
   (IP allowlist, #39). Show `npm run smoke` output: clients without elicitation get the approve URL.
-- **Chat UI** (`localhost:3200`): works (same engine, Approve on cards); optional if time allows.
+- **Web chat UI:** removed 2026-09-17. The demo is Claude Code; the site root now redirects to the docs.
 
 ### If something goes wrong
 | Symptom | Cause / fix |
 |---|---|
-| Chat 401 "API key is invalid" | Shell `ANTHROPIC_API_KEY` overrides `.env.local`; start with `env -u ANTHROPIC_API_KEY` |
 | Mercury 401 `ipNotWhitelisted` | New network or IPv6; add the IPv4 shown in the error to the token allowlist (#44) |
 | "Mercury already has this request" | Same bill proposed earlier today (same idempotency key); reject it in the dashboard or use it |
 | "Nobody else in this organization can approve" | The second org member was removed or lacks approve permission |

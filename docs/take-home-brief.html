@@ -1,0 +1,203 @@
+<!doctype html>
+<!-- Generated from docs/take-home-brief.md by apps/web/scripts/render-docs.mjs. Edit the Markdown, then run `npm run docs`. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Take-Home Brief</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --paper: #f5f7f9; --panel: #ffffff; --ink: #16202c; --muted: #5b6877; --rule: #dce1e7;
+    --accent: #1f6f5c; --accent-soft: #e3f0ec; --amber: #9a6414; --amber-soft: #f8eedc;
+    --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+      --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+    --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; scroll-padding-top: 64px; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.6; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  code { font-family: var(--mono); font-size: 0.82em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  a code { text-decoration: underline; text-decoration-color: currentColor; }
+
+  .bar { position: sticky; top: 0; z-index: 2; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
+  .site { max-width: 1040px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 4px 16px; overflow-x: auto; scrollbar-width: none; font-family: var(--mono); font-size: 0.76rem; white-space: nowrap; }
+  .site a { color: var(--muted); text-decoration: none; padding: 4px 0; }
+  .site a:hover { color: var(--ink); }
+  .site a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+
+  .wrap { max-width: 800px; margin: 0 auto; padding: 48px 16px 96px; }
+  h1, h2, h3, h4 { font-family: var(--display); line-height: 1.15; text-wrap: balance; }
+  h1 { font-size: clamp(2rem, 6vw, 3rem); font-weight: 700; letter-spacing: -0.02em; margin: 8px 0 0; }
+  h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 12px; }
+  h3 { font-size: 1.1rem; font-weight: 700; margin: 32px 0 8px; }
+  h4 { font-size: 1rem; margin: 24px 0 8px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .dek { font-size: 1.2rem; color: var(--muted); margin: 16px 0 0; max-width: 36em; }
+  .meta { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin: 20px 0 0; }
+  .meta code { background: none; padding: 0; }
+
+  .toc { margin-top: 32px; padding: 16px 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; }
+  .toc ul { list-style: none; margin: 8px 0 0; padding: 0; columns: 2 16em; column-gap: 32px; font-size: 0.92rem; }
+  .toc li { break-inside: avoid; margin: 2px 0; }
+  .toc code { background: none; padding: 0; }
+
+  .doc section { margin-top: 56px; }
+  .doc section.lead { margin-top: 32px; }
+  .doc p, .doc ul, .doc ol, .doc blockquote, .doc pre, .doc .table { margin: 0 0 16px; }
+  .doc li { margin: 6px 0; }
+  .doc li > p { margin: 0 0 8px; }
+  .doc hr { border: 0; border-top: 1px solid var(--rule); margin: 40px 0; }
+  .doc blockquote { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; color: var(--muted); }
+  .doc pre { background: #111820; color: #d9e2ea; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+  .doc pre code { background: none; padding: 0; font-size: inherit; color: inherit; overflow-wrap: normal; }
+  .doc input[type="checkbox"] { margin-right: 6px; }
+  .doc li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.2em; }
+  .doc ol > li[id] { scroll-margin-top: 64px; }
+  .doc ol > li[id]:target { background: var(--amber-soft); outline: 6px solid var(--amber-soft); border-radius: 2px; }
+  a.ref { font-variant-numeric: tabular-nums; }
+
+  .table { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; line-height: 1.45; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--rule); }
+  th { font-family: var(--display); font-weight: 700; font-size: 0.85rem; background: var(--accent-soft); }
+  tr:last-child td { border-bottom: 0; }
+
+  .doc section.feature { margin: 40px -16px 0; padding: 28px 16px; background: var(--amber-soft); border-top: 3px solid var(--amber); }
+  .doc section.feature h2 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); }
+  .doc section.feature > p:first-of-type { font-size: 1.12rem; }
+  .doc section.feature .table { border-color: color-mix(in srgb, var(--amber) 35%, transparent); }
+  .doc section.feature th { background: color-mix(in srgb, var(--amber) 18%, var(--panel)); }
+  .doc section.feature td:first-child { color: var(--muted); }
+  .doc section.feature td:last-child strong { color: var(--accent); }
+  @media (min-width: 832px) { .doc section.feature { margin-inline: -32px; padding-inline: 32px; border-radius: 0 0 10px 10px; } }
+</style>
+</head>
+<body>
+<header class="bar"><nav class="site" aria-label="Documents"><a href="index.html">Memo</a><a href="narrative.html">Narrative</a><a href="plan.html">Plan</a><a href="findings.html">Findings</a><a href="api-friction-log.html">Friction log</a><a href="direction.html">Direction</a><a href="landscape.html">Landscape</a><a href="sandbox-surface.html">Sandbox</a><a href="scope-catalog.html">Scopes</a><a href="take-home-brief.html" aria-current="page">Brief</a><a href="explainer.html">Explainer</a></nav></header>
+<main class="wrap">
+  <header class="top">
+    <p class="eyebrow">The assignment</p>
+    <h1>Take-Home Brief</h1>
+    
+    <p class="meta">Rendered from <a href="https://github.com/lucasdickey/mercury-demo/blob/main/docs/take-home-brief.md"><code>docs/take-home-brief.md</code></a></p>
+  </header>
+  <article class="doc">
+
+  </article>
+  <nav class="toc" aria-label="On this page"><p class="eyebrow">On this page</p><ul><li><a href="#overview">Overview</a></li><li><a href="#what-we-are-looking-for">What We Are Looking For</a></li><li><a href="#format">Format</a></li><li><a href="#resources">Resources</a></li></ul></nav>
+  <article class="doc">
+<section class="lead"><p>Source: <a href="https://docs.google.com/document/d/1vpOHEyQZ6J-UUF5xz7t6YUFMCpVPrnWn18isj7jpIBI/edit">https://docs.google.com/document/d/1vpOHEyQZ6J-UUF5xz7t6YUFMCpVPrnWn18isj7jpIBI/edit</a></p>
+</section>
+<section><h2 id="overview">Overview</h2>
+<p>We&#39;re constantly inspired by what&#39;s possible when great builders get their hands on the right tools. Our API team is tasked with building for our most ambitious customers. We&#39;d love to use this opportunity to evaluate how you think and what you might build for them.</p>
+<p>We&#39;re particularly interested in how Mercury&#39;s API could power experiences that don&#39;t require our UI. Experiences that could benefit from being headless, agentic, and/or conversational: think automating a recurring financial workflow, allowing agents to manage spend, or entirely new interfaces built on top of Mercury&#39;s core primitives. We&#39;re not prescribing what, the choice is part of what we&#39;re evaluating.</p>
+<p>Start by getting familiar with Mercury: spend some time in the demo, dig into the API docs, and sign up for an account (you do not need to provide personal information) in our sandbox. Develop a point of view on what&#39;s interesting, what&#39;s possible today, and where the gaps are.</p>
+<p>Then <strong>build</strong> something. Use your preferred tech stack; we expect you to leverage AI and will want to talk about what, why, and how.</p>
+<p>The sandbox has limitations. If you hit one, tell us what you&#39;d fix.</p>
+</section>
+<section><h2 id="what-we-are-looking-for">What We Are Looking For</h2>
+<p>We are interested in how you think about building for Mercury&#39;s most ambitious customers. A strong demo will typically show:</p>
+<ul>
+<li>sound business judgment in Mercury&#39;s specific context</li>
+<li>understanding of our API and the interfaces (e.g. CLI, MCP) it enables</li>
+<li>thoughtful consideration of customer trust and product simplicity</li>
+<li>awareness of regulatory and operational tradeoffs</li>
+</ul>
+<p><strong>Note:</strong> We are using Mercury&#39;s actual business as the backdrop because the role requires this kind of judgment in practice. We are interested in your thinking and approach, treat this as a discussion artifact, not a deliverable we would act on. We retain ownership of Mercury&#39;s existing IP and while we may independently build similar things in the future, you retain ownership of anything you build.</p>
+</section>
+<section><h2 id="format">Format</h2>
+<p>Come ready to demo a working prototype and talk through your thinking: what you built, why you chose it, what you&#39;d change about the API itself, and what you&#39;d do next. You may choose the format that works best for you.</p>
+<p>We recommend spending no more than two hours on this exercise. Some candidates will naturally invest more, but we want to be clear that is not expected. Quality of thinking matters more than polish or volume.</p>
+</section>
+<section><h2 id="resources">Resources</h2>
+<p>Documentation</p>
+<ul>
+<li>Mercury demo: <a href="https://demo.mercury.com">https://demo.mercury.com</a></li>
+<li>API docs: <a href="https://docs.mercury.com/docs/welcome">https://docs.mercury.com/docs/welcome</a></li>
+<li>Sandbox: <a href="https://sandbox.mercury.com/signup">https://sandbox.mercury.com/signup</a></li>
+</ul>
+<h3 id="starter-code-python">Starter Code (Python)</h3>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;List Mercury accounts and print them to the console.
+
+Set your token first:
+    export MERCURY_API_TOKEN=&#39;secret-token:mercury_production_...&#39;
+
+Then run:
+    python3 list_accounts.py
+&quot;&quot;&quot;
+
+import os
+import sys
+import urllib.request
+import urllib.error
+import json
+
+API_URL = &quot;https://api.mercury.com/api/v1/accounts&quot;
+
+
+def fetch_accounts(token):
+    req = urllib.request.Request(
+        API_URL,
+        headers={
+            &quot;Authorization&quot;: f&quot;Bearer {token}&quot;,
+            &quot;Accept&quot;: &quot;application/json&quot;,
+        },
+    )
+    with urllib.request.urlopen(req) as resp:
+        return json.load(resp)
+
+
+def main():
+    token = os.environ.get(&quot;MERCURY_API_TOKEN&quot;)
+    if not token:
+        sys.exit(&quot;Error: set the MERCURY_API_TOKEN environment variable first.&quot;)
+    try:
+        data = fetch_accounts(token)
+    except urllib.error.HTTPError as e:
+        sys.exit(f&quot;HTTP error {e.code}: {e.read().decode(errors=&#39;replace&#39;)}&quot;)
+    except urllib.error.URLError as e:
+        sys.exit(f&quot;Network error: {e.reason}&quot;)
+
+    accounts = data.get(&quot;accounts&quot;, [])
+    if not accounts:
+        print(&quot;No accounts found.&quot;)
+        return
+
+    print(f&quot;Found {len(accounts)} account(s):\n&quot;)
+    for acct in accounts:
+        print(f&quot;  {acct.get(&#39;name&#39;)} ({acct.get(&#39;nickname&#39;) or acct.get(&#39;kind&#39;)})&quot;)
+        print(f&quot;    id: {acct.get(&#39;id&#39;)}&quot;)
+        print(f&quot;    type: {acct.get(&#39;type&#39;)}&quot;)
+        print(f&quot;    status: {acct.get(&#39;status&#39;)}&quot;)
+        print(f&quot;    accountNumber: {acct.get(&#39;accountNumber&#39;)}&quot;)
+        print(f&quot;    routingNumber: {acct.get(&#39;routingNumber&#39;)}&quot;)
+        print(f&quot;    availableBalance: {acct.get(&#39;availableBalance&#39;)}&quot;)
+        print(f&quot;    currentBalance: {acct.get(&#39;currentBalance&#39;)}&quot;)
+        print()
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+</section>
+  </article>
+</main>
+</body>
+</html>

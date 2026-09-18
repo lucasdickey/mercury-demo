@@ -1,0 +1,589 @@
+<!doctype html>
+<!-- Generated from docs/api-friction-log.md by apps/web/scripts/render-docs.mjs. Edit the Markdown, then run `npm run docs`. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>API Friction Log</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --paper: #f5f7f9; --panel: #ffffff; --ink: #16202c; --muted: #5b6877; --rule: #dce1e7;
+    --accent: #1f6f5c; --accent-soft: #e3f0ec; --amber: #9a6414; --amber-soft: #f8eedc;
+    --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+      --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+    --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; scroll-padding-top: 64px; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.6; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  code { font-family: var(--mono); font-size: 0.82em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  a code { text-decoration: underline; text-decoration-color: currentColor; }
+
+  .bar { position: sticky; top: 0; z-index: 2; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
+  .site { max-width: 1040px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 4px 16px; overflow-x: auto; scrollbar-width: none; font-family: var(--mono); font-size: 0.76rem; white-space: nowrap; }
+  .site a { color: var(--muted); text-decoration: none; padding: 4px 0; }
+  .site a:hover { color: var(--ink); }
+  .site a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+
+  .wrap { max-width: 800px; margin: 0 auto; padding: 48px 16px 96px; }
+  h1, h2, h3, h4 { font-family: var(--display); line-height: 1.15; text-wrap: balance; }
+  h1 { font-size: clamp(2rem, 6vw, 3rem); font-weight: 700; letter-spacing: -0.02em; margin: 8px 0 0; }
+  h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 12px; }
+  h3 { font-size: 1.1rem; font-weight: 700; margin: 32px 0 8px; }
+  h4 { font-size: 1rem; margin: 24px 0 8px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .dek { font-size: 1.2rem; color: var(--muted); margin: 16px 0 0; max-width: 36em; }
+  .meta { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin: 20px 0 0; }
+  .meta code { background: none; padding: 0; }
+
+  .toc { margin-top: 32px; padding: 16px 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; }
+  .toc ul { list-style: none; margin: 8px 0 0; padding: 0; columns: 2 16em; column-gap: 32px; font-size: 0.92rem; }
+  .toc li { break-inside: avoid; margin: 2px 0; }
+  .toc code { background: none; padding: 0; }
+
+  .doc section { margin-top: 56px; }
+  .doc section.lead { margin-top: 32px; }
+  .doc p, .doc ul, .doc ol, .doc blockquote, .doc pre, .doc .table { margin: 0 0 16px; }
+  .doc li { margin: 6px 0; }
+  .doc li > p { margin: 0 0 8px; }
+  .doc hr { border: 0; border-top: 1px solid var(--rule); margin: 40px 0; }
+  .doc blockquote { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; color: var(--muted); }
+  .doc pre { background: #111820; color: #d9e2ea; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+  .doc pre code { background: none; padding: 0; font-size: inherit; color: inherit; overflow-wrap: normal; }
+  .doc input[type="checkbox"] { margin-right: 6px; }
+  .doc li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.2em; }
+  .doc ol > li[id] { scroll-margin-top: 64px; }
+  .doc ol > li[id]:target { background: var(--amber-soft); outline: 6px solid var(--amber-soft); border-radius: 2px; }
+  a.ref { font-variant-numeric: tabular-nums; }
+
+  .table { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; line-height: 1.45; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--rule); }
+  th { font-family: var(--display); font-weight: 700; font-size: 0.85rem; background: var(--accent-soft); }
+  tr:last-child td { border-bottom: 0; }
+
+  .doc section.feature { margin: 40px -16px 0; padding: 28px 16px; background: var(--amber-soft); border-top: 3px solid var(--amber); }
+  .doc section.feature h2 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); }
+  .doc section.feature > p:first-of-type { font-size: 1.12rem; }
+  .doc section.feature .table { border-color: color-mix(in srgb, var(--amber) 35%, transparent); }
+  .doc section.feature th { background: color-mix(in srgb, var(--amber) 18%, var(--panel)); }
+  .doc section.feature td:first-child { color: var(--muted); }
+  .doc section.feature td:last-child strong { color: var(--accent); }
+  @media (min-width: 832px) { .doc section.feature { margin-inline: -32px; padding-inline: 32px; border-radius: 0 0 10px 10px; } }
+</style>
+</head>
+<body>
+<header class="bar"><nav class="site" aria-label="Documents"><a href="index.html">Memo</a><a href="narrative.html">Narrative</a><a href="plan.html">Plan</a><a href="findings.html">Findings</a><a href="api-friction-log.html" aria-current="page">Friction log</a><a href="direction.html">Direction</a><a href="landscape.html">Landscape</a><a href="sandbox-surface.html">Sandbox</a><a href="scope-catalog.html">Scopes</a><a href="take-home-brief.html">Brief</a><a href="explainer.html">Explainer</a></nav></header>
+<main class="wrap">
+  <header class="top">
+    <p class="eyebrow">Friction log · every wall, with a fix</p>
+    <h1>API Friction Log</h1>
+    
+    <p class="meta">Rendered from <a href="https://github.com/lucasdickey/mercury-demo/blob/main/docs/api-friction-log.md"><code>docs/api-friction-log.md</code></a></p>
+  </header>
+  <article class="doc">
+
+  </article>
+  <nav class="toc" aria-label="On this page"><p class="eyebrow">On this page</p><ul><li><a href="#discovery-aeo">Discovery &amp; AEO</a></li><li><a href="#auth-scopes">Auth &amp; scopes</a></li><li><a href="#errors-limits-pagination">Errors, limits, pagination</a></li><li><a href="#mcp-specifics">MCP specifics</a></li><li><a href="#data-model-gaps-the-ones-that-block-an-efficiency-agent">Data model gaps (the ones that block an efficiency agent)</a></li><li><a href="#sandbox">Sandbox</a></li><li><a href="#ecosystem-not-mercury-s-fault-but-shapes-what-mercury-should-build">Ecosystem (not Mercury&#39;s fault, but shapes what Mercury should build)</a></li><li><a href="#added-2026-09-15-business-pivot-layer-tagged">Added 2026-09-15 (business pivot; layer-tagged)</a></li><li><a href="#found-while-building-2026-09-15">Found while building (2026-09-15)</a></li><li><a href="#sandbox-recon-2026-09-16">Sandbox recon (2026-09-16)</a></li><li><a href="#write-tests-2026-09-16">Write tests (2026-09-16)</a></li><li><a href="#official-cli-and-mcp-tested-against-the-sandbox-2026-09-16">Official CLI and MCP, tested against the sandbox (2026-09-16)</a></li><li><a href="#checked-against-saastr-s-agent-friendly-api-checklist-2026-09-16">Checked against SaaStr&#39;s agent-friendly API checklist (2026-09-16)</a></li></ul></nav>
+  <article class="doc">
+<section class="lead"><blockquote>
+<p><strong>Start with <a href="findings.md"><a href="findings.html"><code>findings.md</code></a></a></strong> — the BLUF and top five. This file is the raw, numbered log it summarizes.</p>
+</blockquote>
+<p>Running log. Each entry: what I hit → why it hurts an agent/MCP/CLI consumer →
+what I&#39;d ship. Severity: 🔴 blocks or misleads agents, 🟠 costs tokens/time,
+🟡 polish. ⬇ = below the line: sandbox or docs polish, worth flagging but not
+leading with. The lead is the API, MCP, and CLI. Add to this as we build.</p>
+</section>
+<section><h2 id="discovery-aeo">Discovery &amp; AEO</h2>
+<ol>
+<li id="n1">🟡 <strong><code>llms.txt</code> exists and <code>.md</code> suffix works — genuinely good.</strong> Every page also
+opens with &quot;Fetch the complete documentation index at llms.txt&quot; — nice agent
+affordance. Keep. But there is no <code>llms-full.txt</code>, so an agent that wants the
+whole surface must make ~100 fetches.</li>
+<li id="n2">🔴 <strong>No single OpenAPI document.</strong> <code>/openapi.json</code>, <code>/openapi.yaml</code> → 404. Each
+reference page embeds its <em>own</em> OpenAPI fragment with the full component
+schema tree re-inlined. <code>listtransactions.md</code> is 45 KB, most of it 14
+international-wire country schemas irrelevant to a GET. Five pages ≈ 200 KB of
+~80 % duplicate JSON into an agent&#39;s context. <strong>Ship:</strong> one <code>openapi.json</code>
+(and link it from <code>llms.txt</code> + <code>/.well-known</code>), and prune per-page fragments to
+referenced schemas only.</li>
+<li id="n3">🟠 <strong>Inconsistent / empty one-liners in <code>llms.txt</code>.</strong> &quot;Get transaction by ID&quot; and
+&quot;Get all events&quot; have no description; two endpoints are titled &quot;Get transaction
+by ID&quot; vs &quot;Get a transaction by ID&quot; (<code>gettransaction</code> = account-scoped,
+<code>gettransactionbyid</code> = org-scoped). An agent picking tools by title will
+confuse them. <strong>Ship:</strong> normalize titles to <code>&lt;verb&gt; &lt;resource&gt; (&lt;scope&gt;)</code>.</li>
+<li id="n4">🟡 <strong>OpenAPI <code>info.description</code> is boilerplate</strong> (&quot;Enables user registration,
+balance tracking…&quot;) — Mercury has no user registration endpoint. This string
+is what MCP clients / API directories surface. Fix the copy.</li>
+<li id="n5">🟡 <strong>Third-party &quot;Mercury MCP&quot; servers</strong> (glama, GitHub) rank alongside the
+official one; only the security page states the official URL. Put the official
+MCP URL + CLI install on <code>docs/welcome</code>, and publish a <code>security.txt</code>-style
+&quot;official agent endpoints&quot; list.</li>
+</ol>
+</section>
+<section><h2 id="auth-scopes">Auth &amp; scopes</h2>
+<ol start="6">
+<li id="n6">🔴 <strong>Scope catalog is undocumented.</strong> Custom tokens have per-endpoint scopes,
+some &quot;with an asterisk&quot; needing an IP allowlist — but the list only exists in
+the dashboard modal. The OpenAPI <code>security</code> block says <code>bearerAuth</code> for
+everything. An agent cannot reason about &quot;what token do I need for X.&quot;
+<strong>Ship:</strong> per-operation <code>x-mercury-scope</code> + <code>x-requires-ip-allowlist</code> in the
+spec; render a scope table in Getting Started.</li>
+<li id="n7">🟠 <strong>Auth story is told three ways.</strong> Getting Started leads with HTTP Basic;
+OpenAPI says Bearer; MCP uses OAuth with a single <code>read</code> scope; CLI uses OAuth
+<em>or</em> API key with precedence rules. Fine for humans, noisy for agents. Lead
+with Bearer everywhere; footnote Basic.</li>
+<li id="n8">🔴 <strong>IP allowlist for write tokens is hostile to agent runtimes</strong> (laptops,
+Claude Code, serverless). Mercury&#39;s own workaround is <code>requestSendMoney</code>
+(approval replaces allowlist) — the right idea — but it&#39;s only mentioned in
+passing and <strong>not in the MCP</strong>. <strong>Ship:</strong> a <code>propose</code> scope tier for MCP/OAuth
+(<code>propose:payments</code>, <code>propose:transfers</code>, <code>write:categories</code>) that maps to the
+request-*-approval endpoints. Agents propose; humans approve in the dashboard
+(or Command). This is the single biggest product gap.</li>
+<li id="n9">🟠 <strong>45-day auto-downgrade / auto-delete</strong> is silent to the integrating code:
+a write scope vanishes and calls start failing. No documented error body for
+&quot;scope downgraded.&quot; <strong>Ship:</strong> distinct error code + <code>WWW-Authenticate</code>
+hint; expose token metadata endpoint (<code>GET /token/self</code> → scopes, expiry).</li>
+</ol>
+</section>
+<section><h2 id="errors-limits-pagination">Errors, limits, pagination</h2>
+<ol start="10">
+<li id="n10">🔴 <strong>No error schema.</strong> Every 4xx in the spec is a bare description
+(<code>&quot;400&quot;: &quot;Invalid body&quot;</code>). Agents self-correct off structured errors; today
+they get prose. <strong>Ship:</strong> RFC 9457 problem+json with <code>code</code>, <code>field</code>, <code>hint</code>.</li>
+<li id="n11">🟠 <strong>Rate limits unpublished</strong> (also flagged by supergood&#39;s D+ report card).
+No <code>Retry-After</code> / <code>X-RateLimit-*</code> documented. MCP <code>listTransactions</code>
+&quot;automatically handles pagination&quot; — great, but the ceiling is unknown.</li>
+<li id="n12">🟠 <strong>Duplicate read paths</strong> — <code>/transactions</code> vs <code>/account/{id}/transactions</code>;
+<code>/transaction/{id}</code> vs <code>/account/{id}/transaction/{id}</code>. Org-scoped
+<code>/transactions</code> is strictly more capable (category filters, <code>cardId[]</code>).
+Mark the account-scoped pair as legacy in the spec so tool selection is
+unambiguous.</li>
+<li id="n13">🟠 <strong>24-hour duplicate guard on <code>createTransaction</code></strong> returns a generic 400
+even with a fresh <code>idempotencyKey</code>. Agents retrying &quot;safely&quot; get a confusing
+failure. Return 409 with <code>code: duplicate_payment_window</code>.</li>
+</ol>
+</section>
+<section><h2 id="mcp-specifics">MCP specifics</h2>
+<ol start="14">
+<li id="n14">🔴 <strong>Read-only MCP means every &quot;do X&quot; prompt dead-ends.</strong> No categorize, no
+note, no request-send-money, no create-recipient-invite. Even non-financial
+writes (<code>updateTransaction</code> note/category) are excluded — and &quot;transaction
+cleanup&quot; is the #<a class="ref" href="#n1">1</a> thing Mercury says early users want.</li>
+<li id="n15">🟠 <strong>No aggregate tools.</strong> Every analytic question (&quot;spend by category last 90
+days&quot;) becomes &quot;page 1000 rows into context.&quot; A hosted MCP can serve
+<code>spendSummary(groupBy, window)</code>, <code>recurringStreams()</code>, <code>idleCash()</code> cheaply
+server-side. Mercury already computes these for the dashboard.</li>
+<li id="n16">🟡 <strong>Tool descriptions are the OpenAPI one-liners.</strong> No guidance on
+<code>listTransactions</code> vs <code>getAccountStatements</code>, no MCP <em>prompts</em> or <em>resources</em>
+(e.g. a <code>mercury://categories</code> resource). No sample-prompt metadata reaches
+the model.</li>
+<li id="n17">🟡 <strong>OAuth metadata gaps Mercury itself documents</strong>: 401 lacks
+<code>resource_metadata</code> in <code>WWW-Authenticate</code>; PRM only at root, not at
+<code>/.well-known/oauth-protected-resource/mcp</code>. Generic clients need hardcoding.</li>
+<li id="n18">🟠 <code>[mcp]</code> <code>[docs]</code> <strong>A sandbox MCP host exists, undocumented, and it
+advertises write scopes.</strong> (Updated 2026-09-16; originally &quot;no sandbox MCP
+host&quot;.) <code>https://mcp-sandbox.mercury.com/mcp</code> answers with the same OAuth
+shape as production (DCR + PKCE S256), but its protected-resource metadata
+lists <code>read offline_access transactions:request transfers:request categories:create categories:edit transactions:update</code>, while
+<code>mcp.mercury.com</code> lists only <code>read offline_access</code>. Neither host nor those
+scopes appear in the MCP docs. That is the propose tier from #<a class="ref" href="#n8">8</a> and #<a class="ref" href="#n14">14</a>,
+apparently in progress. <strong>Ship:</strong> document the sandbox host so builders can
+test against it, and say which scopes are coming to production.</li>
+</ol>
+</section>
+<section><h2 id="data-model-gaps-the-ones-that-block-an-efficiency-agent">Data model gaps (the ones that block an efficiency agent)</h2>
+<ol start="19">
+<li id="n19">🔴 <strong>No recurring-stream signal.</strong> No <code>isRecurring</code>, no cadence, no
+&quot;expected next charge.&quot; Plaid ships <code>/transactions/recurring/get</code>; Mercury
+has the raw MCC + merchant id to compute it. <strong>Ship:</strong> <code>GET /recurring</code>
+(streams with cadence, avg amount, last seen, status) — also as an MCP tool.</li>
+<li id="n20">🔴 <strong>No merchant enrichment.</strong> <code>merchant.id</code> exists but there&#39;s no
+<code>GET /merchant/{id}</code>; <code>listMerchants</code> is only spend-control priority
+merchants. No logo, domain, plan/tier hints, cancel URL.</li>
+<li id="n21">🟠 <strong>Agent cards can&#39;t be created via API</strong> (<code>isAgentCard</code> is response-only).
+The agent-payments story requires a dashboard click. Add
+<code>agent: { budgetId, merchantLock, categoryLocks }</code> to <code>POST /cards</code>.</li>
+<li id="n22">🟠 <strong>Approval requests emit no events/webhooks</strong> (docs say poll). An agent
+that proposed a payment can&#39;t be told it was approved/rejected.</li>
+<li id="n23">🟠 <strong>Personal accounts are invisible in the docs</strong> even though
+<code>personalBankingSubscriptionFee</code> is in the enum and Command covers personal.
+Say which endpoints work on personal; which 403.</li>
+</ol>
+</section>
+<section><h2 id="sandbox">Sandbox</h2>
+<ol start="24">
+<li id="n24">⬇ No webhooks in sandbox (documented). Unknown: cards, agent cards, vault,
+events, MCC coverage on seeded data. Will log as we hit them.</li>
+</ol>
+</section>
+<section><h2 id="ecosystem-not-mercury-s-fault-but-shapes-what-mercury-should-build">Ecosystem (not Mercury&#39;s fault, but shapes what Mercury should build)</h2>
+<ol start="25">
+<li id="n25">🔴 <strong>Consumer chat clients can&#39;t render an approval.</strong> MCP elicitation (form
+mode) works in Claude Code, Cursor, VS Code, and the Vercel AI SDK client;
+<strong>Claude.ai</strong> has an open request (anthropics/claude-ai-mcp#153, Apr 2026)
+and turns a state-only <code>InputRequiredResult</code> into &quot;Error occurred during
+tool execution&quot; (#1027, Sep 2026); ChatGPT shows no evidence of support.
+So &quot;propose, approve in chat&quot; is a developer-client story today.
+<strong>Ship (Mercury):</strong> a hosted approval page reachable by URL — the
+approval-queue endpoints already exist; a <code>/approve/{requestId}</code> deep link
+into the dashboard, returned by the API, would let any client complete the
+loop. (<code>dashboardLink</code> already exists on accounts and transactions; add it
+to <code>SendMoneyApprovalRequestResponse</code>.)</li>
+<li id="n26">🟠 <strong>Spec churn.</strong> MCP 2026-07-28 made elicitation stateless (MRTR) and
+deprecated sampling/roots. Mercury&#39;s MCP docs don&#39;t state which protocol
+version the server speaks or which client features it uses. Add a
+&quot;protocol version + capabilities&quot; line to <em>Connecting Mercury MCP</em>.</li>
+</ol>
+</section>
+<section><h2 id="added-2026-09-15-business-pivot-layer-tagged">Added 2026-09-15 (business pivot; layer-tagged)</h2>
+<ol start="27">
+<li id="n27">⬇ <code>[sandbox]</code> <code>[docs]</code> <strong>Sandbox contents are undocumented.</strong> The guide says
+&quot;pre-loaded with organizations, accounts, transactions, and balances&quot; and
+that AR and payments work; it does not say whether treasury, credit, cards,
+approval queues, events, or MCC/category data exist in the sandbox, or how
+many recipients/invoices are seeded. A builder has to discover this by
+probing. <strong>Ship:</strong> a &quot;What&#39;s in the sandbox&quot; table (seeded objects + counts)
+and a &quot;Not available in sandbox&quot; list (webhooks is the only one stated).</li>
+<li id="n28">🔴 <code>[api]</code> <strong>Invoice creation requires a read-write token bound to an IP
+allowlist</strong> (Invoicing guide, &quot;API Token Scopes&quot;). Same serverless problem
+as direct sends — but invoices don&#39;t move money. There is no
+<code>request-invoice</code> analog. <strong>Ship:</strong> drop the allowlist for AR writes, or
+add them to the no-allowlist Custom scopes.</li>
+<li id="n29">🟠 <code>[api]</code> <strong>No Bill Pay / accounts-payable API.</strong> The Invoicing API is
+receivables only. Payables exist in the product (Bill Pay) but an agent
+can&#39;t list bills due, so AP has to be modeled outside Mercury. <strong>Ship:</strong>
+<code>GET /bills</code> (due date, vendor, amount, status) + <code>request-send-money</code>
+accepting a <code>billId</code>.</li>
+<li id="n30">🟡 <code>[api]</code> <strong>No API for invoice reminders.</strong> Overdue-invoice follow-up is a
+dashboard action; an agent can draft the message but not send it through
+Mercury. <strong>Ship:</strong> <code>POST /invoice/{id}/remind</code>.</li>
+<li id="n31">🟡 <code>[cli]</code> <del>No <code>--sandbox</code> flag on the official CLI.</del> Resolved: CLI
+0.11.8 has <code>--environment sandbox</code> and <code>mercury status</code> shows sign-in per
+environment. Verified against the sandbox on 2026-09-16 (#<a class="ref" href="#n68">68</a>–72).</li>
+<li id="n32">🔴 <code>[ecosystem]</code> <strong>Grok&#39;s connector client is <code>tools/list</code> + <code>tools/call</code>
+only</strong> — an elicitation makes the call time out. Together with Claude.ai
+and ChatGPT, none of the three consumer chat surfaces can render an
+approval today.</li>
+</ol>
+</section>
+<section><h2 id="found-while-building-2026-09-15">Found while building (2026-09-15)</h2>
+<ol start="33">
+<li id="n33">🟡 <code>[api]</code> <code>[docs]</code> <strong>Resource paths are inconsistent.</strong> Receivables live at
+<code>/ar/invoices</code> and <code>/ar/customers</code>; everything else is top-level
+(<code>/recipients</code>, <code>/treasury</code>). The approval-queue transfer is
+<code>POST /request-transfer</code>, but its docs title is &quot;Request to transfer money&quot;
+and its payment sibling is <code>/account/{id}/request-send-money</code> — one is
+account-scoped, one isn&#39;t. An agent reading titles guesses wrong. <strong>Ship:</strong>
+a path table in Getting Started; consider aliases.</li>
+<li id="n34">🟠 <code>[api]</code> <strong>No typed client and no spec to generate one from.</strong> We
+hand-typed ~15 objects from per-page OpenAPI fragments. A published
+<code>openapi.json</code> would have made this <code>openapi-typescript</code> in one command.
+(Restates item 2 from the builder&#39;s seat.)</li>
+<li id="n35">🟡 <code>[api]</code> <strong><code>Account.kind</code> is a free-form string.</strong> The enum that clearly
+exists server-side (checking/savings/treasury/credit…) isn&#39;t in the spec,
+so filtering &quot;operating accounts&quot; means string-matching. <strong>Ship:</strong> enum it.</li>
+<li id="n36">🟡 <code>[mcp]</code> <code>[ecosystem]</code> <strong>MCP 2026-07-28 capability detection is
+per-request.</strong> <code>_meta[&quot;io.modelcontextprotocol/clientCapabilities&quot;]</code> must be
+read on every call to decide whether elicitation is renderable; the SDK
+backfills <code>getClientCapabilities()</code> from it. Any bank-grade MCP server that
+wants to gate on this needs the same branch we wrote — worth a paragraph in
+Mercury&#39;s &quot;Build your own client&quot; guide when they add writes.</li>
+<li id="n37">🔴 <code>[mcp]</code> <code>[ecosystem]</code> <strong>Stateless servers can&#39;t see 2025-era clients&#39;
+capabilities.</strong> Verified with the official TypeScript client SDK v2: by
+default it speaks 2025-11-25 — capabilities are declared once in
+<code>initialize</code> and never again. A stateless Streamable HTTP server (Vercel,
+one fresh server per request) has forgotten them by <code>tools/call</code>, so
+<code>getClientCapabilities()</code> is <code>undefined</code> and there is no <code>_meta</code> envelope.
+Only 2026-07-28 clients (per-request envelope) can be capability-gated.
+Our server treats &quot;unknown&quot; as &quot;can&#39;t render&quot; and returns the approve URL,
+which is the safe default — but it means <strong>every 2025-era client gets the
+URL path even if it could have shown a form.</strong> Any bank that ships a
+hosted, stateless, write-capable MCP will hit this. <strong>Ship (Mercury MCP
+docs):</strong> state the protocol version the server speaks and that
+2025-era clients are served statelessly; recommend clients upgrade.</li>
+<li id="n38">⬇ <code>[sandbox]</code> <strong>The sandbox enforces the production IP-allowlist rule.</strong>
+Creating a Read and Write token in the sandbox demands an IP whitelist,
+same as production, even though no real money exists. A builder on a
+laptop (or a plane) can&#39;t get a write token for <em>testing</em>. The Custom
+token path (<code>RequestSendMoney</code> + reads, no asterisk) should work — verify.
+<strong>Ship:</strong> relax the allowlist for sandbox tokens, or at least say in the
+sandbox guide which token type to create.</li>
+<li id="n39">🔴 <code>[api]</code> <code>[docs]</code> <code>[sandbox]</code> <strong>&quot;Send Money with Approval&quot; requires an IP
+allowlist — contradicting the docs.</strong> API Token Security Policies says the
+request-send-money endpoint is usable &quot;without IP whitelisting&quot; via a
+Custom token whose scopes have no asterisk. In the sandbox token dialog the
+scope has no asterisk and the whitelist is still mandatory. Consequences:
+the one write path that is supposed to work from serverless hosts doesn&#39;t
+(at least in sandbox); a Vercel-hosted agent can read but never queue.
+<strong>Ship:</strong> make the docs and the dialog agree; if the approval path truly
+needs an allowlist, say so and offer a static-egress guide — or drop it,
+since dashboard approval is the control.</li>
+<li id="n40">⬇ <code>[docs]</code> <strong>Scope names in the docs don&#39;t match the picker.</strong> Docs:
+<code>RequestSendMoney</code>. Picker: &quot;Send Money with Approval&quot;. Search is
+substring-on-display-name, so &quot;request&quot; doesn&#39;t find it. The asterisk is
+the only allowlist signal and is unexplained in the dialog.
+<strong>Ship:</strong> a scope catalog with both the display name and the identifier.</li>
+<li id="n41">🔴 <code>[api]</code> <strong>No Custom-token scope for <code>request-transfer</code>.</strong> &quot;Send Money
+with Approval&quot; exists; &quot;Transfer with Approval&quot; does not. The approval-
+gated internal transfer — the safest money movement in the API — can&#39;t be
+granted without a full Read and Write token (allowlisted). Steward&#39;s
+treasury sweep therefore stops at &quot;proposed&quot; under a Custom token.
+<strong>Ship:</strong> a <code>Transfer with Approval</code> scope, allowlist-free.</li>
+<li id="n42">🔴 <code>[api]</code> <strong>&quot;Update Transactions&quot; requires an IP allowlist.</strong> Adding a
+note or category moves no money and is the write Mercury&#39;s own launch
+coverage says early users want most (&quot;transaction cleanup&quot;). Allowlisting
+it rules out every hosted agent. <strong>Ship:</strong> drop the asterisk on
+non-monetary writes (transactions, invoices, categories).</li>
+<li id="n43">⬇ <code>[docs]</code> The Custom scope picker <em>is</em> the scope catalog — 27 scopes,
+seven groups, asterisk convention, one &quot;Experimental&quot; badge — and it lives
+only in a modal. Transcribed to <a href="scope-catalog.html"><code>docs/scope-catalog.md</code></a>; Mercury should
+publish the equivalent with identifiers and endpoint mappings.</li>
+<li id="n44">🟠 <code>[api]</code> <code>[sandbox]</code> <code>[docs]</code> <strong>IP allowlists are IPv4-in-practice on a
+dual-stack API.</strong> <code>api-sandbox.mercury.com</code> publishes AAAA records
+(Cloudflare), so a Mac on a home/mobile ISP egresses over IPv6 — a
+temporary SLAAC address that rotates. The dashboard hint and <code>ifconfig.me</code>
+both nudge you to allowlist IPv4; curl and Node <code>fetch</code> then connect over
+IPv6 and get <code>401 ipNotWhitelisted</code>. The error body does echo the observed
+IP (good), but nothing says &quot;you&#39;re on IPv6; allowlist a /64 or force
+IPv4.&quot; Workaround: <code>curl -4</code>, <code>NODE_OPTIONS=--dns-result-order=ipv4first</code>.
+<strong>Ship:</strong> accept IPv6 prefixes (/64) in the allowlist, and add an
+<code>ipFamily</code> hint to the <code>ipNotWhitelisted</code> error.</li>
+</ol>
+</section>
+<section><h2 id="sandbox-recon-2026-09-16">Sandbox recon (2026-09-16)</h2>
+<p>Probed read-only with a Custom token; evidence in <a href="sandbox-surface.html"><code>sandbox-surface.md</code></a>,
+reproducible via <code>scripts/recon/sweep.mjs</code>. API findings first; sandbox and docs
+notes are marked ⬇.</p>
+<ol start="45">
+<li id="n45">⬇ <code>[sandbox]</code> Seed data doesn&#39;t cover close/AP/AR/treasury: 0 invoices,
+customers, treasury, statements; recipients are mostly &quot;Currency Cloud
+Recipient N&quot;. Seeding needs allowlisted create scopes (#<a class="ref" href="#n28">28</a>). A richer seed
+profile would help; not a blocker for the API story.</li>
+<li id="n46">🔴 <code>[api]</code> <strong>Unknown and malformed query params are silently ignored.</strong>
+<code>postedstart=</code> (case typo of <code>postedStart</code>) returns all 150 rows unfiltered
+with 200; <code>order=newest</code> returns 200 in <code>asc</code>. But <code>status=bogus</code> and
+<code>start=yesterday</code> 400. An LLM that half-remembers a param name gets
+<em>plausible, wrong</em> data and no signal — the worst failure mode for an
+agent doing accounting. <strong>Ship:</strong> 400 on unknown params and invalid enums
+(<code>code: unknown_parameter</code>, <code>hint: &quot;did you mean postedStart?&quot;</code>), behind an
+API version if needed.</li>
+<li id="n47">🟠 <code>[api]</code> <code>[docs]</code> <code>[sandbox]</code> <strong><code>start</code>/<code>end</code> filter <code>createdAt</code>; the
+dashboard shows <code>postedAt</code>.</strong> Documented in the param description, but the
+obvious names are the wrong ones for any period-based task (month-end
+close, spend by month). In the sandbox the gap is extreme: every
+<code>createdAt</code> is the seed run (Aug 16–Sep 15) while <code>postedAt</code> spans Apr–Sep,
+82 rows are posted <em>before</em> they were created, and <code>end=2026-06-30</code>
+returns 0 rows though 16 posted before then. Steward&#39;s own <code>closeMonth</code>
+fell into this (uses <code>start</code> and <code>createdAt</code> for the outflow window).
+<strong>Ship:</strong> <code>createdStart</code>/<code>createdEnd</code> aliases and deprecate the bare names;
+seed <code>createdAt</code> consistently with <code>postedAt</code>.</li>
+<li id="n48">⬇ <code>[sandbox]</code> No category, merchant, or MCC data on seeded transactions
+(0/150 categorized), so spend and categorization agents can&#39;t be tested.</li>
+<li id="n49">🟠 <code>[api]</code> <strong>The credit account is invisible to <code>/accounts</code> but a third of
+<code>/transactions</code> belongs to it.</strong> 49 of 150 rows carry an <code>accountId</code> that
+<code>/accounts</code> doesn&#39;t list and <code>GET /account/{id}</code> 404s on; you have to know
+to join <code>/credit</code>. <code>GET /account/{creditId}/transactions</code> <em>does</em> work. An
+agent grouping spend by account gets an unknown bucket or crashes on a
+lookup. <strong>Ship:</strong> list credit in <code>/accounts</code> with <code>kind: &quot;credit&quot;</code>, or put
+<code>accountKind</code> on each transaction.</li>
+<li id="n50">🟠 <code>[api]</code> <strong>Transfer approval requests are write-only.</strong> <code>POST /request-transfer</code> exists; there is no documented <code>GET /request-transfer</code>
+or <code>GET /request-transfer/{id}</code> (both 403 <code>tokenNotInScope</code>, not 404/405).
+<code>request-send-money</code> has list + get + status filter. An agent that queued
+a sweep can never check whether it was approved (compounds #<a class="ref" href="#n22">22</a>, #<a class="ref" href="#n41">41</a>).
+<strong>Ship:</strong> list/get for transfer requests with the same status enum, and
+return 405 for wrong methods.</li>
+<li id="n51">🟠 <code>[api]</code> <strong>Four error envelopes and two list envelopes.</strong> Observed:
+<code>{errors:{errorCode,message}}</code> (403 scope, 400 date),
+<code>{errors:{errorCode:&quot;resourceNotFound&quot;,message}}</code> (<code>/account/{id}</code>),
+<code>{errors:{notFound:[…&quot;contact help@mercury.com&quot;]}}</code> (no code;
+<code>/transaction/{id}</code>, unknown paths, and malformed UUIDs, which should be
+400), <code>{errors:{message}}</code> (limit &gt; 1000, no code). <code>tokenNotInScope</code>
+doesn&#39;t name the missing scope. Lists: org-scoped transactions return
+<code>{transactions, page}</code>; account-scoped return <code>{total, transactions}</code> with
+no cursor. Evidence for #<a class="ref" href="#n10">10</a> and #<a class="ref" href="#n12">12</a>. <strong>Ship:</strong> one problem+json shape with
+<code>code</code>, and <code>requiredScope</code> on 403.</li>
+<li id="n52">🟠 <code>[api]</code> <code>[mcp]</code> <strong>Transactions are heavy for a context window.</strong> 1.2 KB
+per row in a list (4.4 KB from <code>GET /transaction/{id}</code>); 10 of 35 top-level
+keys were null on all 150 rows. 150 rows ≈ 182 KB ≈ 45k tokens; 79
+recipients ≈ 60 KB. <strong>Ship:</strong> <code>fields=</code> sparse fieldsets and an
+omit-nulls option; the MCP should use both by default (see #<a class="ref" href="#n15">15</a>).</li>
+<li id="n53">🟡 <code>[api]</code> <strong>Zero-date sentinel instead of null.</strong> <code>postedAt</code>,
+<code>failedAt</code>, and <code>recipient.dateLastPaid</code> use <code>0001-01-01T00:00:00Z</code>, on
+<code>sent</code> transactions too. Sorts first, parses as a valid date, breaks
+&quot;days since last paid.&quot; <strong>Ship:</strong> null.</li>
+<li id="n54">🟡 <code>[api]</code> <strong>Headers: no rate-limit info; internal metadata instead.</strong>
+Confirms #<a class="ref" href="#n11">11</a> in practice — no <code>RateLimit-*</code> / <code>Retry-After</code>. Good:
+<code>x-mercury-request-id</code> and <code>traceparent</code>. But every API response also
+carries <code>git-commit</code>, <code>ecs-task-name</code>, <code>ecs-task-id</code>,
+<code>mercury-honeycomb-link</code>, and four <code>Set-Cookie</code>s (incl. a <code>_SESSION</code>) on
+bearer-token calls, which cookie-jar HTTP clients will persist.
+<strong>Ship:</strong> rate-limit headers; strip deploy metadata and cookies from the
+API host.</li>
+<li id="n55">⬇ <code>[sandbox]</code> Seeded account nicknames carry the wrong last four
+(&quot;Evolve Checking ••4124&quot; on ••6579). Related API ask: a first-class
+<code>accountNumberLast4</code>, since account numbers are rightly redacted.</li>
+<li id="n56">⬇ <code>[sandbox]</code> Seeded credit-card transactions include the developer&#39;s
+signup email (<code>details.creditCardInfo.email</code>).</li>
+<li id="n57">⬇ <code>[docs]</code> <code>GET /account/{id}</code> works but isn&#39;t in the API reference.</li>
+</ol>
+</section>
+<section><h2 id="write-tests-2026-09-16">Write tests (2026-09-16)</h2>
+<p><code>request-send-money</code> / <code>request-transfer</code> from the propose-only Custom token,
+directly and through Steward&#39;s MCP (elicitation accepted → <code>queueProposal</code>).</p>
+<ol start="58">
+<li id="n58">🔴 <code>[api]</code> <strong>The approval queue rejects requests nobody else can approve,
+so a one-member org can&#39;t propose anything.</strong> With one org member,
+<code>POST /account/{id}/request-send-money</code> → <code>400 {&quot;errors&quot;:{&quot;invalidApproval&quot;: [&quot;Nobody else in this organization can approve this payment, so it can&#39;t be submitted for approval.&quot;]}}</code>. After adding a second member it → 200
+<code>pendingApproval</code>, <code>numberOfApproversRequired: 1</code>,
+<code>requesterMayApprove: false</code>. So the agent-safe write path (#<a class="ref" href="#n8">8</a>, #<a class="ref" href="#n39">39</a>)
+is unavailable to the smallest companies, who most want an agent doing
+the close, and there is no way to check before asking the human to
+approve: Steward&#39;s user approves in chat (gate 1), then gets a raw 400.
+<strong>Ship:</strong> allow the requester to approve their own agent-originated
+request in the dashboard (the 2FA&#39;d dashboard step is the control); expose
+<code>GET /organization/approval-policy</code> (or <code>requesterMayApprove</code> as a dry-run
+on the request) so an agent can check first; document the rule on the
+endpoint.</li>
+<li id="n59">🔴 <code>[api]</code> <strong>Idempotency keys reject retries instead of replaying them.</strong>
+Repeating a successful <code>request-send-money</code> with the <strong>same key and the
+same body</strong> → <code>400 {&quot;errors&quot;:{&quot;sendMoneyWithApproval&quot;:[&quot;It looks like you have already used this idempotency key before. Please contact help@mercury.com…&quot;]}}</code>, not the original <code>requestId</code>. Same response for
+same key with a different amount, so replay and conflict are
+indistinguishable. An agent retrying after a timeout sees a failure and
+either gives up on a request that exists, or mints a new key and queues a
+duplicate. Also a fifth error envelope (no <code>errorCode</code>; cf. #<a class="ref" href="#n51">51</a>), and a
+<code>createdAt</code> that differs between the POST response and the GET for the same
+request. <strong>Ship:</strong> Stripe semantics: same key + same body → the original
+200 response; same key + different body → 409
+<code>idempotency_key_conflict</code>.</li>
+<li id="n60">🟡 <code>[api]</code> <strong><code>request-transfer</code> fails with a scope error, not a
+capability error.</strong> 403 <code>tokenNotInScope</code> (expected, #<a class="ref" href="#n41">41</a>), confirmed live.
+The same 403 also comes back for <code>GET</code> on a POST-only path, where a 405
+would be correct.</li>
+<li id="n61">⬇ <code>[sandbox]</code> Invitee onboarding showed a generic &quot;Error processing your
+request&quot; at the phone step; a refresh advanced past it (stale UI state).</li>
+<li id="n62">⬇ <code>[sandbox]</code> Testing two-person approval needs a second real user, SMS
+opt-in, and mandatory 2FA, for fake money. A Stripe-style test helper
+(<code>POST /sandbox/request-send-money/{id}/approve</code>) would make gate 2
+testable in CI and agent evals.</li>
+<li id="n63">🟠 <code>[api]</code> <strong>The dashboard&#39;s approval queue has items the API can&#39;t see.</strong>
+Payments → Needs Approval lists two requests: our $12.34 ACH (0 of 1
+approvals) and a $100.00 payment to &quot;Trina Lyon&quot; (1 of 2 approvals).
+<code>GET /request-send-money</code> returns only the first, under every status
+filter; no recipient or transaction matches &quot;Trina Lyon&quot; either. So an
+agent can&#39;t see the full set of payments waiting to go out, which is
+exactly what it needs before proposing a sweep or a new payment
+(&quot;$100 is already committed&quot;). <strong>Ship:</strong> one approval-requests resource
+covering every request type the dashboard queue shows (payments to
+non-API recipients, bill pay, transfers, multi-approver), with <code>type</code>.</li>
+<li id="n64">🟠 <code>[api]</code> <strong>Approval requests have no <code>dashboardLink</code>, though the deep
+link exists.</strong> The approve page is
+<code>https://sandbox.mercury.com/payments/approvals?requestId=&lt;requestId&gt;</code>;
+the API response doesn&#39;t return it, so the human hunts for it (it isn&#39;t
+under Tasks; it&#39;s Payments → Needs Approval). Accounts and transactions
+already carry <code>dashboardLink</code>. <strong>Ship:</strong> add it to
+<code>SendMoneyApprovalRequest</code> (and transfer requests), so any client, MCP
+or not, can hand the approver one click (#<a class="ref" href="#n25">25</a>).</li>
+<li id="n65">⬇ <code>[dashboard]</code> A payment awaiting your approval doesn&#39;t appear in Tasks.</li>
+<li id="n66">🟡 <code>[api]</code> <strong>Approval outcomes emit no event, and the resulting
+transaction&#39;s event omits <code>requestId</code>.</strong> Approving the $12.34 request
+(verified end to end: request → <code>approved</code> with <code>reviews[{reviewerUserId, reviewedAt}]</code>, then an ACH <code>outgoingPayment</code> whose <code>requestId</code> points back)
+produced <code>transaction/create</code> and <code>checkingAccount/update</code> events, but
+nothing for the request, and the create event&#39;s <code>changedPaths</code> don&#39;t
+include <code>requestId</code>. An agent waiting on its proposal must poll
+<code>GET /request-send-money/{id}</code> or fetch every new transaction. Evidence
+for #<a class="ref" href="#n22">22</a>. <strong>Ship:</strong> <code>resourceType: sendMoneyApprovalRequest</code> events, and
+<code>requestId</code> in the transaction create patch.</li>
+<li id="n67">⬇ <code>[dashboard]</code> Approving in the dashboard: the Approve button ignored
+accessibility-tree clicks while reporting success (only a coordinate
+click worked), so a computer-use agent can think it approved when it
+didn&#39;t. No confirmation step, and no notification or Tasks entry for the
+pending approval (#<a class="ref" href="#n65">65</a>).</li>
+</ol>
+</section>
+<section><h2 id="official-cli-and-mcp-tested-against-the-sandbox-2026-09-16">Official CLI and MCP, tested against the sandbox (2026-09-16)</h2>
+<p>Mercury CLI 0.11.8 (Go, Stainless-generated) with the propose-only sandbox
+token via <code>MERCURY_API_KEY</code> and <code>--environment sandbox</code>; Mercury MCP probed
+unauthenticated and via OAuth.</p>
+<ol start="68">
+<li id="n68">🔴 <code>[cli]</code> <strong><code>payments transfer</code> moves money directly, and sits next to
+<code>payments request</code>.</strong> The CLI has <code>payments request</code> (approval-gated
+send), <code>payments create</code> (direct send), and <code>payments transfer</code>, which is
+<code>POST /transfer</code>, a direct internal transfer. There is no command for
+<code>request-transfer</code>. Our own agent, testing the CLI for the approval-gated
+path, ran <code>payments transfer</code> expecting a request; only the token&#39;s missing
+scope (403) stopped it. Command names don&#39;t say which ones need approval.
+<strong>Ship:</strong> <code>payments request-transfer</code>; name direct movers unambiguously
+(<code>payments send-now</code>, <code>transfers execute</code>); mark approval-gated commands in
+help.</li>
+<li id="n69">🟠 <code>[cli]</code> <strong>Errors go to stdout, after &quot;No results.&quot;</strong> A failed call prints
+<code>No results.</code>, the request line, and the error JSON on stdout (exit code
+1). <code>mercury … --format json | jq</code> gets a non-JSON line followed by an error
+object. <strong>Ship:</strong> errors on stderr, nothing on stdout on failure.</li>
+<li id="n70">🟠 <code>[cli]</code> <strong>No way to force IPv4.</strong> The Go client connects over IPv6 when
+available, so the same IPv4-allowlisted token that works with <code>curl -4</code>
+gets <code>401 ipNotWhitelisted</code> (#<a class="ref" href="#n44">44</a>). The only workaround was a local IPv4
+CONNECT proxy via <code>HTTPS_PROXY</code>. <strong>Ship:</strong> <code>--ip-family 4</code>, or fall back to
+IPv4 on <code>ipNotWhitelisted</code>.</li>
+<li id="n71">🟡 <code>[cli]</code> <strong>The CLI passes the API&#39;s rough edges straight through.</strong>
+Replaying <code>payments request</code> with the same <code>--idempotency-key</code> → the same
+400 &quot;already used this idempotency key&quot; (#<a class="ref" href="#n59">59</a>); <code>--order newest</code> is
+accepted and ignored (#<a class="ref" href="#n46">46</a>). Output includes full account and routing
+numbers, with no redaction option for piping into an agent.</li>
+<li id="n72">🟡 <code>[cli]</code> <strong>Good defaults worth keeping:</strong> in a non-interactive shell,
+money commands refuse to run without <code>--yes</code> instead of hanging on a
+prompt; <code>--idempotency-key</code> is required; a misspelled flag gets &quot;Did you
+mean <code>--posted-start</code>?&quot;, which fixes #<a class="ref" href="#n46">46</a> at the client; <code>--format jsonl</code>
+and <code>--transform</code> (GJSON) are agent-friendly.</li>
+</ol>
+</section>
+<section><h2 id="checked-against-saastr-s-agent-friendly-api-checklist-2026-09-16">Checked against SaaStr&#39;s agent-friendly API checklist (2026-09-16)</h2>
+<p>Source: Jason Lemkin, &quot;The simplest way to make your product more agentic this
+month&quot; (SaaStr). Mercury scores about 4 of 10 on its checklist, counting
+partial credit. Items below are the ones our log didn&#39;t already cover; each
+was verified against docs.mercury.com.</p>
+<ol start="73">
+<li id="n73">🟠 <code>[mcp]</code> <code>[docs]</code> <strong>Auto-discovery points agents at the docs server, not
+the bank.</strong> Every docs page sends a <code>Link</code> header advertising
+<code>rel=&quot;mcp-server&quot;</code> → <code>/.well-known/mcp/server-card.json</code>, whose only remote
+is <code>https://docs.mercury.com/mcp</code> (ReadMe&#39;s docs-search MCP), not
+<code>mcp.mercury.com/mcp</code>. The same header advertises <code>rel=&quot;api-catalog&quot;</code> →
+<code>/.well-known/api-catalog</code>, which returns 404; <code>llms-full.txt</code> is also 404
+(#<a class="ref" href="#n1">1</a>). An agent that follows the standard discovery path connects to the
+wrong server. <strong>Ship:</strong> list both servers in the card with clear titles;
+serve the api-catalog or remove the link.</li>
+<li id="n74">🟠 <code>[api]</code> <strong>Most write endpoints have no idempotency key.</strong> In the
+reference, <code>idempotencyKey</code> exists only on send money, request send money,
+request transfer, and internal transfer (4 of 12 checked). Creating
+recipients, invoices, customers, cards, categories, webhooks, and recipient
+invites has none, so an agent retrying after a timeout can create
+duplicates. Together with #<a class="ref" href="#n59">59</a> (replay returns 400), retries are unsafe on
+most writes. <strong>Ship:</strong> <code>Idempotency-Key</code> on every POST, with replay
+semantics.</li>
+<li id="n75">🟡 <code>[docs]</code> <strong>The skills index is a placeholder.</strong>
+<code>/.well-known/agent-skills/index.json</code> exists but holds ReadMe&#39;s single
+generic &quot;read-the-docs&quot; skill. Mercury already has Recipes that could be
+task skills, and &quot;request a payment for approval&quot; is the pattern agents
+most need to learn. <strong>Ship:</strong> task-level skills, starting there.</li>
+</ol>
+</section>
+  </article>
+</main>
+</body>
+</html>

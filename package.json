@@ -11,7 +11,8 @@
     "dev": "npm run dev -w apps/web",
     "typecheck": "npm run typecheck -ws --if-present",
     "smoke": "scripts/smoke/run.sh",
-    "demo:prep": "node scripts/demo/prep.mjs"
+    "demo:prep": "node scripts/demo/prep.mjs",
+    "docs": "node apps/web/scripts/render-docs.mjs"
   },
   "engines": {
     "node": ">=22"

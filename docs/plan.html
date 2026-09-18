@@ -1,0 +1,468 @@
+<!doctype html>
+<!-- Generated from PLAN.md by apps/web/scripts/render-docs.mjs. Edit the Markdown, then run `npm run docs`. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Steward Build Plan</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --paper: #f5f7f9; --panel: #ffffff; --ink: #16202c; --muted: #5b6877; --rule: #dce1e7;
+    --accent: #1f6f5c; --accent-soft: #e3f0ec; --amber: #9a6414; --amber-soft: #f8eedc;
+    --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+      --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f151c; --panel: #151d26; --ink: #e6ebf0; --muted: #96a3b1; --rule: #25313f;
+    --accent: #5cc3a6; --accent-soft: #15302a; --amber: #e0a84a; --amber-soft: #2c2415;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; scroll-padding-top: 64px; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.6; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  code { font-family: var(--mono); font-size: 0.82em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  a code { text-decoration: underline; text-decoration-color: currentColor; }
+
+  .bar { position: sticky; top: 0; z-index: 2; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
+  .site { max-width: 1040px; margin: 0 auto; padding: 10px 16px; display: flex; gap: 4px 16px; overflow-x: auto; scrollbar-width: none; font-family: var(--mono); font-size: 0.76rem; white-space: nowrap; }
+  .site a { color: var(--muted); text-decoration: none; padding: 4px 0; }
+  .site a:hover { color: var(--ink); }
+  .site a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+
+  .wrap { max-width: 800px; margin: 0 auto; padding: 48px 16px 96px; }
+  h1, h2, h3, h4 { font-family: var(--display); line-height: 1.15; text-wrap: balance; }
+  h1 { font-size: clamp(2rem, 6vw, 3rem); font-weight: 700; letter-spacing: -0.02em; margin: 8px 0 0; }
+  h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 12px; }
+  h3 { font-size: 1.1rem; font-weight: 700; margin: 32px 0 8px; }
+  h4 { font-size: 1rem; margin: 24px 0 8px; }
+  .eyebrow { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .dek { font-size: 1.2rem; color: var(--muted); margin: 16px 0 0; max-width: 36em; }
+  .meta { font-family: var(--mono); font-size: 0.74rem; color: var(--muted); margin: 20px 0 0; }
+  .meta code { background: none; padding: 0; }
+
+  .toc { margin-top: 32px; padding: 16px 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; }
+  .toc ul { list-style: none; margin: 8px 0 0; padding: 0; columns: 2 16em; column-gap: 32px; font-size: 0.92rem; }
+  .toc li { break-inside: avoid; margin: 2px 0; }
+  .toc code { background: none; padding: 0; }
+
+  .doc section { margin-top: 56px; }
+  .doc section.lead { margin-top: 32px; }
+  .doc p, .doc ul, .doc ol, .doc blockquote, .doc pre, .doc .table { margin: 0 0 16px; }
+  .doc li { margin: 6px 0; }
+  .doc li > p { margin: 0 0 8px; }
+  .doc hr { border: 0; border-top: 1px solid var(--rule); margin: 40px 0; }
+  .doc blockquote { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; color: var(--muted); }
+  .doc pre { background: #111820; color: #d9e2ea; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5; }
+  .doc pre code { background: none; padding: 0; font-size: inherit; color: inherit; overflow-wrap: normal; }
+  .doc input[type="checkbox"] { margin-right: 6px; }
+  .doc li:has(> input[type="checkbox"]) { list-style: none; margin-left: -1.2em; }
+  .doc ol > li[id] { scroll-margin-top: 64px; }
+  .doc ol > li[id]:target { background: var(--amber-soft); outline: 6px solid var(--amber-soft); border-radius: 2px; }
+  a.ref { font-variant-numeric: tabular-nums; }
+
+  .table { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; line-height: 1.45; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--rule); }
+  th { font-family: var(--display); font-weight: 700; font-size: 0.85rem; background: var(--accent-soft); }
+  tr:last-child td { border-bottom: 0; }
+
+  .doc section.feature { margin: 40px -16px 0; padding: 28px 16px; background: var(--amber-soft); border-top: 3px solid var(--amber); }
+  .doc section.feature h2 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); }
+  .doc section.feature > p:first-of-type { font-size: 1.12rem; }
+  .doc section.feature .table { border-color: color-mix(in srgb, var(--amber) 35%, transparent); }
+  .doc section.feature th { background: color-mix(in srgb, var(--amber) 18%, var(--panel)); }
+  .doc section.feature td:first-child { color: var(--muted); }
+  .doc section.feature td:last-child strong { color: var(--accent); }
+  @media (min-width: 832px) { .doc section.feature { margin-inline: -32px; padding-inline: 32px; border-radius: 0 0 10px 10px; } }
+</style>
+</head>
+<body>
+<header class="bar"><nav class="site" aria-label="Documents"><a href="index.html">Memo</a><a href="narrative.html">Narrative</a><a href="plan.html" aria-current="page">Plan</a><a href="findings.html">Findings</a><a href="api-friction-log.html">Friction log</a><a href="direction.html">Direction</a><a href="landscape.html">Landscape</a><a href="sandbox-surface.html">Sandbox</a><a href="scope-catalog.html">Scopes</a><a href="take-home-brief.html">Brief</a><a href="explainer.html">Explainer</a></nav></header>
+<main class="wrap">
+  <header class="top">
+    <p class="eyebrow">Execution plan · rev 2</p>
+    <h1>Steward Build Plan</h1>
+    <p class="dek">The plan expected a modest demo. The build brute-forced every step until Mercury said no, and logged each wall. Start with the table below: what I set out to do, how hard I pushed, and where it actually stopped.</p>
+    <p class="meta">Rendered from <a href="https://github.com/lucasdickey/mercury-demo/blob/main/PLAN.md"><code>PLAN.md</code></a></p>
+  </header>
+  <article class="doc">
+<section class="feature"><h2 id="brute-force-what-i-expected-vs-how-far-i-pushed">Brute force: what I expected vs. how far I pushed</h2>
+<p><strong>I didn&#39;t scope this down to what would demo cleanly. I brute-forced it.</strong> The
+brief asks for about two hours. What I expected to build was modest: an agent
+that reads the books and queues a payment and a sweep for approval. Instead of
+stopping at the first wall and mocking around it, I pushed every step of the
+workflow until Mercury itself said no — new tokens, new scopes, a second human
+in the org, the official CLI, the undocumented sandbox MCP — and logged each
+wall. Where the plan and reality diverge, reality won, and the gap is the
+finding.</p>
+<div class="table"><table>
+<thead>
+<tr>
+<th>What I expected to do</th>
+<th>How hard I pushed</th>
+<th>Where it actually stopped</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Get a sandbox token and start calling the API.</td>
+<td>Read-write token, then a Custom token with the approval scope; the first call still failed because the laptop connected over IPv6.</td>
+<td>Every write-capable token demands an IP allowlist, sandbox included, docs notwithstanding, and in practice it&#39;s IPv4-only [<a class="ref" href="api-friction-log.html#n38">38</a>, <a class="ref" href="api-friction-log.html#n39">39</a>, <a class="ref" href="api-friction-log.html#n44">44</a>].</td>
+</tr>
+<tr>
+<td>Read cash position across accounts.</td>
+<td>Pulled every account and transaction; checked the numbers against the dashboard.</td>
+<td>Works, but quietly wrong: misspelled filters return everything with a 200, and <code>start</code>/<code>end</code> mean <code>createdAt</code>, not posted date. Steward&#39;s own close used the wrong one until the sandbox exposed it [<a class="ref" href="api-friction-log.html#n46">46</a>, <a class="ref" href="api-friction-log.html#n47">47</a>].</td>
+</tr>
+<tr>
+<td>AR: chase overdue invoices.</td>
+<td>Looked for invoices, then tried to create them.</td>
+<td>The sandbox seeds none, and creating one needs an allowlisted read-write token [<a class="ref" href="api-friction-log.html#n28">28</a>, <a class="ref" href="api-friction-log.html#n45">45</a>]. Covered by tests and the offline smoke test, not live.</td>
+</tr>
+<tr>
+<td>AP: pay a vendor through the approval queue.</td>
+<td>Hit <code>400 invalidApproval</code>, then added a second real person to the org (phone, SMS opt-in, mandatory 2FA — for fake money) and approved as them.</td>
+<td><strong>Works end to end</strong>: request → approve in Mercury → ACH sent with the request id linked back. But a one-person company can&#39;t use it at all [<a class="ref" href="api-friction-log.html#n58">58</a>], retries with the same idempotency key fail instead of replaying [<a class="ref" href="api-friction-log.html#n59">59</a>], and the API returns no link to the approval [<a class="ref" href="api-friction-log.html#n64">64</a>].</td>
+</tr>
+<tr>
+<td>Sweep surplus to treasury.</td>
+<td>Called <code>request-transfer</code> live, then went looking for a scope that would allow it.</td>
+<td>No token scope exists for transfer requests [<a class="ref" href="api-friction-log.html#n41">41</a>], and the sandbox has no treasury account. Steward says so plainly and doesn&#39;t re-ask. It&#39;s in the demo <em>because</em> it fails.</td>
+</tr>
+<tr>
+<td>Use Mercury&#39;s own tools instead of mine.</td>
+<td>Drove the official CLI and probed Mercury&#39;s MCP, including hosts the docs don&#39;t mention.</td>
+<td>The CLI&#39;s <code>payments transfer</code> moves money directly, next to <code>payments request</code> [<a class="ref" href="api-friction-log.html#n68">68</a>]; the production MCP is read-only; an undocumented sandbox MCP advertises exactly the request scopes this project argues for [<a class="ref" href="api-friction-log.html#n18">18</a>].</td>
+</tr>
+<tr>
+<td>Host it and approve from Claude.ai or ChatGPT.</td>
+<td>Deployed to Vercel; checked each client&#39;s support for approvals.</td>
+<td>A hosted app can read but not queue (the allowlist again), and consumer chat clients can&#39;t render the approval, so they get an approve link instead (§7).</td>
+</tr>
+</tbody></table></div>
+<p>The expectation was a working demo. The result is a working demo <strong>plus a
+map of exactly where an agent on Mercury runs out of road</strong>: 75 entries in
+<a href="api-friction-log.html"><code>docs/api-friction-log.md</code></a>, ranked in <a href="findings.html"><code>docs/findings.md</code></a>. That map is the
+main deliverable.</p>
+</section>
+  </article>
+  <nav class="toc" aria-label="On this page"><p class="eyebrow">On this page</p><ul><li><a href="#brute-force-what-i-expected-vs-how-far-i-pushed">Brute force: what I expected vs. how far I pushed</a></li><li><a href="#0-decisions-already-made-do-not-relitigate">0. Decisions already made (do not relitigate)</a></li><li><a href="#status-2026-09-15-end-of-day">Status (2026-09-15, end of day)</a></li><li><a href="#1-preconditions-human">1. Preconditions (human)</a></li><li><a href="#2-step-1-sandbox-recon-30-min-blocking">2. Step 1 — sandbox recon (30 min, blocking)</a></li><li><a href="#3-repo-layout">3. Repo layout</a></li><li><a href="#4-work-packages-parallelizable">4. Work packages (parallelizable)</a></li><li><a href="#5-demo-script-7-8-min-claude-code-verified-e2e-2026-09-16">5. Demo script (7–8 min, Claude Code, verified e2e 2026-09-16)</a></li><li><a href="#6-guardrails">6. Guardrails</a></li><li><a href="#7-client-matrix-verified-2026-09-15">7. Client matrix (verified 2026-09-15)</a></li><li><a href="#8-still-open-need-sandbox">8. Still open (need sandbox)</a></li><li><a href="#9-why-rev-2-replaced-rev-1">9. Why rev 2 replaced rev 1</a></li></ul></nav>
+  <article class="doc">
+<section class="lead"><p>Hand-off document for whichever model/agents execute the build. Read
+<code>CLAUDE.md</code>, <a href="direction.html"><code>docs/direction.md</code></a>, <a href="landscape.html"><code>docs/landscape.md</code></a>, and
+<a href="api-friction-log.html"><code>docs/api-friction-log.md</code></a> first; this file is the <em>what to do</em>, those are the
+<em>why</em>. Rev 1 (personal account, production reads) is superseded — see §9.</p>
+</section>
+<section><h2 id="0-decisions-already-made-do-not-relitigate">0. Decisions already made (do not relitigate)</h2>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Choice</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Concept</td>
+<td><strong>Steward</strong> — a propose-only agent tier on Mercury for a technical founder running <strong>month-end close from the terminal</strong>. Read → analyze → propose → approve (gate 1: in the client when it can render it) → approve in Mercury (gate 2: approval queue). The agent has no path to move money.</td>
+</tr>
+<tr>
+<td>Persona</td>
+<td>Founder/CFO of a small startup. The sandbox org <em>is</em> the company.</td>
+</tr>
+<tr>
+<td>Workflow</td>
+<td>(1) cash position across accounts, (2) AR: overdue invoices we sent → follow-ups, (3) AP: pay vendors from the recipient list → approval queue, (4) sweep operating surplus to treasury/savings → approval queue.</td>
+</tr>
+<tr>
+<td>Environment</td>
+<td><strong>Sandbox only.</strong> <code>https://api-sandbox.mercury.com/api/v1</code> for every call. One sandbox token (read-write is fine in sandbox; there is no real money). No production tokens in the build.</td>
+</tr>
+<tr>
+<td>Hosting</td>
+<td>Vercel, one Next.js app. MCP at <code>/api/mcp/[secret]</code>, chat UI at <code>/</code>, approve page at <code>/approve/[token]</code>, docs at <code>/docs</code>.</td>
+</tr>
+<tr>
+<td>Hero client</td>
+<td><strong>Claude Code</strong> — renders MCP elicitation (gate 1) and is the persona&#39;s actual tool. <code>claude mcp add --transport http steward https://&lt;app&gt;/api/mcp/&lt;secret&gt;</code>.</td>
+</tr>
+<tr>
+<td>Other clients</td>
+<td>Claude.ai, ChatGPT, Grok: connect for reads + proposals; approvals fall back to the <strong>approve URL</strong> (surface we own). Web chat (AI SDK): full flow. <code>mercury … | steward</code> CLI pipe: audit only.</td>
+</tr>
+<tr>
+<td>MCP auth</td>
+<td>Long random path segment + server-side check. Real OAuth is a &quot;what&#39;s next&quot; slide.</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>Claude via Vercel AI SDK, <code>claude-sonnet-5</code>.</td>
+</tr>
+<tr>
+<td>Presentation</td>
+<td><code>docs/index.html</code> memo + <code>docs/explainer.html</code> walkthrough. Remotion render = stretch.</td>
+</tr>
+<tr>
+<td>Standing task</td>
+<td><strong>Keep cataloging.</strong> Every paper cut goes in <a href="api-friction-log.html"><code>docs/api-friction-log.md</code></a> under the right layer (API · MCP · CLI · docs · sandbox · ecosystem) with severity and a proposed fix. This is a deliverable, not a side effect.</td>
+</tr>
+</tbody></table></div>
+</section>
+<section><h2 id="status-2026-09-15-end-of-day">Status (2026-09-15, end of day)</h2>
+<p>Built and green without a sandbox token:</p>
+<ul>
+<li><code>packages/core</code>: sandbox-only Mercury client (refuses production, redacts account/routing numbers, follows cursors), analyzers (cash floor, overdue AR, bills-due AP with recipient matching, treasury sweep), zod proposal schema, <code>closeMonth()</code> / <code>queueProposal()</code>. <strong>11/11 tests.</strong></li>
+<li><code>apps/web</code>: MCP route with real MRTR elicitation + HMAC <code>requestState</code> + approve-URL fallback; chat UI on AI SDK 7; <code>/approve/[token]</code>; <code>/docs</code> served statically. <strong><code>next build</code> passes.</strong></li>
+<li><code>npm run smoke</code> — offline end-to-end with a mock Mercury and the real MCP client SDK: <code>tools/list</code>, <code>close_month</code>, approve-URL fallback for clients without elicitation, and the full MRTR round trip (form → accept → signed re-entry → <code>POST /request-transfer</code> with the proposal id as idempotencyKey → <code>pendingApproval</code>; decline → nothing queued). 7/7 checks.</li>
+</ul>
+<p><del>Blocked on the sandbox token</del> Token in hand (Custom, IPv4-allowlisted). <strong>§2 read recon done 2026-09-16 → <a href="sandbox-surface.html"><code>docs/sandbox-surface.md</code></a>, friction #<a class="ref" href="api-friction-log.html#n45">45</a>–57.</strong> Live read-only <code>closeMonth</code>: 0 follow-ups, 0 pays, 3 unmatched bills, 1 un-queueable sweep — seed data can&#39;t exercise AR/AP/treasury. <strong>§2 writes 2026-09-16: <code>request-send-money</code> → 400 <code>invalidApproval</code> (one-member org can&#39;t self-approve, #<a class="ref" href="api-friction-log.html#n58">58</a>); <code>request-transfer</code> → 403 (no scope, #<a class="ref" href="api-friction-log.html#n41">41</a>). Second org member added → <code>request-send-money</code> 200 <code>pendingApproval</code>; idempotent retry → 400 (#<a class="ref" href="api-friction-log.html#n59">59</a>).</strong> <strong>Gate 2 verified end to end:</strong> second member approved in Payments → Needs Approval → request <code>approved</code> → ACH transaction <code>sent</code> with <code>requestId</code> back-link. Still open: seeding, the <code>createdAt</code> fix in <code>closeMonth</code> (#<a class="ref" href="api-friction-log.html#n47">47</a>), Claude Code end-to-end. Requires Node ≥ 22 (<code>Object.groupBy</code>).</p>
+</section>
+<section><h2 id="1-preconditions-human">1. Preconditions (human)</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Sandbox account at <a href="https://sandbox.mercury.com/signup">https://sandbox.mercury.com/signup</a> → sandbox API token (read-write, no allowlist needed? <strong>verify</strong> — if the sandbox modal also demands an IP allowlist for read-write, log it and use a Custom token with <code>RequestSendMoney</code> + reads).</li>
+<li><input disabled="" type="checkbox"> <code>.env.local</code> in repo root: <code>MERCURY_SANDBOX_API_TOKEN=secret-token:mercury_sandbox_…</code>, <code>ANTHROPIC_API_KEY</code>, <code>MCP_PATH_SECRET</code> (32+ random chars), <code>STATE_SECRET</code> (32+ random chars).</li>
+<li><input disabled="" type="checkbox"> Vercel project linked; same vars in Production + Preview; Deployment Protection <strong>off</strong> for the MCP route.</li>
+</ul>
+</section>
+<section><h2 id="2-step-1-sandbox-recon-30-min-blocking">2. Step 1 — sandbox recon (30 min, blocking)</h2>
+<p>Sweep the sandbox and write <a href="sandbox-surface.html"><code>docs/sandbox-surface.md</code></a>: status, row counts, and a
+redacted sample per endpoint. This is both our data-availability check and a
+friction-log source (the docs don&#39;t enumerate what the sandbox seeds).</p>
+<pre><code>GET /accounts                 # kinds present? checking/savings/treasury/credit? balances?
+GET /transactions?limit=200   # merchant.categoryCode? mercuryCategory? counterpartyName? kinds?
+GET /recipients               # how many vendors seeded? payment methods?
+GET /invoices  GET /customers # AR seeded? statuses (unpaid/overdue)?
+GET /treasury                 # exists in sandbox?
+GET /credit
+GET /categories  GET /merchants?limit=5
+GET /organization  GET /users
+GET /cards
+GET /request-send-money       # approval-request list — does the concept exist here?
+GET /events?limit=3           # events in sandbox? (webhooks are documented as unavailable)
+</code></pre>
+<p>Then the writes we depend on, each with a unique <code>idempotencyKey</code>, small amounts:</p>
+<pre><code>POST /account/{checkingId}/request-send-money      {recipientId, amount, paymentMethod:&quot;ach&quot;, idempotencyKey}
+POST /account/{checkingId}/request-transfer-money  {destinationAccountId, amount, idempotencyKey}   # treasury or savings
+POST /invoices  (only if AR create works without IP allowlist in sandbox; else log it)
+</code></pre>
+<p>Confirm each 200s <strong>and appears in the sandbox dashboard&#39;s approval queue</strong>, then
+approve one in the dashboard and confirm the resulting transaction shows in
+<code>GET /transactions</code>. If the sandbox has no approval queue UI, that&#39;s a 🔴 finding
+and gate 2 becomes &quot;status polling on <code>GET /request-send-money/{id}</code>&quot; for the demo.</p>
+<p>If seed data is thin (few recipients, no invoices), seed it via API:
+<code>POST /recipients</code> ×5 vendors, <code>POST /customers</code> ×3, <code>POST /invoices</code> ×4 (two overdue).
+Record what had to be seeded — that&#39;s a friction entry (&quot;sandbox needs a
+realistic seed profile&quot;).</p>
+</section>
+<section><h2 id="3-repo-layout">3. Repo layout</h2>
+<pre><code>mercury-demo/
+  PLAN.md  CLAUDE.md  .env.example
+  docs/                          # static, served at /docs
+    index.html explainer.html direction.md landscape.md api-friction-log.md sandbox-surface.md take-home-brief.md
+  packages/core/                 # framework-free TS
+    src/mercury/client.ts        # sandbox base URL, bearer auth, cursor pagination, redaction of accountNumber/routingNumber
+    src/mercury/types.ts         # hand-typed from llms.txt fragments (no codegen — no single OpenAPI file exists; log it)
+    src/analyze/cash.ts          # position by account kind; operating floor = max(60-day min balance, 2× monthly outflow)
+    src/analyze/ar.ts            # invoices: unpaid, overdue (dueDate &lt; today), days late, amount → follow-up proposals
+    src/analyze/ap.ts            # recipients + a small &quot;bills due&quot; list (seeded JSON: vendor→amount→due) → pay proposals
+    src/analyze/sweep.ts         # surplus = available − floor − AP due → sweep proposal to treasury (or savings if no treasury)
+    src/intents.ts               # zod: Proposal = followup | pay | sweep ; {why, evidence[], amount, requires_approval, reversible}
+    src/steward.ts               # closeMonth(): runs all analyzers → proposals[] ; propose*() → sandbox request-* calls
+  apps/web/                      # Next.js App Router, Node runtime
+    app/api/mcp/[secret]/route.ts
+    app/api/chat/route.ts
+    app/approve/[token]/page.tsx # fallback gate 1 for clients without elicitation
+    app/page.tsx                 # chat + proposal cards
+  apps/cli/                      # optional: `steward close` reading jsonl from stdin
+</code></pre>
+<p>pnpm workspaces, TypeScript strict, no DB. Approval state lives in Mercury.</p>
+</section>
+<section><h2 id="4-work-packages-parallelizable">4. Work packages (parallelizable)</h2>
+<h3 id="a-core">A. <code>core</code></h3>
+<ul>
+<li>Client + types as above. <code>listAll*</code> helpers follow <code>page.nextPage</code>.</li>
+<li><code>cash.ts</code>: group <code>GET /accounts</code> by <code>kind</code>; sum available; compute floor.</li>
+<li><code>ar.ts</code>: <code>GET /invoices</code> → filter unpaid; overdue if <code>dueDate &lt; now</code>; proposal <code>followup {customer, invoiceId, amount, daysLate}</code> (<code>requires_approval:false</code> — it&#39;s a message draft, no API for reminders; log that).</li>
+<li><code>ap.ts</code>: bills-due list is a seeded JSON in <code>src/catalog/bills.json</code> mapping recipient names → amount/due (Mercury has no Bill Pay API — log it). Proposal <code>pay {recipientId, amount, memo, due}</code>.</li>
+<li><code>sweep.ts</code>: surplus after AP; target = treasury account if present else savings; proposal <code>sweep {from, to, amount, why}</code>.</li>
+<li>Acceptance: unit tests on fixtures from <a href="sandbox-surface.html"><code>docs/sandbox-surface.md</code></a>; <code>closeMonth()</code> &lt; 2 s.</li>
+</ul>
+<h3 id="b-mcp-route">B. MCP route</h3>
+<ul>
+<li><code>mcp-handler@^2</code> + <code>@modelcontextprotocol/server@^2</code> + <code>zod@^4</code>, Node 20+, protocol 2026-07-28, <code>maxDuration = 60</code>. Not the v1 <code>@modelcontextprotocol/sdk</code>.</li>
+<li>Tools: <code>cash_position()</code>, <code>close_month({asOf?})</code> → proposals, <code>propose_payment({recipientId, amount, memo})</code>, <code>propose_sweep({fromAccountId, toAccountId, amount})</code>.</li>
+<li><strong>Gate 1 — MRTR elicitation.</strong> First call returns <code>inputRequired({ inputRequests: { approve: inputRequired.elicit({ type:&quot;form&quot;, fields:[{name:&quot;approve&quot;, type:&quot;boolean&quot;, required:true, label:&quot;Queue $X to &lt;vendor&gt; for approval in Mercury?&quot;}] }) }, requestState: await codec.mint({...}) })</code>; on re-entry read <code>acceptedContent(ctx.mcpReq.inputResponses, &quot;approve&quot;)</code>; if true → sandbox <code>request-*</code> call; else declined. <strong>Always include <code>inputRequests</code></strong> (state-only results break Claude.ai, anthropics/claude-ai-mcp#1027).</li>
+<li><strong>Capability fallback.</strong> If <code>ctx.mcpReq.envelope?.clientCapabilities?.elicitation</code> is absent → return the proposal with <code>approve_url: https://&lt;app&gt;/approve/&lt;signed token&gt;</code> and instructions. Never execute, never fake a confirm via a second tool.</li>
+<li>Acceptance: Inspector lists 4 tools; Claude Code shows Approve/Decline on <code>propose_payment</code>; sandbox dashboard shows the queued payment; Claude.ai gets the approve link and it works.</li>
+</ul>
+<h3 id="c-web-chat-approve-page">C. Web chat + approve page</h3>
+<ul>
+<li>AI SDK <code>useChat</code>/<code>streamText</code>, tools imported from <code>core</code>. Proposal cards with Approve/Decline for <code>requires_approval</code> items → same sandbox <code>request-*</code> call → &quot;queued in Mercury&quot; state with dashboard link.</li>
+<li><code>/approve/[token]</code>: verify signed token, render one proposal, Approve → queue. This is the fallback gate for Claude.ai/ChatGPT/Grok.</li>
+<li>Visual language from <code>docs/index.html</code> tokens.</li>
+</ul>
+<h3 id="d-docs-friction-log-continuous">D. Docs + friction log (continuous)</h3>
+<ul>
+<li><a href="sandbox-surface.html"><code>docs/sandbox-surface.md</code></a> from §2.</li>
+<li>Append to <a href="api-friction-log.html"><code>docs/api-friction-log.md</code></a> as you go, tagged by layer: <code>[api]</code> <code>[mcp]</code> <code>[cli]</code> <code>[docs]</code> <code>[sandbox]</code> <code>[ecosystem]</code>.</li>
+<li>Update <code>docs/index.html</code> findings ledger with the top new items at the end.</li>
+</ul>
+<h3 id="e-cli-pipe-optional">E. CLI pipe (optional)</h3>
+<p><code>mercury accounts list --format jsonl</code> + <code>mercury transactions list --format jsonl</code> piped into <code>steward close --json</code>. Note whether the official CLI honors <code>--base-url https://api-sandbox.mercury.com/api/v1</code> with a sandbox token (it has no <code>--sandbox</code> flag — log it).</p>
+</section>
+<section><h2 id="5-demo-script-7-8-min-claude-code-verified-e2e-2026-09-16">5. Demo script (7–8 min, Claude Code, verified e2e 2026-09-16)</h2>
+<p>Everything below has been run against the live sandbox, API and dashboard.</p>
+<h3 id="before-5-min">Before (5 min)</h3>
+<ol>
+<li>Node ≥ 22 (<code>nvm use 25</code>). Start the app without the shell&#39;s Anthropic key (it overrides <code>.env.local</code>):
+<code>env -u ANTHROPIC_API_KEY PORT=3200 PUBLIC_BASE_URL=http://localhost:3200 npm run dev</code>
+(add <code>STEWARD_DEBUG=1</code> to log every MCP call).</li>
+<li><code>npm run demo:prep</code> — checks the token, picks the sandbox&#39;s ACH-payable recipient (Alex Rivera), writes
+<code>.demo/bills.json</code> dated from today, warns about leftover pending approvals, previews <code>close_month</code>.
+Expect: 1 payment, 2 unmatched bills, 1 sweep, 0 follow-ups.</li>
+<li>Claude Code, new terminal: <code>claude mcp add --transport http steward &quot;http://localhost:3200/api/mcp/&lt;MCP_PATH_SECRET&gt;&quot;</code> (prep prints it), <code>/mcp</code> shows 4 tools.</li>
+<li>Second Chrome profile signed in as the second org member (the approver) on
+<a href="https://sandbox.mercury.com/payments/approvals">https://sandbox.mercury.com/payments/approvals</a>. Reject leftovers from earlier runs so the queue is clean.</li>
+</ol>
+<h3 id="run">Run</h3>
+<ol>
+<li><strong>Memo, 60 s.</strong> <code>docs/index.html</code> → <a href="findings.html"><code>findings.md</code></a> BLUF: agent-readable, not agent-actionable.</li>
+<li><strong>&quot;Run month-end close.&quot;</strong> → <code>close_month</code> (read-only). Talk track: cash by account, operating floor from
+<em>posted</em> dates (the API&#39;s <code>start</code> means <code>createdAt</code>, #<a class="ref" href="api-friction-log.html#n47">47</a>), Alex Rivera $1,250 due in 2 days, two bills with no
+saved recipient (Acme Hosting; Northstar Legal, overdue), a surplus sweep. No receivables: the sandbox has no
+invoices and this token can&#39;t create them (#<a class="ref" href="api-friction-log.html#n28">28</a>). Nothing is queued.</li>
+<li><strong>&quot;Pay the Alex Rivera bill.&quot;</strong> → <code>propose_payment</code> → Claude Code shows Approve / Decline (<strong>gate 1</strong>) → Approve →
+<code>request-send-money</code> → <code>pendingApproval</code> + a link straight to the request in Mercury.
+Talk track: the agent can only <em>request</em>; there is no send path in the code.</li>
+<li><strong>Switch to the approver&#39;s window</strong>, open the link → Approve (<strong>gate 2</strong>) → Payments → Paid shows the ACH,
+pending. Talk track: the requester can&#39;t approve their own request, so a one-person company can&#39;t use this at
+all (#<a class="ref" href="api-friction-log.html#n58">58</a>); the API returns no <code>dashboardLink</code> for requests, Steward builds it (#<a class="ref" href="api-friction-log.html#n64">64</a>); approvals never reach Tasks.</li>
+<li><strong>&quot;Sweep the surplus to savings.&quot;</strong> → gate 1 → Approve → Mercury refuses: no token scope exists for transfer
+requests (#<a class="ref" href="api-friction-log.html#n41">41</a>). Steward says so in plain words and tells you how to do it by hand. Ask again → it doesn&#39;t ask you
+to approve something Mercury will refuse. Talk track: without a dry run (#<a class="ref" href="api-friction-log.html#n58">58</a>), every agent has to learn refusals
+after the human already said yes.</li>
+<li><strong>Wrap, 60 s.</strong> <a href="findings.html"><code>findings.md</code></a> top five, <code>docs/explainer.html</code>.</li>
+</ol>
+<h3 id="not-in-the-live-demo-and-why">Not in the live demo, and why</h3>
+<ul>
+<li><strong>Overdue-invoice follow-ups:</strong> no invoices in the sandbox; creating them needs an allowlisted token (#<a class="ref" href="api-friction-log.html#n28">28</a>, #<a class="ref" href="api-friction-log.html#n45">45</a>).
+Covered by unit tests and <code>npm run smoke</code>.</li>
+<li><strong>A successful sweep:</strong> no transfer-with-approval scope (#<a class="ref" href="api-friction-log.html#n41">41</a>). The smoke test runs it against the mock.</li>
+<li><strong>Claude.ai / ChatGPT approve link:</strong> needs a public URL; hosted on Vercel the app could read but not queue
+(IP allowlist, #<a class="ref" href="api-friction-log.html#n39">39</a>). Show <code>npm run smoke</code> output: clients without elicitation get the approve URL.</li>
+<li><strong>Web chat UI:</strong> removed 2026-09-17. The demo is Claude Code; the site root now redirects to the docs.</li>
+</ul>
+<h3 id="if-something-goes-wrong">If something goes wrong</h3>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Cause / fix</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Mercury 401 <code>ipNotWhitelisted</code></td>
+<td>New network or IPv6; add the IPv4 shown in the error to the token allowlist (#<a class="ref" href="api-friction-log.html#n44">44</a>)</td>
+</tr>
+<tr>
+<td>&quot;Mercury already has this request&quot;</td>
+<td>Same bill proposed earlier today (same idempotency key); reject it in the dashboard or use it</td>
+</tr>
+<tr>
+<td>&quot;Nobody else in this organization can approve&quot;</td>
+<td>The second org member was removed or lacks approve permission</td>
+</tr>
+<tr>
+<td>Payment proposal missing</td>
+<td>App isn&#39;t reading <code>.demo/bills.json</code>; re-run <code>npm run demo:prep</code></td>
+</tr>
+</tbody></table></div>
+</section>
+<section><h2 id="6-guardrails">6. Guardrails</h2>
+<ul>
+<li>Sandbox only. If any code path can reach <code>api.mercury.com</code>, that&#39;s a bug.</li>
+<li>Never call <code>POST /account/{id}/transactions</code> (direct send) or <code>POST /transfer</code> (direct internal transfer). Only <code>request-*</code>.</li>
+<li>Never log/return <code>accountNumber</code>, <code>routingNumber</code>, card data.</li>
+<li>Proposals say &quot;you could,&quot; not &quot;you should.&quot;</li>
+</ul>
+</section>
+<section><h2 id="7-client-matrix-verified-2026-09-15">7. Client matrix (verified 2026-09-15)</h2>
+<div class="table"><table>
+<thead>
+<tr>
+<th>Client</th>
+<th>MCP</th>
+<th>Elicitation (gate 1)</th>
+<th>Role in demo</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Claude Code</td>
+<td>✓</td>
+<td>✓ form</td>
+<td><strong>Hero</strong></td>
+</tr>
+<tr>
+<td>Cursor / VS Code</td>
+<td>✓</td>
+<td>✓ form</td>
+<td>Alternate</td>
+</tr>
+<tr>
+<td>Vercel AI SDK (<code>@ai-sdk/mcp</code>)</td>
+<td>✓</td>
+<td>✓ form</td>
+<td>Our web UI</td>
+</tr>
+<tr>
+<td>Claude.ai</td>
+<td>✓</td>
+<td>✗ (#153 open since Apr; state-only results error, #1027)</td>
+<td>Reads + approve-URL</td>
+</tr>
+<tr>
+<td>ChatGPT Dev Mode</td>
+<td>✓</td>
+<td>no evidence</td>
+<td>Reads + approve-URL</td>
+</tr>
+<tr>
+<td>Grok (grok.com connectors)</td>
+<td>✓ tools only</td>
+<td>✗ — elicitation times out (<code>emrgim/marriott-mcp#16</code>)</td>
+<td>Reads + approve-URL</td>
+</tr>
+</tbody></table></div>
+<p>Spec note: MCP 2026-07-28 made elicitation stateless (MRTR); sampling/roots deprecated. Don&#39;t use them.</p>
+</section>
+<section><h2 id="8-still-open-need-sandbox">8. Still open (need sandbox)</h2>
+<ul>
+<li><del>What the sandbox seeds</del> → <a href="sandbox-surface.html"><code>docs/sandbox-surface.md</code></a>: 9 depository + 1 credit account, 150 txns, 79 recipients (not vendor-like), 0 invoices/customers/treasury/statements, no categories or MCCs applied.</li>
+<li>Whether the sandbox has an approval-queue UI and whether <code>request-*</code> requests appear there.</li>
+<li><del>Whether sandbox read-write tokens demand an IP allowlist</del> → yes, and so does the approval scope (#<a class="ref" href="api-friction-log.html#n38">38</a>, #<a class="ref" href="api-friction-log.html#n39">39</a>); allowlist is effectively IPv4-only (#<a class="ref" href="api-friction-log.html#n44">44</a>).</li>
+<li>Whether the official CLI works against the sandbox via <code>--base-url</code>.</li>
+</ul>
+</section>
+<section><h2 id="9-why-rev-2-replaced-rev-1">9. Why rev 2 replaced rev 1</h2>
+<p>Rev 1 audited a personal account on production reads and queued writes to the
+sandbox. Problems: the brief targets business customers; personal accounts may
+lack approval-queue endpoints; splitting reads (prod) and writes (sandbox) made
+the demo incoherent; consumer chat clients can&#39;t render approvals, so the
+&quot;approve in ChatGPT&quot; moment wasn&#39;t real. Rev 2 puts the whole loop in one
+business sandbox org with Claude Code as the hero — the persona Mercury itself
+cites for its CLI. The personal token is an optional epilogue if time allows.</p>
+</section>
+  </article>
+</main>
+</body>
+</html>
