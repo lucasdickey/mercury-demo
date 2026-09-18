@@ -8,7 +8,8 @@ import type { NextRequest } from "next/server";
  * `/api/mcp/<secret>` is exempt: MCP clients can't answer a Basic challenge, and
  * that route already authenticates with the unguessable path secret (PLAN.md §0).
  */
-const REALM = 'Basic realm="Steward — any username, password only", charset="UTF-8"';
+// ASCII only: a non-ASCII byte here throws when the header is constructed.
+const REALM = 'Basic realm="Steward (any username, password only)", charset="UTF-8"';
 
 export function proxy(request: NextRequest) {
   const password = process.env.STEWARD_PASSWORD;
