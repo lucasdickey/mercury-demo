@@ -8,8 +8,7 @@ import type { NextRequest } from "next/server";
  * `/api/mcp/<secret>` is exempt: MCP clients can't answer a Basic challenge, and
  * that route already authenticates with the unguessable path secret (PLAN.md §0).
  */
-const REALM = 'Basic realm="Steward", charset="UTF-8"';
-const USER = "steward";
+const REALM = 'Basic realm="Steward — any username, password only", charset="UTF-8"';
 
 export function proxy(request: NextRequest) {
   const password = process.env.STEWARD_PASSWORD;
@@ -22,7 +21,11 @@ export function proxy(request: NextRequest) {
   return new NextResponse("Authentication required.", { status: 401, headers: { "WWW-Authenticate": REALM } });
 }
 
-/** Compares in constant time so the response time doesn't leak how much of the password matched. */
+/**
+ * Password only: the username is ignored, since a browser's Basic prompt makes it
+ * easy to leave blank and the resulting 401 just re-opens the box. Compared in
+ * constant time so the response doesn't leak how much of the password matched.
+ */
 function matches(encoded: string, password: string): boolean {
   let decoded: string;
   try {
@@ -30,10 +33,10 @@ function matches(encoded: string, password: string): boolean {
   } catch {
     return false;
   }
-  const expected = `${USER}:${password}`;
-  if (decoded.length !== expected.length) return false;
+  const given = decoded.slice(decoded.indexOf(":") + 1);
+  if (given.length !== password.length) return false;
   let diff = 0;
-  for (let i = 0; i < expected.length; i++) diff |= decoded.charCodeAt(i) ^ expected.charCodeAt(i);
+  for (let i = 0; i < password.length; i++) diff |= given.charCodeAt(i) ^ password.charCodeAt(i);
   return diff === 0;
 }
 
