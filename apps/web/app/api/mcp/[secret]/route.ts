@@ -25,7 +25,13 @@ type PendingState = { proposal: Proposal };
 let _codec: ReturnType<typeof createRequestStateCodec<PendingState>> | null = null;
 const codec = () => (_codec ??= createRequestStateCodec<PendingState>({ key: requireEnv("STATE_SECRET", 32), ttlSeconds: 600 }));
 
-const Approve = z.object({ approve: z.boolean().describe("Queue this in Mercury's approval queue?") });
+/**
+ * An explicit choice, not a checkbox: a boolean renders as a tick box that starts
+ * unset, and Accept on an unset required field fails validation with no feedback.
+ */
+const Approve = z.object({
+  approve: z.enum(["queue it", "cancel"]).describe("Queue this in Mercury's approval queue, or cancel?"),
+});
 
 /**
  * Mercury has no way to ask "would you accept this request?" before creating it
@@ -145,7 +151,7 @@ async function gate(server: McpServer, ctx: ServerContext, proposal: PayProposal
   const state = ctx.mcpReq.requestState<PendingState>();
   if (state) {
     const answer = acceptedContent(ctx.mcpReq.inputResponses, "approve", Approve);
-    if (!answer?.approve) return text(`Declined. Nothing was queued for ${describe(state.proposal)}.`);
+    if (answer?.approve !== "queue it") return text(`Declined. Nothing was queued for ${describe(state.proposal)}.`);
     const outcome = await queueProposal(mercury(), state.proposal as PayProposal | SweepProposal);
     if ("notQueued" in outcome) {
       if (outcome.reason === "needs_second_approver" || outcome.reason === "missing_scope") {

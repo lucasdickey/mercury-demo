@@ -13,7 +13,7 @@ async function connect(withElicitation, answer) {
   if (withElicitation) {
     client.setRequestHandler("elicitation/create", async (req) => {
       results.formSeen = { message: req.params.message, mode: req.params.mode, schema: req.params.requestedSchema };
-      return answer ? { action: "accept", content: { approve: true } } : { action: "decline" };
+      return answer ? { action: "accept", content: { approve: "queue it" } } : { action: "decline" };
     });
   }
   await client.connect(new StreamableHTTPClientTransport(new URL(URL_)));

@@ -10,6 +10,8 @@ export PUBLIC_BASE_URL="http://localhost:3999"
 export MERCURY_SANDBOX_API_TOKEN="secret-token:mercury_sandbox_smoke_yrucrem"
 export MERCURY_BASE_URL="http://localhost:3998/api/v1"
 export ANTHROPIC_API_KEY="sk-ant-smoke"
+# Offline smoke uses the static bills catalog, never a demo file written by demo:prep.
+export STEWARD_BILLS_FILE="/nonexistent/bills.json"
 cleanup() { kill "${MOCK_PID:-}" "${NEXT_PID:-}" 2>/dev/null || true; }
 trap cleanup EXIT
 node "$ROOT/scripts/smoke/mock-mercury.mjs" >/dev/null 2>&1 & MOCK_PID=$!
