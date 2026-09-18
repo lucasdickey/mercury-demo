@@ -4,7 +4,7 @@
 node_modules/
 .DS_Store
 .demo/
-node_modules/
+.vercel/
 .next/
 dist/
 apps/web/public/docs/
