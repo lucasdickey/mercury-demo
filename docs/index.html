@@ -181,8 +181,8 @@
   <div>
     <span class="eyebrow">Mercury API spike</span>
     <div class="meta" style="flex-direction:column; gap:4px; margin-top:10px">
-      <span>2026-09-15</span>
-      <span>status: planned</span>
+      <span>2026-09-17</span>
+      <span>status: built · run live in the sandbox</span>
       <span>rev 2 · business, sandbox</span>
     </div>
   </div>
@@ -195,7 +195,6 @@
       <a href="plan.html">Execution plan</a>
       <a href="findings.html">Findings, ranked</a>
       <a href="api-friction-log.html">Friction log</a>
-      <a href="landscape.html">Landscape</a>
       <a href="explainer.html">Interactive explainer ↗</a>
     </div>
   </div>
@@ -222,22 +221,22 @@
       <div role="listitem"><div class="k">1 · read</div><div class="v">Accounts, invoices, recipients</div><div class="d">Balances by kind, unpaid AR, the vendor list, recent outflows.</div></div>
       <div role="listitem"><div class="k">2 · analyze</div><div class="v">Position, due, surplus</div><div class="d">Operating floor, overdue invoices, bills due this week, cash above floor after AP.</div></div>
       <div class="gate" role="listitem"><div class="k">3 · propose</div><div class="v">Ask in the client</div><div class="d">MCP elicitation: Claude Code renders Approve / Decline. The model can't click.</div></div>
-      <div class="gate" role="listitem"><div class="k">4 · approve</div><div class="v">Queue in Mercury</div><div class="d"><code>request-send-money</code> / <code>request-transfer-money</code>. Money moves only after dashboard approval.</div></div>
+      <div class="gate" role="listitem"><div class="k">4 · approve</div><div class="v">Queue in Mercury</div><div class="d"><code>request-send-money</code> / <code>request-transfer</code>. Money moves only after dashboard approval.</div></div>
     </div>
 
     <div class="tablewrap">
     <table>
       <thead><tr><th>Capability</th><th>Mercury calls</th><th>Second source</th><th>Proposal</th></tr></thead>
       <tbody>
-        <tr><td><strong>Cash position</strong></td><td><code>GET /accounts</code>, <code>GET /treasury</code>, <code>GET /credit</code></td><td>—</td><td>Operating floor and surplus; no proposal on its own</td></tr>
-        <tr><td><strong>Receivables</strong></td><td><code>GET /invoices</code>, <code>GET /customers</code></td><td>—</td><td><span class="stamp propose">follow up</span> — drafts the reminder; Mercury has no API to send one</td></tr>
+        <tr><td><strong>Cash position</strong></td><td><code>GET /accounts</code>, <code>GET /transactions</code>, <code>GET /treasury</code></td><td>—</td><td>Operating floor and surplus; no proposal on its own</td></tr>
+        <tr><td><strong>Receivables</strong></td><td><code>GET /ar/invoices</code>, <code>GET /ar/customers</code></td><td>—</td><td><span class="stamp propose">follow up</span> — drafts the reminder; Mercury has no API to send one. The sandbox has no invoices, so this runs in tests only</td></tr>
         <tr><td><strong>Payables</strong></td><td><code>GET /recipients</code>, <code>POST …/request-send-money</code></td><td>Bills-due list (Mercury has no Bill Pay API)</td><td><span class="stamp approve">pay</span> → Mercury approval queue, always</td></tr>
-        <tr><td><strong>Treasury sweep</strong></td><td><code>POST …/request-transfer-money</code></td><td>—</td><td><span class="stamp approve">sweep</span> → Mercury approval queue</td></tr>
+        <tr><td><strong>Treasury sweep</strong></td><td><code>POST /request-transfer</code></td><td>—</td><td><span class="stamp approve">sweep</span> → Mercury approval queue. Refused live: no Custom-token scope exists for transfer requests</td></tr>
       </tbody>
     </table>
     </div>
 
-    <p>Two ways in, one engine: a hosted MCP endpoint attached to <strong>Claude Code</strong> (the hero — a surface we don't own, and the founder's actual tool), with the same endpoint in Claude.ai, ChatGPT, or Grok for reads and approvals handed to a page we host; and a <strong>CLI pipe</strong> — <code>mercury transactions list --format jsonl | steward close</code>. Everything runs against one Mercury <strong>sandbox</strong> org, which plays the company.</p>
+    <p>One engine behind one MCP endpoint, attached to <strong>Claude Code</strong> (the hero — a surface we don't own, and the founder's actual tool), with the same endpoint in Claude.ai, ChatGPT, or Grok for reads and approvals handed to a page we host. The CLI pipe we planned (<code>mercury transactions list --format jsonl | steward close</code>) wasn't built; we tested Mercury's official CLI against the sandbox instead. Everything runs against one Mercury <strong>sandbox</strong> org, which plays the company.</p>
   </div>
 </section>
 
@@ -247,14 +246,14 @@
     <h2>Why this is the spike</h2>
     <p>Mercury has already shipped the obvious things: <strong>Command</strong> (natural language inside the dashboard), an official <strong>CLI</strong>, a hosted <strong>MCP</strong>, and <strong>agent cards</strong>. Rebuilding any of those would be table stakes. What they have <em>not</em> shipped is an agent-safe write path outside the dashboard.</p>
     <p class="thesis">Their MCP is read-only because they don't trust the model to act. The answer to "we don't trust it" doesn't have to be "so it can't do anything." It can be "so it has to ask — twice."</p>
-    <p>The REST API already contains the pattern: <code>request-send-money</code> and <code>request-transfer-money</code> queue an action for a human to approve in the dashboard, and neither needs an IP allowlist because the approval <em>is</em> the control. Those endpoints are absent from the MCP, along with harmless writes like categorizing a transaction — which Mercury says is the #1 thing early users want.</p>
+    <p>The REST API already contains the pattern: <code>request-send-money</code> and <code>request-transfer</code> queue an action for a human to approve in the dashboard. Mercury's docs say the payment request works without an IP allowlist, because the approval <em>is</em> the control; in the sandbox it still demanded one, and transfer requests have no token scope at all. Those endpoints are absent from the MCP, along with harmless writes like categorizing a transaction — which Mercury says is the #1 thing early users want.</p>
     <p>So the spike is a working demonstration of the tier we think Mercury's MCP should add next, built on their own API, with the API critique carried by the artifact rather than a slide.</p>
     <p>The method isn't ours alone. A week before this, Michelle Bu — who owns APIs and developer tools at Stripe — ran 21 coding-agent attempts at building shops on Stripe's own API and logged where they broke: 7 worked, 2 were shippable, and the failures clustered at sandbox access, version skew, and keys that shouldn't have to exist. Her line is the thesis of this memo: <em>"Any friction we reduce for agents is friction we'll reduce for humans as well."</em> <a href="https://www.breakingchange.blog/p/building-a-t-shirt-factory-factory">Building a t-shirt factory factory ↗</a></p>
 
     <h3>How it maps to the brief</h3>
     <ul>
       <li><strong>Business judgment.</strong> Month-end close is the workflow every founder actually runs, and the one Mercury says its CLI users reach for first: cash position, pay what's due, put the rest to work. The agent does the assembly; the human keeps the signature.</li>
-      <li><strong>API / CLI / MCP understanding.</strong> We consume the official CLI's JSON, wrap the REST API, and ship a sibling MCP that exercises stateless elicitation (MCP 2026-07-28) and the approval endpoints — and we catalog every paper cut by layer as we go.</li>
+      <li><strong>API / CLI / MCP understanding.</strong> We tested the official CLI against the sandbox, wrap the REST API, and ship a sibling MCP that exercises stateless elicitation (MCP 2026-07-28) and the approval endpoints — and we catalog every paper cut by layer as we go.</li>
       <li><strong>Trust and simplicity.</strong> One mental model — propose, approve — identical to Command's.</li>
       <li><strong>Regulatory and operational tradeoffs.</strong> IP allowlists, dual approval, 45-day token hygiene, PII kept out of the model's context, and careful "advice" language.</li>
     </ul>
@@ -269,11 +268,11 @@
     <div class="callout critical">
       <h3>Serverless hosts have no fixed IP. Mercury's write tokens require one.</h3>
       <p>A <strong>Read and Write</strong> token must be bound to an IP allowlist. Vercel functions, Cloudflare Workers, Lambda, and most agent runtimes egress from rotating, shared address pools; a laptop's residential IP changes too. Mercury's docs are candid — "we do not offer a way to circumvent this security requirement" — and point at NAT gateways and static-IP add-ons.</p>
-      <p>The consequence is not a nuisance; it's architectural. From Vercel, the only Mercury write path that works at all is the <strong>approval-queue path</strong> (<code>request-send-money</code>, <code>request-transfer-money</code>), because those endpoints trade the allowlist for dashboard approval. Propose-only isn't just the safe design — <strong>it's the only design the platform allows</strong> where agents actually get deployed. Mercury's own hosted MCP is presumably running into the same wall, which may be part of why it's read-only.</p>
+      <p>The consequence is not a nuisance; it's architectural. On paper, the one Mercury write path that works from Vercel is the <strong>approval-queue path</strong> (<code>request-send-money</code>), because the docs say it trades the allowlist for dashboard approval — which would make propose-only <strong>the only design the platform allows</strong> where agents actually get deployed. In practice it's narrower still: the sandbox's token dialog demands an allowlist for "Send Money with Approval" too, and there is no scope at all for <code>request-transfer</code>. So a hosted agent can read but not queue, and Steward's demo runs from a laptop on an allowlisted IPv4 address. Mercury's own hosted MCP is presumably running into the same wall, which may be part of why it's read-only.</p>
       <p style="margin:0">Recommendation: make the approval-queue tier a first-class OAuth scope (<code>propose:payments</code>, <code>propose:transfers</code>, <code>write:categories</code>) for MCP and API tokens, no allowlist required, and say so on the token-creation modal.</p>
     </div>
 
-    <p>Selected findings. The ranked summary with a BLUF is in <a href="findings.html">findings</a>; the full log — 75 entries so far, tagged by layer (API · MCP · CLI · docs · sandbox · ecosystem), each with a proposed fix — is in <a href="api-friction-log.html">the friction log</a>. It keeps growing through the build.</p>
+    <p>Selected findings. The ranked summary with a BLUF is in <a href="findings.html">findings</a>; the full log — 75 entries, tagged by layer (API · MCP · CLI · docs · sandbox · ecosystem), each with a proposed fix — is in <a href="api-friction-log.html">the friction log</a>.</p>
 
     <div class="ledger">
       <div class="row">
@@ -325,7 +324,7 @@
   <div class="content">
     <h2>Architecture</h2>
     <figure>
-      <svg class="arch" viewBox="0 0 880 330" role="img" aria-label="Architecture: chat clients and a CLI pipe call the Steward MCP server on Vercel, which reads Mercury's API and queues money movement for approval in the Mercury dashboard.">
+      <svg class="arch" viewBox="0 0 880 330" role="img" aria-label="Architecture: chat clients (and a planned CLI pipe, not built) call the Steward MCP server on Vercel, which reads Mercury's API and queues money movement for approval in the Mercury dashboard.">
         <defs>
           <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrow"/></marker>
           <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrow money"/></marker>
@@ -335,8 +334,8 @@
         <text x="40" y="66">Claude Code · Claude.ai · ChatGPT</text>
         <text class="mono" x="40" y="86">surfaces we don't own</text>
         <rect class="box ours" x="24" y="164" width="170" height="64" rx="4"/>
-        <text x="40" y="190">CLI pipe</text>
-        <text class="mono" x="40" y="210">mercury … | steward audit</text>
+        <text x="40" y="190">CLI pipe (planned)</text>
+        <text class="mono" x="40" y="210">not built</text>
         <!-- steward -->
         <rect class="box ours" x="290" y="96" width="220" height="132" rx="4"/>
         <text x="306" y="122" style="font-weight:600">Steward on Vercel</text>
@@ -350,7 +349,7 @@
         <rect class="box" x="600" y="40" width="250" height="90" rx="4"/>
         <text x="616" y="66" style="font-weight:600">Mercury API</text>
         <text class="mono" x="616" y="86">GET /accounts · /invoices · /recipients</text>
-        <text class="mono" x="616" y="104">POST …/request-transfer-money</text>
+        <text class="mono" x="616" y="104">POST /request-transfer</text>
         <text class="mono" x="616" y="120">POST …/request-send-money</text>
         <!-- dashboard gate -->
         <rect class="box gate" x="600" y="180" width="250" height="64" rx="4"/>
@@ -394,7 +393,7 @@
       <li><strong>Events for approval requests</strong>, so an agent learns the outcome of what it proposed.</li>
       <li><strong>Agent cards via API</strong> — today <code>isAgentCard</code> is read-only — plus a guide on funding x402 / MPP / AP2 sessions from an agent card.</li>
       <li><strong>A payables surface</strong> (<code>GET /bills</code>) and an invoice-reminder endpoint, so month-end close can be fully agent-assembled.</li>
-      <li><strong>CLI:</strong> a <code>--sandbox</code> flag and auto-detection of the <code>mercury_sandbox_</code> token prefix; <strong>sandbox docs:</strong> say what's seeded and what's missing.</li>
+      <li><strong>CLI:</strong> a <code>payments request-transfer</code> command, and direct money movers named so an agent can't mistake one for a request (today <code>payments transfer</code> is a direct transfer next to <code>payments request</code>); <strong>sandbox docs:</strong> say what's seeded and what's missing.</li>
     </ol>
     <p>What we'd do next with the prototype: replace the shared secret with real OAuth, wire webhooks so the agent learns when a queued payment is approved (production only — the sandbox has none), and point the same tools at a personal account read-only as an epilogue.</p>
   </div>

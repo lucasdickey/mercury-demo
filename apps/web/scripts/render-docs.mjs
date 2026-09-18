@@ -1,4 +1,5 @@
-// Renders the repo's Markdown docs (PLAN.md, docs/*.md) to styled HTML pages in
+// Renders the repo's published Markdown docs (PLAN.md and the docs/*.md listed in
+// PAGES) to styled HTML pages in
 // docs/, in the narrative page's visual language. The Markdown stays the source
 // of truth: edit it, then `npm run docs` (also runs before dev and build).
 //
@@ -22,9 +23,6 @@ const PAGES = [
   },
   { src: "docs/findings.md", out: "findings.html", nav: "Findings", title: "Findings, Ranked", eyebrow: "Findings · ranked BLUF" },
   { src: "docs/api-friction-log.md", out: "api-friction-log.html", nav: "Friction log", title: "API Friction Log", eyebrow: "Friction log · every wall, with a fix", frictionLog: true },
-  { src: "docs/direction.md", out: "direction.html", nav: "Direction", title: "Choosing a Direction", eyebrow: "Research · direction" },
-  { src: "docs/landscape.md", out: "landscape.html", nav: "Landscape", title: "Agent Banking Landscape", eyebrow: "Research · landscape" },
-  { src: "docs/sandbox-surface.md", out: "sandbox-surface.html", nav: "Sandbox", title: "Sandbox Surface", eyebrow: "Recon · what the sandbox seeds" },
   { src: "docs/scope-catalog.md", out: "scope-catalog.html", nav: "Scopes", title: "Token Scope Catalog", eyebrow: "Recon · token scopes" },
   { src: "docs/take-home-brief.md", out: "take-home-brief.html", nav: "Brief", title: "Take-Home Brief", eyebrow: "The assignment" },
 ];

@@ -39,28 +39,35 @@ main deliverable.
 | Persona | Founder/CFO of a small startup. The sandbox org *is* the company. |
 | Workflow | (1) cash position across accounts, (2) AR: overdue invoices we sent → follow-ups, (3) AP: pay vendors from the recipient list → approval queue, (4) sweep operating surplus to treasury/savings → approval queue. |
 | Environment | **Sandbox only.** `https://api-sandbox.mercury.com/api/v1` for every call. One sandbox token (read-write is fine in sandbox; there is no real money). No production tokens in the build. |
-| Hosting | Vercel, one Next.js app. MCP at `/api/mcp/[secret]`, chat UI at `/`, approve page at `/approve/[token]`, docs at `/docs`. |
+| Hosting | Vercel, one Next.js app (project `web`, https://mercury-demo.one-off.dev, password-gated by `STEWARD_PASSWORD`). MCP at `/api/mcp/[secret]` (exempt from the gate), approve page at `/approve/[token]`, docs at `/docs`; `/` redirects to `/docs/index.html`. ~~Chat UI at `/`~~ removed 2026-09-17. |
 | Hero client | **Claude Code** — renders MCP elicitation (gate 1) and is the persona's actual tool. `claude mcp add --transport http steward https://<app>/api/mcp/<secret>`. |
-| Other clients | Claude.ai, ChatGPT, Grok: connect for reads + proposals; approvals fall back to the **approve URL** (surface we own). Web chat (AI SDK): full flow. `mercury … \| steward` CLI pipe: audit only. |
+| Other clients | Claude.ai, ChatGPT, Grok: connect for reads + proposals; approvals fall back to the **approve URL** (surface we own). ~~Web chat (AI SDK): full flow~~ (removed 2026-09-17). ~~`mercury … \| steward` CLI pipe: audit only~~ (not built; the official CLI was tested directly instead, #68–72). |
 | MCP auth | Long random path segment + server-side check. Real OAuth is a "what's next" slide. |
-| Model | Claude via Vercel AI SDK, `claude-sonnet-5`. |
-| Presentation | `docs/index.html` memo + `docs/explainer.html` walkthrough. Remotion render = stretch. |
+| Model | ~~Claude via Vercel AI SDK, `claude-sonnet-5`~~. Only the web chat called a model, and it was removed 2026-09-17. In Claude Code the model is whatever the session runs; Steward itself makes no LLM calls. |
+| Presentation | `docs/index.html` memo + `docs/narrative.html` + `docs/explainer.html` walkthrough. A recorded walkthrough video (about 4½ min, 2026-09-17, on Vercel Blob) is embedded in the memo and the narrative. Remotion render = stretch, not done. |
 | Standing task | **Keep cataloging.** Every paper cut goes in `docs/api-friction-log.md` under the right layer (API · MCP · CLI · docs · sandbox · ecosystem) with severity and a proposed fix. This is a deliverable, not a side effect. |
 
-## Status (2026-09-15, end of day)
+## Status (2026-09-17)
 
-Built and green without a sandbox token:
-- `packages/core`: sandbox-only Mercury client (refuses production, redacts account/routing numbers, follows cursors), analyzers (cash floor, overdue AR, bills-due AP with recipient matching, treasury sweep), zod proposal schema, `closeMonth()` / `queueProposal()`. **11/11 tests.**
-- `apps/web`: MCP route with real MRTR elicitation + HMAC `requestState` + approve-URL fallback; chat UI on AI SDK 7; `/approve/[token]`; `/docs` served statically. **`next build` passes.**
+Built, green, and run live against the sandbox:
+- `packages/core`: sandbox-only Mercury client (refuses production, redacts account/routing numbers, follows cursors), analyzers (cash floor, overdue AR, bills-due AP with recipient matching, treasury sweep), zod proposal schema, `closeMonth()` / `queueProposal()`. **16/16 tests** (`npm test`; needs Node ≥ 22, one test fails on Node 20 for lack of `Object.groupBy`).
+- `apps/web`: MCP route with real MRTR elicitation + HMAC `requestState` + approve-URL fallback; `/approve/[token]`; password gate (`proxy.ts`: HTTP Basic, password only, `STEWARD_PASSWORD`; the MCP route is exempt); docs rendered from Markdown by `apps/web/scripts/render-docs.mjs` (`npm run docs`, also before dev/build) and served under `/docs`. `/` and `/docs` redirect to `/docs/index.html`, `/plan` and `/PLAN.md` to `/docs/plan.html`, `/narrative` to `/docs/narrative.html`. **`next build` and `tsc` pass.** ~~Chat UI on AI SDK 7~~: removed 2026-09-17; the app is now the MCP endpoint, the approve page, and the docs.
 - `npm run smoke` — offline end-to-end with a mock Mercury and the real MCP client SDK: `tools/list`, `close_month`, approve-URL fallback for clients without elicitation, and the full MRTR round trip (form → accept → signed re-entry → `POST /request-transfer` with the proposal id as idempotencyKey → `pendingApproval`; decline → nothing queued). 7/7 checks.
+- Deployed: Vercel project `web`, https://mercury-demo.one-off.dev, password-gated. Walkthrough video (about 4½ min, recorded 2026-09-17) on Vercel Blob, embedded in `docs/index.html` and `docs/narrative.html`.
 
-~~Blocked on the sandbox token~~ Token in hand (Custom, IPv4-allowlisted). **§2 read recon done 2026-09-16 → `docs/sandbox-surface.md`, friction #45–57.** Live read-only `closeMonth`: 0 follow-ups, 0 pays, 3 unmatched bills, 1 un-queueable sweep — seed data can't exercise AR/AP/treasury. **§2 writes 2026-09-16: `request-send-money` → 400 `invalidApproval` (one-member org can't self-approve, #58); `request-transfer` → 403 (no scope, #41). Second org member added → `request-send-money` 200 `pendingApproval`; idempotent retry → 400 (#59).** **Gate 2 verified end to end:** second member approved in Payments → Needs Approval → request `approved` → ACH transaction `sent` with `requestId` back-link. Still open: seeding, the `createdAt` fix in `closeMonth` (#47), Claude Code end-to-end. Requires Node ≥ 22 (`Object.groupBy`).
+History. 2026-09-15: built without a token. 2026-09-16: token in hand (Custom, IPv4-allowlisted). **§2 read recon → `docs/sandbox-surface.md`, friction #45–57.** Live read-only `closeMonth`: 0 follow-ups, 0 pays, 3 unmatched bills, 1 un-queueable sweep — seed data can't exercise AR/AP/treasury. **§2 writes: `request-send-money` → 400 `invalidApproval` (one-member org can't self-approve, #58); `request-transfer` → 403 (no scope, #41). Second org member added → `request-send-money` 200 `pendingApproval`; idempotent retry → 400 (#59).** **Gate 2 verified end to end:** second member approved in Payments → Needs Approval → request `approved` → ACH transaction `sent` with `requestId` back-link. Then, the same day: `closeMonth` switched to posted dates (`postedStart`, periods by `postedAt`; #47 fixed in Steward); `npm run demo:prep` writes `.demo/bills.json` against the sandbox's one ACH-payable recipient (the "seeding" that was possible — invoices still can't be created, #28); Claude Code end to end verified (§5). 2026-09-17: web chat removed, password gate, docs as HTML, video recorded.
+
+**Live run in Claude Code, 2026-09-17** (the one in the video): `close_month` → 1 payment (Alex Rivera, $1,255.00 — `.demo/bills.json` had been hand-edited from the $1,250 that `demo:prep` writes), 2 unmatched bills (Acme Hosting; Northstar Legal, overdue), 1 sweep, 0 follow-ups. Payment queued → approved in Mercury by the second member. Sweep → 403, no scope (#41); asking again didn't re-prompt for approval. Exactly as §5 scripts it.
+
+**Known issue (Steward's bug, not Mercury's; not fixed).** Re-running `close_month` after the payment was approved proposes the same Alex Rivera payment again (same proposal id: the bill file doesn't know it was paid, and `closeMonth` doesn't check existing requests) and subtracts the $1,255 twice in the sweep math. **Don't re-run the close mid-demo** (§5, "If something goes wrong").
+
+Open: the Vercel project has only `STEWARD_PASSWORD` and `BLOB_READ_WRITE_TOKEN` set (checked 2026-09-17), so the hosted MCP endpoint isn't configured; the demo runs the app locally (§5). Requires Node ≥ 22 (`Object.groupBy`).
 
 ## 1. Preconditions (human)
 
-- [ ] Sandbox account at https://sandbox.mercury.com/signup → sandbox API token (read-write, no allowlist needed? **verify** — if the sandbox modal also demands an IP allowlist for read-write, log it and use a Custom token with `RequestSendMoney` + reads).
-- [ ] `.env.local` in repo root: `MERCURY_SANDBOX_API_TOKEN=secret-token:mercury_sandbox_…`, `ANTHROPIC_API_KEY`, `MCP_PATH_SECRET` (32+ random chars), `STATE_SECRET` (32+ random chars).
-- [ ] Vercel project linked; same vars in Production + Preview; Deployment Protection **off** for the MCP route.
+- [x] Sandbox account at https://sandbox.mercury.com/signup → sandbox API token (read-write, no allowlist needed? **verify** — if the sandbox modal also demands an IP allowlist for read-write, log it and use a Custom token with `RequestSendMoney` + reads). → Verified 2026-09-16: read-write *and* "Send Money with Approval" both demand an allowlist (#38, #39). Using a Custom token, IPv4-allowlisted (#44); `scripts/set-token.sh` writes it.
+- [x] `.env.local` in repo root: `MERCURY_SANDBOX_API_TOKEN=secret-token:mercury_sandbox_…`, ~~`ANTHROPIC_API_KEY`~~ (only the web chat used it; unused since 2026-09-17), `MCP_PATH_SECRET` (32+ random chars), `STATE_SECRET` (32+ random chars).
+- [ ] Vercel project linked; same vars in Production + Preview; Deployment Protection **off** for the MCP route. → **Partly.** Linked (`web`, https://mercury-demo.one-off.dev), but as of 2026-09-17 only `STEWARD_PASSWORD` (Production) and `BLOB_READ_WRITE_TOKEN` are set, so the hosted MCP endpoint isn't live; the demo runs locally (§5). The password gate exempts `/api/mcp/`.
 
 ## 2. Step 1 — sandbox recon (30 min, blocking)
 
@@ -85,13 +92,16 @@ GET /events?limit=3           # events in sandbox? (webhooks are documented as u
 Then the writes we depend on, each with a unique `idempotencyKey`, small amounts:
 ```
 POST /account/{checkingId}/request-send-money      {recipientId, amount, paymentMethod:"ach", idempotencyKey}
-POST /account/{checkingId}/request-transfer-money  {destinationAccountId, amount, idempotencyKey}   # treasury or savings
+POST /request-transfer                             {sourceAccountId, destinationAccountId, amount, idempotencyKey}   # treasury or savings (planned as …/request-transfer-money; the real path is /request-transfer)
 POST /invoices  (only if AR create works without IP allowlist in sandbox; else log it)
 ```
 Confirm each 200s **and appears in the sandbox dashboard's approval queue**, then
 approve one in the dashboard and confirm the resulting transaction shows in
 `GET /transactions`. If the sandbox has no approval queue UI, that's a 🔴 finding
 and gate 2 becomes "status polling on `GET /request-send-money/{id}`" for the demo.
+→ Done 2026-09-16: the queue exists (Payments → Needs Approval) and `request-send-money`
+shows there; approved → ACH `sent` with `requestId` back-link (#63–66). `request-transfer`
+never got that far (403, #41). Invoices couldn't be created (#28).
 
 If seed data is thin (few recipients, no invoices), seed it via API:
 `POST /recipients` ×5 vendors, `POST /customers` ×3, `POST /invoices` ×4 (two overdue).
@@ -103,8 +113,9 @@ realistic seed profile").
 ```
 mercury-demo/
   PLAN.md  CLAUDE.md  .env.example
-  docs/                          # static, served at /docs
-    index.html explainer.html direction.md landscape.md api-friction-log.md sandbox-surface.md take-home-brief.md
+  docs/                          # copied to apps/web/public/docs, served at /docs
+    index.html narrative.html explainer.html   # hand-built
+    *.md → *.html                              # rendered by render-docs.mjs (its PAGES list; not narrative.md or the research notes)
   packages/core/                 # framework-free TS
     src/mercury/client.ts        # sandbox base URL, bearer auth, cursor pagination, redaction of accountNumber/routingNumber
     src/mercury/types.ts         # hand-typed from llms.txt fragments (no codegen — no single OpenAPI file exists; log it)
@@ -116,13 +127,17 @@ mercury-demo/
     src/steward.ts               # closeMonth(): runs all analyzers → proposals[] ; propose*() → sandbox request-* calls
   apps/web/                      # Next.js App Router, Node runtime
     app/api/mcp/[secret]/route.ts
-    app/api/chat/route.ts
     app/approve/[token]/page.tsx # fallback gate 1 for clients without elicitation
-    app/page.tsx                 # chat + proposal cards
-  apps/cli/                      # optional: `steward close` reading jsonl from stdin
+    proxy.ts                     # password gate (STEWARD_PASSWORD); /api/mcp/ exempt
+    scripts/render-docs.mjs      # PLAN.md + docs/*.md → docs/*.html (npm run docs)
+  scripts/demo/prep.mjs          # npm run demo:prep
+  scripts/smoke/                 # npm run smoke (mock Mercury + real MCP clients)
 ```
 
-pnpm workspaces, TypeScript strict, no DB. Approval state lives in Mercury.
+Removed 2026-09-17: `app/api/chat/route.ts` and `app/page.tsx` (web chat + proposal
+cards); `/` now redirects to `/docs/index.html`. Never built: `apps/cli/`.
+
+npm workspaces, TypeScript strict, no DB. Approval state lives in Mercury.
 
 ## 4. Work packages (parallelizable)
 
@@ -141,8 +156,8 @@ pnpm workspaces, TypeScript strict, no DB. Approval state lives in Mercury.
 - **Capability fallback.** If `ctx.mcpReq.envelope?.clientCapabilities?.elicitation` is absent → return the proposal with `approve_url: https://<app>/approve/<signed token>` and instructions. Never execute, never fake a confirm via a second tool.
 - Acceptance: Inspector lists 4 tools; Claude Code shows Approve/Decline on `propose_payment`; sandbox dashboard shows the queued payment; Claude.ai gets the approve link and it works.
 
-### C. Web chat + approve page
-- AI SDK `useChat`/`streamText`, tools imported from `core`. Proposal cards with Approve/Decline for `requires_approval` items → same sandbox `request-*` call → "queued in Mercury" state with dashboard link.
+### C. ~~Web chat +~~ approve page
+- ~~AI SDK `useChat`/`streamText`, tools imported from `core`. Proposal cards with Approve/Decline for `requires_approval` items → same sandbox `request-*` call → "queued in Mercury" state with dashboard link.~~ Built 2026-09-15, removed 2026-09-17 (with its AI SDK deps); `/approve/[token]` is the only approval page we own.
 - `/approve/[token]`: verify signed token, render one proposal, Approve → queue. This is the fallback gate for Claude.ai/ChatGPT/Grok.
 - Visual language from `docs/index.html` tokens.
 
@@ -153,13 +168,14 @@ pnpm workspaces, TypeScript strict, no DB. Approval state lives in Mercury.
 
 ### E. CLI pipe (optional)
 `mercury accounts list --format jsonl` + `mercury transactions list --format jsonl` piped into `steward close --json`. Note whether the official CLI honors `--base-url https://api-sandbox.mercury.com/api/v1` with a sandbox token (it has no `--sandbox` flag — log it).
+→ Not built. The official CLI was tested directly against the sandbox instead: it has `--environment sandbox` (#31), and what it gets wrong for agents is #68–72.
 
-## 5. Demo script (7–8 min, Claude Code, verified e2e 2026-09-16)
+## 5. Demo script (7–8 min, Claude Code, verified e2e 2026-09-16, run again live 2026-09-17)
 
 Everything below has been run against the live sandbox, API and dashboard.
 
 ### Before (5 min)
-1. Node ≥ 22 (`nvm use 25`). Start the app without the shell's Anthropic key (it overrides `.env.local`):
+1. Node ≥ 22 (`nvm use 25`). Start the app locally (the hosted one has no Mercury token; `env -u ANTHROPIC_API_KEY` is a leftover from the web chat and harmless):
    `env -u ANTHROPIC_API_KEY PORT=3200 PUBLIC_BASE_URL=http://localhost:3200 npm run dev`
    (add `STEWARD_DEBUG=1` to log every MCP call).
 2. `npm run demo:prep` — checks the token, picks the sandbox's ACH-payable recipient (Alex Rivera), writes
@@ -172,7 +188,7 @@ Everything below has been run against the live sandbox, API and dashboard.
 ### Run
 1. **Memo, 60 s.** `docs/index.html` → `findings.md` BLUF: agent-readable, not agent-actionable.
 2. **"Run month-end close."** → `close_month` (read-only). Talk track: cash by account, operating floor from
-   *posted* dates (the API's `start` means `createdAt`, #47), Alex Rivera $1,250 due in 2 days, two bills with no
+   *posted* dates (the API's `start` means `createdAt`, #47), Alex Rivera $1,250 due in 2 days (the amount `demo:prep` writes; the 2026-09-17 run and the video show $1,255, from a hand edit to `.demo/bills.json`), two bills with no
    saved recipient (Acme Hosting; Northstar Legal, overdue), a surplus sweep. No receivables: the sandbox has no
    invoices and this token can't create them (#28). Nothing is queued.
 3. **"Pay the Alex Rivera bill."** → `propose_payment` → Claude Code shows Approve / Decline (**gate 1**) → Approve →
@@ -202,6 +218,7 @@ Everything below has been run against the live sandbox, API and dashboard.
 | "Mercury already has this request" | Same bill proposed earlier today (same idempotency key); reject it in the dashboard or use it |
 | "Nobody else in this organization can approve" | The second org member was removed or lacks approve permission |
 | Payment proposal missing | App isn't reading `.demo/bills.json`; re-run `npm run demo:prep` |
+| Close re-run after approval proposes the Alex Rivera payment again | Known Steward bug (Status): `close_month` doesn't check existing requests, so it re-proposes the paid bill (same proposal id) and counts it twice in the sweep. **Don't re-run the close mid-demo**; if you must, say so and skip the payment |
 
 ## 6. Guardrails
 
@@ -210,25 +227,25 @@ Everything below has been run against the live sandbox, API and dashboard.
 - Never log/return `accountNumber`, `routingNumber`, card data.
 - Proposals say "you could," not "you should."
 
-## 7. Client matrix (verified 2026-09-15)
+## 7. Client matrix (researched 2026-09-15; Claude Code row verified live 2026-09-16 and 2026-09-17)
 
 | Client | MCP | Elicitation (gate 1) | Role in demo |
 |---|---|---|---|
 | Claude Code | ✓ | ✓ form | **Hero** |
 | Cursor / VS Code | ✓ | ✓ form | Alternate |
-| Vercel AI SDK (`@ai-sdk/mcp`) | ✓ | ✓ form | Our web UI |
+| Vercel AI SDK (`@ai-sdk/mcp`) | ✓ | ✓ form | ~~Our web UI~~ (removed 2026-09-17) |
 | Claude.ai | ✓ | ✗ (#153 open since Apr; state-only results error, #1027) | Reads + approve-URL |
 | ChatGPT Dev Mode | ✓ | no evidence | Reads + approve-URL |
 | Grok (grok.com connectors) | ✓ tools only | ✗ — elicitation times out (`emrgim/marriott-mcp#16`) | Reads + approve-URL |
 
 Spec note: MCP 2026-07-28 made elicitation stateless (MRTR); sampling/roots deprecated. Don't use them.
 
-## 8. Still open (need sandbox)
+## 8. ~~Still open (need sandbox)~~ Answered by the sandbox (2026-09-16)
 
 - ~~What the sandbox seeds~~ → `docs/sandbox-surface.md`: 9 depository + 1 credit account, 150 txns, 79 recipients (not vendor-like), 0 invoices/customers/treasury/statements, no categories or MCCs applied.
-- Whether the sandbox has an approval-queue UI and whether `request-*` requests appear there.
+- ~~Whether the sandbox has an approval-queue UI and whether `request-*` requests appear there~~ → yes: Payments → Needs Approval, and `request-send-money` shows there (it isn't under Tasks, and the queue shows requests the API can't see; #63–65). `request-transfer` never reaches it (403, #41).
 - ~~Whether sandbox read-write tokens demand an IP allowlist~~ → yes, and so does the approval scope (#38, #39); allowlist is effectively IPv4-only (#44).
-- Whether the official CLI works against the sandbox via `--base-url`.
+- ~~Whether the official CLI works against the sandbox via `--base-url`~~ → yes, via `--environment sandbox` (CLI 0.11.8, #31); findings #68–72.
 
 ## 9. Why rev 2 replaced rev 1
 

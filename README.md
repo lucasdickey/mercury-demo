@@ -13,11 +13,12 @@ no path to move money. Built for the Mercury PM take-home ("Command").
 ## Run it
 
 ```bash
-npm install
-cp .env.example .env.local        # fill in: sandbox token, ANTHROPIC_API_KEY, MCP_PATH_SECRET, STATE_SECRET
-npm test                          # core analyzers against fixtures
+npm install                       # Node ≥ 22
+cp .env.example .env.local        # fill in: sandbox token, MCP_PATH_SECRET, STATE_SECRET
+npm test                          # core analyzers against fixtures (16 tests)
 npm run dev                       # http://localhost:3000 → /docs (memo, narrative, plan)
 npm run demo:prep                 # before a demo: bills due from today, queue check, close_month preview
+npm run docs                      # re-render PLAN.md and docs/*.md to docs/*.html
 ```
 
 Demo walkthrough, prerequisites, and troubleshooting: `PLAN.md` §5.
@@ -68,6 +69,6 @@ the default legacy era can't be capability-detected by a stateless server.
 
 ```
 packages/core   Mercury client (sandbox-only, redacting, paginating) · analyzers · proposal schema · closeMonth()
-apps/web        Next.js: /api/mcp/[secret] · /api/chat · /approve/[token] · / (chat) · /docs (static)
-docs/           memo, explainer, research, friction log
+apps/web        Next.js: /api/mcp/[secret] · /approve/[token] · /docs (static; / redirects there) · password gate (STEWARD_PASSWORD)
+docs/           memo, narrative, explainer, research, friction log (rendered pages are generated)
 ```

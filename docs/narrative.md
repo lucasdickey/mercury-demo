@@ -2,6 +2,11 @@
 
 A walkthrough of what we built, why, and what we learned doing it.
 
+**Watch the walkthrough** (about 4½ minutes, recorded 2026-09-17): close the
+month, pay a bill through both approvals, and watch Mercury refuse a transfer.
+[Video](https://cfsno74zv8ik3jwj.public.blob.vercel-storage.com/video/mercury-end-of-month-close-CJ1MU32w7n4kxWnY1cR0I5BRgpMIgM.mp4),
+also embedded in `narrative.html` and the memo (`index.html`).
+
 ## The job
 
 I'm a technical founder. My company banks with Mercury. Every month-end I do
@@ -50,7 +55,7 @@ tests whether a third-party agent can use it.
 1. **"Run month-end close."** Steward reads accounts, transactions, recipients,
    invoices, and treasury, then reports: cash by account; an operating floor
    (two months of average outflow, by *posted* date); one bill due in two days
-   that can be paid (Alex Rivera, $1,250); two bills from vendors with no
+   that can be paid (Alex Rivera, $1,255); two bills from vendors with no
    saved recipient; and a surplus it could sweep. Nothing is queued.
 2. **"Pay the Alex Rivera bill."** Claude Code shows Approve / Decline. I
    approve. Steward calls `request-send-money` and returns the request, marked
@@ -127,6 +132,10 @@ agents from using it:
 The sandbox MCP's scopes suggest Mercury is already on the first. The other
 three are smaller, and they're what separates a demo from something a founder
 would trust with real money.
+
+**On two-factor.** Agent-readiness checklists count "requires a human with
+2FA" against an API. Here it guards approving a money movement, not logging
+in, and that's the point.
 
 ## What's honest to say about the limits
 
