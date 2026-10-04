@@ -12,8 +12,12 @@ const API = "https://api-sandbox.mercury.com/api/v1";
 const APP = process.env.DEMO_URL ?? "http://localhost:3200";
 
 const env = Object.fromEntries(
-  readFileSync(".env.local", "utf8").split("\n").filter((l) => /^[A-Z_]+=/.test(l)).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]),
+  readFileSync(".env.local", "utf8").split("\n").filter((l) => /^[A-Z_]+=/.test(l)).map((l) => [l.slice(0, l.indexOf("=")), unquote(l.slice(l.indexOf("=") + 1))]),
 );
+/** `vercel env pull` writes values in double quotes; dotenv strips them, our parsing must too. */
+function unquote(v) {
+  return v.replace(/^"(.*)"$/s, "$1");
+}
 const ok = (m) => console.log(`✓ ${m}`);
 const warn = (m) => console.log(`! ${m}`);
 const fail = (m) => (console.log(`✗ ${m}`), process.exit(1));
@@ -69,4 +73,4 @@ try {
   fail(`app not reachable at ${APP} (${String(e).slice(0, 120)}). Start it: env -u ANTHROPIC_API_KEY PORT=3200 PUBLIC_BASE_URL=${APP} npm run dev`);
 }
 
-console.log(`\nReady. In Claude Code:\n  claude mcp add --transport http steward "${APP}/api/mcp/$(grep ^MCP_PATH_SECRET= .env.local | cut -d= -f2-)"`);
+console.log(`\nReady. In Claude Code:\n  claude mcp add --transport http steward "${APP}/api/mcp/${env.MCP_PATH_SECRET}"`);

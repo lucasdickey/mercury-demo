@@ -15,7 +15,8 @@ const token = readFileSync(".env.local", "utf8")
   .split("\n")
   .filter((l) => l.startsWith("MERCURY_SANDBOX_API_TOKEN="))
   .pop()
-  ?.slice("MERCURY_SANDBOX_API_TOKEN=".length);
+  ?.slice("MERCURY_SANDBOX_API_TOKEN=".length)
+  .replace(/^"(.*)"$/s, "$1"); // `vercel env pull` quotes values
 if (!token) throw new Error("MERCURY_SANDBOX_API_TOKEN missing from .env.local");
 
 const REDACT = new Set(["accountNumber", "routingNumber", "ein", "taxId", "ssn", "pan", "cvc", "iban", "swiftCode"]);

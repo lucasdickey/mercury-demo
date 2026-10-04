@@ -10,7 +10,7 @@ ENV_FILE=.env.local
 
 verify() {
   local var=$1 base tok status body
-  tok=$(grep -E "^${var}=" "$ENV_FILE" | tail -1 | cut -d= -f2-)
+  tok=$(grep -E "^${var}=" "$ENV_FILE" | tail -1 | cut -d= -f2- | sed -E 's/^"(.*)"$/\1/')  # vercel env pull quotes values
   [[ -n $tok ]] || { echo "$var: not set in $ENV_FILE"; return 1; }
   body=$(mktemp)
   if [[ $var == ANTHROPIC_API_KEY ]]; then
