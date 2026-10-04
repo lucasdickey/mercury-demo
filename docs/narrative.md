@@ -4,7 +4,7 @@ A walkthrough of what we built, why, and what we learned doing it.
 
 **Watch the walkthrough** (about 4½ minutes, recorded 2026-09-17): close the
 month, pay a bill through both approvals, and watch Mercury refuse a transfer.
-[Video](https://cfsno74zv8ik3jwj.public.blob.vercel-storage.com/video/mercury-end-of-month-close-CJ1MU32w7n4kxWnY1cR0I5BRgpMIgM.mp4),
+[Video](https://cfsno74zv8ik3jwj.public.blob.vercel-storage.com/video/mercury-end-of-month-close-2026-10-04.mp4),
 also embedded in `narrative.html` and the memo (`index.html`).
 
 ## The job

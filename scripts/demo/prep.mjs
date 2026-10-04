@@ -43,9 +43,11 @@ ok(`ACH payee: ${payee.name}`);
 
 // 3. Bills due, relative to today. Only the payee's bill can become a payment; the
 //    others show what "no saved recipient" and "outside this week" look like.
+//    DEMO_PAY_AMOUNT changes the payee's bill for a same-day retake: the proposal id
+//    (Mercury's idempotency key) is payee + due + amount + day, so a new amount is a new request.
 const day = (n) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
 const bills = [
-  { vendor: payee.name, amount: 1250, due: day(2), memo: "Contract design work" },
+  { vendor: payee.name, amount: Number(process.env.DEMO_PAY_AMOUNT ?? 1250), due: day(2), memo: "Contract design work" },
   { vendor: "Acme Hosting", amount: 4200, due: day(3), memo: "Hosting" },
   { vendor: "Northstar Legal", amount: 3150, due: day(-4), memo: "Invoice 2211, trademark filing" },
   { vendor: "Deel", amount: 18500, due: day(20), memo: "Contractor payroll" },

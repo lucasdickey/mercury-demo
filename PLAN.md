@@ -57,7 +57,7 @@ Built, green, and run live against the sandbox:
 
 History. 2026-09-15: built without a token. 2026-09-16: token in hand (Custom, IPv4-allowlisted). **§2 read recon → `docs/sandbox-surface.md`, friction #45–57.** Live read-only `closeMonth`: 0 follow-ups, 0 pays, 3 unmatched bills, 1 un-queueable sweep — seed data can't exercise AR/AP/treasury. **§2 writes: `request-send-money` → 400 `invalidApproval` (one-member org can't self-approve, #58); `request-transfer` → 403 (no scope, #41). Second org member added → `request-send-money` 200 `pendingApproval`; idempotent retry → 400 (#59).** **Gate 2 verified end to end:** second member approved in Payments → Needs Approval → request `approved` → ACH transaction `sent` with `requestId` back-link. Then, the same day: `closeMonth` switched to posted dates (`postedStart`, periods by `postedAt`; #47 fixed in Steward); `npm run demo:prep` writes `.demo/bills.json` against the sandbox's one ACH-payable recipient (the "seeding" that was possible — invoices still can't be created, #28); Claude Code end to end verified (§5). 2026-09-17: web chat removed, password gate, docs as HTML, video recorded.
 
-**Live run in Claude Code, 2026-09-17** (the one in the video): `close_month` → 1 payment (Alex Rivera, $1,255.00 — `.demo/bills.json` had been hand-edited from the $1,250 that `demo:prep` writes), 2 unmatched bills (Acme Hosting; Northstar Legal, overdue), 1 sweep, 0 follow-ups. Payment queued → approved in Mercury by the second member. Sweep → 403, no scope (#41); asking again didn't re-prompt for approval. Exactly as §5 scripts it.
+**Live run in Claude Code, 2026-09-17** (re-recorded 2026-10-04 for the current video, same flow): `close_month` → 1 payment (Alex Rivera, $1,255.00 — hand-edited on 9/17, `DEMO_PAY_AMOUNT=1255 npm run demo:prep` on 10/4; prep's default is $1,250), 2 unmatched bills (Acme Hosting; Northstar Legal, overdue), 1 sweep, 0 follow-ups. Payment queued → approved in Mercury by the second member. Sweep → 403, no scope (#41); asking again didn't re-prompt for approval. Exactly as §5 scripts it.
 
 **Known issue (Steward's bug, not Mercury's; not fixed).** Re-running `close_month` after the payment was approved proposes the same Alex Rivera payment again (same proposal id: the bill file doesn't know it was paid, and `closeMonth` doesn't check existing requests) and subtracts the $1,255 twice in the sweep math. **Don't re-run the close mid-demo** (§5, "If something goes wrong").
 
@@ -188,7 +188,7 @@ Everything below has been run against the live sandbox, API and dashboard.
 ### Run
 1. **Memo, 60 s.** `docs/index.html` → `findings.md` BLUF: agent-readable, not agent-actionable.
 2. **"Run month-end close."** → `close_month` (read-only). Talk track: cash by account, operating floor from
-   *posted* dates (the API's `start` means `createdAt`, #47), Alex Rivera $1,250 due in 2 days (the amount `demo:prep` writes; the 2026-09-17 run and the video show $1,255, from a hand edit to `.demo/bills.json`), two bills with no
+   *posted* dates (the API's `start` means `createdAt`, #47), Alex Rivera $1,250 due in 2 days (the amount `demo:prep` writes; the video shows $1,255. For a same-day retake set `DEMO_PAY_AMOUNT`: a new amount is a new idempotency key), two bills with no
    saved recipient (Acme Hosting; Northstar Legal, overdue), a surplus sweep. No receivables: the sandbox has no
    invoices and this token can't create them (#28). Nothing is queued.
 3. **"Pay the Alex Rivera bill."** → `propose_payment` → Claude Code shows Approve / Decline (**gate 1**) → Approve →
