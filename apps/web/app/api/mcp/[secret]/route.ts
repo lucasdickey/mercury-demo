@@ -28,9 +28,10 @@ const codec = () => (_codec ??= createRequestStateCodec<PendingState>({ key: req
 /**
  * An explicit choice, not a checkbox: a boolean renders as a tick box that starts
  * unset, and Accept on an unset required field fails validation with no feedback.
+ * Defaults to "queue it" so one Accept is enough; Accept itself is the human's yes.
  */
 const Approve = z.object({
-  approve: z.enum(["queue it", "cancel"]).describe("Queue this in Mercury's approval queue, or cancel?"),
+  approve: z.enum(["queue it", "cancel"]).default("queue it").describe("Queue this in Mercury's approval queue, or cancel?"),
 });
 
 /**

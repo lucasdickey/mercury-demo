@@ -20,6 +20,6 @@ Key constraints from the brief:
 - `docs/explainer.html` — Three.js step-through of one conversation across both approval gates.
 - `docs/*.html` for `PLAN.md` and the `docs/*.md` pages listed in `render-docs.mjs` (not `narrative.md`; not the research files `direction.md`, `landscape.md`, `sandbox-surface.md`, which stay Markdown-only) are **generated** by `apps/web/scripts/render-docs.mjs` (`npm run docs`, also runs before dev/build). Edit the Markdown, not the HTML. `index.html`, `narrative.html`, `explainer.html` are hand-built. Site root redirects to `/docs/index.html`; the web chat UI was removed 2026-09-17.
 - `docs/findings.md` — **ranked BLUF** of the friction log; update it when the log grows.
-- `docs/api-friction-log.md` — the numbered friction log (75 entries). `docs/direction.md`, `docs/landscape.md`, `docs/sandbox-surface.md` — research behind the decision (repo only, not on the site).
+- `docs/api-friction-log.md` — the numbered friction log (76 entries). `docs/direction.md`, `docs/landscape.md`, `docs/sandbox-surface.md` — research behind the decision (repo only, not on the site).
 - Guardrails: sandbox only (no production tokens); writes only via `request-*` endpoints; never direct sends. See PLAN.md §6.
 - Standing task: log every paper cut in `docs/api-friction-log.md`, tagged `[api]` `[mcp]` `[cli]` `[docs]` `[sandbox]` `[ecosystem]`.

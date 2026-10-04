@@ -581,6 +581,13 @@ semantics.</li>
 generic &quot;read-the-docs&quot; skill. Mercury already has Recipes that could be
 task skills, and &quot;request a payment for approval&quot; is the pattern agents
 most need to learn. <strong>Ship:</strong> task-level skills, starting there.</li>
+<li id="n76">🟡 <code>[ecosystem]</code> <strong>A required choice in an elicitation still starts unset.</strong>
+Swapping the approval checkbox for an enum (<code>approve: &quot;queue it&quot; | &quot;cancel&quot;</code>)
+didn&#39;t fix it: Claude Code renders <code>approve: not set</code>, the cursor lands on
+<strong>Accept</strong>, and pressing it fails with &quot;This field is required&quot;. The founder
+read that as the tool refusing, and the call came back declined (2026-09-18,
+live run). <strong>Ship:</strong> a <code>default</code> on the field, or put the choice in the
+Accept/Decline action itself and drop the field.</li>
 </ol>
 </section>
   </article>
